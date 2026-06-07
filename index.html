@@ -8,7 +8,7 @@
 <title>寻微 — 寻微以知著，原始以见终</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&family=Inter:wght@300;400;500&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
 <style>
   :root {
     /* ── 南宋基底 ── */
@@ -76,14 +76,25 @@
 
   .hero{text-align:center;padding:50px 22px 36px;background:rgba(250,247,241,.35);border:1px solid rgba(156,148,135,.10);border-radius:20px;backdrop-filter:blur(20px) saturate(125%);-webkit-backdrop-filter:blur(20px) saturate(125%);box-shadow:0 3px 24px rgba(60,45,25,.025),inset 0 1px 0 rgba(255,255,255,.65)}
 
-  /* ── 大字 ── */
-  .chars{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:10px}
-  .char-block{display:flex;flex-direction:column;align-items:center}
-  .char-large{font-size:clamp(4.2rem,10.5vw,6.6rem);font-weight:700;line-height:1.04;letter-spacing:8px;
-    background:linear-gradient(170deg,#3a352d 0%,#4e4840 22%,#7d9483 48%,#5d735d 100%);
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-  .char-sep{width:1px;height:70px;background:linear-gradient(180deg,transparent,rgba(140,130,115,.16),transparent)}
-  .pinyin{font-size:.72rem;color:var(--ink-4);letter-spacing:3px;font-family:"Inter","SF Pro Display","Segoe UI",sans-serif;margin-top:2px}
+  /* ── 大字：马山楷书（唐楷遗风） ── */
+  .chars{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px}
+  .char-block{display:flex;flex-direction:column;align-items:center;position:relative}
+  .char-large{
+    font-family:"Ma Shan Zheng","STKaiti","KaiTi","KaiTi SC",cursive;
+    font-size:clamp(5.5rem,14vw,9rem);font-weight:400;line-height:1;
+    color:#24211c;
+    text-shadow:0 2px 8px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.04);
+    letter-spacing:0;
+    transition:color .4s;}
+  .char-stamp{
+    position:absolute;top:-6px;right:-18px;
+    width:26px;height:26px;border:1.2px solid #b55c4e;border-radius:3px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Inter","SF Pro Display",sans-serif;
+    font-size:.45rem;color:#b55c4e;letter-spacing:0;line-height:1;
+    transform:rotate(8deg);opacity:.65}
+  .char-sep{width:1px;height:60px;background:linear-gradient(180deg,transparent,rgba(140,130,115,.14),transparent)}
+  .pinyin{font-size:.7rem;color:var(--ink-4);letter-spacing:3px;font-family:"Inter","SF Pro Display",sans-serif;margin-top:2px}
   .subtitle{font-size:.88rem;color:var(--ink-3);letter-spacing:6px;margin-top:10px}
 
   /* ── 引用块 ── */
@@ -143,9 +154,9 @@
   <!-- Hero -->
   <section class="hero reveal">
     <div class="chars">
-      <div class="char-block"><span class="char-large">寻</span><span class="pinyin">xún</span></div>
+      <div class="char-block"><span class="char-large">寻</span><span class="char-stamp">印</span><span class="pinyin">xún</span></div>
       <div class="char-sep"></div>
-      <div class="char-block"><span class="char-large">微</span><span class="pinyin">wēi</span></div>
+      <div class="char-block"><span class="char-large">微</span><span class="char-stamp">印</span><span class="pinyin">wēi</span></div>
     </div>
     <div class="subtitle">寻微以知著&emsp;原始以见终</div>
   </section>
