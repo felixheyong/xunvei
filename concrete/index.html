@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Twintec 钢纤维混凝土组合级配分析</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
+
+  /*
+   * 南宋审美色系 (Southern Song Dynasty Palette)
+   * 汝窑天青 · 茶白素底 · 墨色入纸 · 檀沉为衬
+   */
+  :root {
+    --bg:           #f3efe8;   /* 素白 — 仿古纸底 */
+    --card:         #faf8f3;   /* 茶白 — 卷面微暖 */
+    --text:         #2e2a25;   /* 墨色 — 松烟墨 */
+    --muted:        #8a8278;   /* 灰檀 — 次文 */
+    --border:       #e0dbd0;   /* 绢色 — 细边 */
+    --accent:       #6b8e89;   /* 汝窑天青 — 主色 accent */
+    --accent2:      #7a6552;   /* 沉香 — 辅色 */
+    --accent3:      #9b8a7a;   /* 暖檀 — 柔和强调 */
+    --pass:         #6b8e78;   /* 竹青 — 合规 */
+    --warn:         #c49555;   /* 赭色 — 临界 */
+    --fail:         #b85a3f;   /* 赭赤 — 不合规 */
+    --celadon:      #8ab5a8;   /* 汝窑青 — Twintec 包络线 */
+    --blue:         #4a6880;   /* 靛青 — 骨料1 */
+    --teal:         #4d8c70;   /* 松绿 — 骨料2 */
+    --sand:         #c49555;   /* 赭色 — 骨料3 */
+    --purple:       #8a7098;   /* 藕荷 — 骨料4 */
+    --shadow:       0 1px 3px rgba(46,42,37,.05), 0 1px 2px rgba(46,42,37,.03);
+    --radius-sm:    6px;
+    --radius:       10px;
+    --radius-lg:    14px;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container { max-width: 1280px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  /* ===== Header ===== */
+  .header {
+    background: linear-gradient(165deg, #2a2722 0%, #3b3630 40%, #4a3f35 100%);
+    color: #f3efe8;
+    padding: 38px 0 42px;
+    margin-bottom: 32px;
+    border-bottom: 3px solid #8a9e96;
+  }
+  .header .container { padding-bottom: 0; }
+  .header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    margin-bottom: 6px;
+    color: #f3efe8;
+  }
+  .header .sub {
+    font-size: .95rem;
+    color: #c4bcb0;
+    font-weight: 400;
+    letter-spacing: .04em;
+  }
+
+  /* ===== Cards ===== */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 26px 30px;
+    margin-bottom: 22px;
+  }
+  .card h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: .02em;
+    color: #2e2a25;
+  }
+  .card .desc {
+    font-size: .82rem;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+
+  /* ===== Chart ===== */
+  .chart-wrap { position: relative; width: 100%; height: 500px; }
+  .chart-wrap canvas { width:100% !important; height:100% !important; }
+
+  /* ===== Legend ===== */
+  .legend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 10px; font-size: .76rem; color: var(--muted); }
+  .legend-swatch { width: 26px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+  .legend-swatch.dashed { height: 0; border-top: 2px dashed; }
+
+  /* ===== Tables ===== */
+  table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+  thead th {
+    background: #f5f2ea;
+    text-align: center;
+    padding: 9px 4px;
+    border-bottom: 2px solid #d8d2c4;
+    font-weight: 600;
+    font-size: .7rem;
+    color: var(--muted);
+    letter-spacing: .04em;
+    white-space: nowrap;
+  }
+  tbody td { text-align: center; padding: 5px 3px; border-bottom: 1px solid var(--border); }
+  tbody tr:hover { background: #f7f4ed; }
+  .highlight-col { background: #f9f6ef !important; }
+
+  /* ===== Editable inputs ===== */
+  input.num-input {
+    width: 56px;
+    text-align: center;
+    border: 1px solid #d5cfc4;
+    border-radius: var(--radius-sm);
+    padding: 4px 2px;
+    font-size: .78rem;
+    font-family: inherit;
+    background: #fefefc;
+    transition: border-color .15s, box-shadow .15s;
+    color: #2e2a25;
+  }
+  input.num-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(107,142,137,.14);
+  }
+  input.num-input.wide { width: 66px; }
+  input.num-input.prop { width: 68px; background: #f6f2ea; font-weight: 600; }
+
+  .prop-row td { background: #f7f4eb; }
+
+  .two-col { display: grid; grid-template-columns: 1.2fr 1fr; gap: 22px; }
+  @media (max-width: 860px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ===== Callout ===== */
+  .callout {
+    background: #f7f3eb;
+    border-left: 3px solid var(--accent3);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 15px 18px;
+    margin: 14px 0;
+    font-size: .82rem;
+    color: #5b4e3e;
+  }
+  .callout.info { border-left-color: var(--accent); background: #f2f6f4; color: #3d504a; }
+  .callout strong { color: var(--accent2); }
+  .callout.info strong { color: var(--accent); }
+
+  .badge {
+    display: inline-block;
+    font-size: .66rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 100px;
+    letter-spacing: .04em;
+  }
+  .badge-ok    { background: #ebf2ec; color: #4a6b55; }
+  .badge-warn  { background: #f9f2e5; color: #8b6a3e; }
+  .badge-fail  { background: #f7e9e3; color: #9b5040; }
+
+  /* ===== Theory cards ===== */
+  .theory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+    margin-top: 14px;
+  }
+  .theory-card {
+    background: #f5f2ea;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .theory-card h4 { font-size: .84rem; font-weight: 700; margin-bottom: 8px; color: #2e2a25; }
+  .theory-card p, .theory-card li { font-size: .76rem; color: var(--muted); line-height: 1.75; }
+  .formula {
+    display: block;
+    background: #faf8f3;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    margin: 10px 0;
+    font-family: 'Courier New', 'Noto Sans SC', monospace;
+    font-size: .81rem;
+    color: var(--text);
+    text-align: center;
+    letter-spacing: .02em;
+  }
+
+  /* ===== Adjustment cards ===== */
+  .adjust-card {
+    background: #f7f4ed;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 10px;
+  }
+  .adjust-card h4 { font-size: .85rem; margin-bottom: 6px; }
+  .adjust-card .suggestion { font-size: .8rem; line-height: 1.7; color: var(--muted); }
+  .adjust-card .highlight-val { font-weight: 700; color: var(--text); }
+
+  /* ===== Buttons ===== */
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .btn {
+    font-family: inherit;
+    font-size: .78rem;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: #faf8f3;
+    cursor: pointer;
+    transition: all .15s;
+    color: var(--text);
+  }
+  .btn:hover { background: #f0ece2; border-color: #c5beb0; }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.primary:hover { background: #5f827c; }
+
+  footer {
+    text-align: center;
+    font-size: .7rem;
+    color: #c4bcae;
+    margin-top: 44px;
+    padding-top: 22px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+  <div class="container">
+    <h1>钢纤维混凝土组合骨料级配分析</h1>
+    <p class="sub">基于 Twintec SFRC Mix 配合比技术</p>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ===== 可编辑筛分表单 ===== -->
+<div class="card">
+  <h2>筛分数据表单 — 依据商混站砂/石筛分报告分别输入</h2>
+  <p class="desc">公制单位 (mm/µm) 为主，英制单位为辅。按商混站提供的碎石和砂筛分报告分别填入，组合级配曲线及评估结果自动更新。比例栏为各材料在总骨料中的质量占比，四项之和保持 100%。</p>
+  <div class="btn-row">
+    <button class="btn primary" onclick="resetToOriginal()">↺ 恢复原始数据</button>
+    <button class="btn" onclick="autoOptimize()">🎯 基于当前材料自动优化级配</button>
+    <span style="font-size:.74rem;color:var(--muted);align-self:center;margin-left:8px;" id="autoMsg"></span>
+  </div>
+
+  <!-- ==== 碎石筛分 ==== -->
+  <h3 style="font-size:.9rem;font-weight:700;margin:16px 0 8px;color:var(--accent2);">
+    🪨 碎石 (Coarse Stone) 筛分报告
+    <span style="font-size:.74rem;font-weight:400;color:var(--muted);margin-left:8px;">— 输入各档碎石在各筛孔的累计过筛百分率</span>
+  </h3>
+  <div style="overflow-x:auto;">
+    <table id="stoneForm">
+      <thead>
+        <tr>
+          <th>筛孔 (mm)</th>
+          <th>英制</th>
+          <th>碎石 ①<br>20mm 过筛%</th>
+          <th>碎石 ②<br>10mm 过筛%</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div style="margin:8px 0 16px; font-size:.76rem; color:var(--muted); display:flex; gap:24px; flex-wrap:wrap;">
+    <span><strong>碎石 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="0" value="39" style="width:60px;">% — 20mm 碎石</span>
+    <span><strong>碎石 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="1" value="16" style="width:60px;">% — 10mm 碎石</span>
+  </div>
+
+  <!-- ==== 砂筛分 ==== -->
+  <h3 style="font-size:.9rem;font-weight:700;margin:16px 0 8px;color:var(--accent2);">
+    🏖️ 砂 (Fine Sand) 筛分报告
+    <span style="font-size:.74rem;font-weight:400;color:var(--muted);margin-left:8px;">— 输入各档砂在各筛孔的累计过筛百分率</span>
+  </h3>
+  <div style="overflow-x:auto;">
+    <table id="sandForm">
+      <thead>
+        <tr>
+          <th>筛孔 (mm)</th>
+          <th>英制</th>
+          <th>砂 ①<br>5mm 机制砂 过筛%</th>
+          <th>砂 ②<br>超细砂 过筛%</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div style="margin:8px 0 4px; font-size:.76rem; color:var(--muted); display:flex; gap:24px; flex-wrap:wrap;">
+    <span><strong>砂 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="2" value="34" style="width:60px;">% — 5mm 机制砂</span>
+    <span><strong>砂 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="3" value="11" style="width:60px;">% — 超细砂</span>
+  </div>
+
+  <!-- ==== 组合级配结果 ==== -->
+  <h3 style="font-size:.9rem;font-weight:700;margin:20px 0 8px;color:var(--accent2);">
+    📊 组合级配结果 &amp; 合规判定
+    <span style="font-size:.74rem;font-weight:400;color:var(--muted);margin-left:8px;">Σ 碎石+砂 = <span id="propSum" style="font-weight:700;color:var(--accent);">100</span>%</span>
+  </h3>
+  <div style="overflow-x:auto;">
+    <table id="combinedForm">
+      <thead>
+        <tr>
+          <th>筛孔 (mm)</th>
+          <th>英制</th>
+          <th class="highlight-col">组合%</th>
+          <th>下限</th>
+          <th>上限</th>
+          <th>判定</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== 级配曲线图 ===== -->
+<div class="card">
+  <h2>组合级配曲线（实时更新）</h2>
+  <p class="desc">半对数坐标：横轴为筛孔尺寸 mm（对数），纵轴为累计过筛率 %。阴影区域为 Twintec SFRC 目标范围。</p>
+  <div class="chart-wrap"><canvas id="gradingChart"></canvas></div>
+  <div class="legend-grid">
+    <div class="legend-item"><div class="legend-swatch" style="background:#b85a3f;"></div> 组合级配</div>
+    <div class="legend-item"><div class="legend-swatch dashed" style="border-color:#d48865;"></div> 组合级配（内插）</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:rgba(138,181,168,.14); height:16px; border-radius:4px; width:26px;"></div> Twintec 目标范围</div>
+    <div class="legend-item"><div class="legend-swatch dashed" style="border-color:#8a9080;"></div> Fuller n=0.45 理想曲线</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#4a6880;"></div> 碎石 ①（20mm）</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#4d8c70;"></div> 碎石 ②（10mm）</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#c49555;"></div> 砂 ①（5mm 机制砂）</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#8a7098;"></div> 砂 ②（超细砂）</div>
+  </div>
+</div>
+
+<!-- ===== 双栏：FM + 配合比 ===== -->
+<div class="two-col">
+  <div class="card">
+    <h2>细度模数 FM &amp; 砂率</h2>
+    <p class="desc">FM = Σ(各筛累计筛余%) / 100，标准筛 0.15 – 4.75 mm。砂率依据 JGJ 55-2011 选取。</p>
+    <div id="fmGrid"></div>
+  </div>
+
+  <div class="card">
+    <h2>配合比摘要</h2>
+    <p class="desc">
+      <label for="gradeSelect" style="font-weight:600;color:var(--text);">混凝土强度等级：</label>
+      <select id="gradeSelect" onchange="onGradeChange()" style="
+        font-family:inherit;font-size:.8rem;font-weight:600;
+        padding:5px 10px;border-radius:6px;border:1px solid #d5cfc4;
+        background:#faf8f3;color:var(--accent);cursor:pointer;
+        margin-right:12px;
+      ">
+        <option value="C20">C20</option>
+        <option value="C25">C25</option>
+        <option value="C30">C30</option>
+        <option value="C35" selected>C35</option>
+        <option value="C40">C40</option>
+        <option value="C45">C45</option>
+        <option value="C50">C50</option>
+      </select>
+      <span style="font-size:.76rem;color:var(--muted);">每立方米材料用量，骨料用量随比例自动换算。</span>
+    </p>
+    <table style="font-size:.78rem;">
+      <thead><tr><th>材料</th><th>用量 (kg)</th><th>占比</th></tr></thead>
+      <tbody id="mixTable"></tbody>
+      <tfoot>
+        <tr style="font-weight:700;border-top:2px solid #d8d2c4;">
+          <td>总 计</td>
+          <td id="mixTotal">—</td>
+          <td>100%</td>
+        </tr>
+      </tfoot>
+    </table>
+    <p style="font-size:.7rem;color:var(--muted);margin-top:6px;" id="gradeNote"></p>
+  </div>
+</div>
+
+<!-- ===== 骨料连续级配评估 ===== -->
+<div class="card">
+  <h2>骨料连续级配评估</h2>
+  <p class="desc">当前材料的级配 vs Twintec 目标范围评估</p>
+  <div class="callout" id="complianceCallout"></div>
+  <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:12px;" id="complianceBadges"></div>
+</div>
+
+<!-- ===== 调整建议 ===== -->
+<div class="card">
+  <h2>调整建议 — 如何达到连续级配合规</h2>
+  <p class="desc">基于组合过筛率理论和堆积密度模型，针对当前偏差给出具体的配合比调整方案。</p>
+
+  <div id="adjustmentsContainer"></div>
+
+  <div class="callout info" style="margin-top:16px;">
+    <strong>💡 调整原则：</strong>
+    <ul style="margin:8px 0 0 18px; line-height:1.9;">
+      <li><strong>粗端不足 →</strong> 增加粗骨料比例，或选用粒径更大的粗骨料</li>
+      <li><strong>细端超标 →</strong> 减少超细砂比例，或选用更粗的砂源（FM 更高）</li>
+      <li><strong>保持连续级配：</strong> 避免某档筛孔出现"断崖"，确保曲线平滑过渡</li>
+      <li><strong>调整幅度：</strong> 每次调整 2–5%，逐步逼近，避免过度修正</li>
+      <li><strong>钢纤维影响：</strong> 钢纤维等效于"超大颗粒"，粗端应略低于 Fuller 曲线</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== 堆积密度理论 ===== -->
+<div class="card">
+  <h2>组合过筛率理论 — 颗粒堆积密度模型</h2>
+  <p class="desc">组合级配优化的核心目标是最大化骨料堆积密度（最小化空隙率），从而减少水泥浆体需求、降低收缩、提高强度和耐久性。</p>
+
+  <div class="theory-grid">
+    <div class="theory-card">
+      <h4>🎯 组合过筛率公式</h4>
+      <p>混合骨料在筛孔 d 处的累计过筛率由各组分按比例加权求和：</p>
+      <span class="formula">P<sub>combined</sub>(d) = Σ [ p<sub>i</sub> × P<sub>i</sub>(d) ]</span>
+      <p>其中 p<sub>i</sub> = 第 i 种骨料的质量比例，P<sub>i</sub>(d) = 该骨料在筛孔 d 处的过筛率。</p>
+    </div>
+
+    <div class="theory-card">
+      <h4>📐 Fuller-Thompson 方程</h4>
+      <p>经典最大密实度理想级配曲线 (1907)：</p>
+      <span class="formula">P(d) = 100 × (d / D<sub>max</sub>)<sup>n</sup></span>
+      <p>n = 0.5（Fuller 原始）或 <strong>n = 0.45</strong>（FHWA 推荐，最大密实度）。D<sub>max</sub> = 最大骨料粒径 25mm。</p>
+    </div>
+
+    <div class="theory-card">
+      <h4>🔬 Andreasen-Andersen 模型</h4>
+      <p>连续级配堆积模型 (1930)，引入分布模数 q：</p>
+      <span class="formula">P(d) = 100 × (d / D<sub>max</sub>)<sup>q</sup></span>
+      <p>最优堆积时 q ≈ <strong>0.37</strong>（比 Fuller 略细）。适用于包含微粉的连续级配体系。</p>
+    </div>
+
+    <div class="theory-card">
+      <h4>🧱 可压缩堆积模型 CPM</h4>
+      <p>de Larrard (1999) 提出的现代堆积理论，考虑了：</p>
+      <ul style="padding-left:18px;">
+        <li><strong>松散效应：</strong>细颗粒撑开粗颗粒骨架</li>
+        <li><strong>壁效应：</strong>粗颗粒表面附近细颗粒无法紧密堆积</li>
+        <li><strong>压实指数 K：</strong>反映施工振捣 / 压实程度</li>
+      </ul>
+    </div>
+
+    <div class="theory-card">
+      <h4>⚙️ Twintec SFRC 工程修正</h4>
+      <p>Twintec 的目标范围是对经典堆积理论的工程修正：</p>
+      <ul style="padding-left:18px;">
+        <li>粗端略开（为钢纤维留空间）</li>
+        <li>细粉严格控制（&lt; 0.15mm 上限 3%）— 防止塑性收缩开裂</li>
+        <li>中粒径区保持连续级配 — 保证工作性和表面平整度</li>
+      </ul>
+    </div>
+
+    <div class="theory-card">
+      <h4>📊 细度模数 FM</h4>
+      <p>FM = Σ(累计筛余%) / 100，只用标准筛 0.15–4.75mm。</p>
+      <span class="formula" style="font-size:.72rem;word-break:break-all;">FM = R<sub>4.75</sub> + R<sub>2.36</sub> + R<sub>1.18</sub> + R<sub>0.6</sub> + R<sub>0.3</sub> + R<sub>0.15</sub></span>
+      <p>混合砂的组合 FM 为各组分的质量加权平均值。地坪推荐 FM <strong>2.5–3.2</strong>。</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Twintec Combined Grading Analysis — Particle Packing Density Theory (Fuller · Andreasen · CPM)
+</footer>
+
+</div><!-- /container -->
+
+<script>
+// ========== CONSTANTS ==========
+// 公制筛孔为主 (mm)，英制为辅
+const SIEVE_SIZES = [25, 19, 12.5, 9.5, 4.75, 2.36, 1.18, 0.6, 0.3, 0.15, 0.075];
+const IMPERIAL_LABELS = ['1"', '3/4"', '1/2"', '3/8"', '#4', '#8', '#16', '#30', '#50', '#100', '#200'];
+const METRIC_LABELS = ['25 mm', '19 mm', '12.5 mm', '9.5 mm', '4.75 mm', '2.36 mm', '1.18 mm', '0.6 mm', '0.3 mm', '0.15 mm', '75 µm'];
+
+// Original aggregate passing data [agg0, agg1, agg2, agg3] for each sieve
+const ORIGINAL_DATA = [
+  [96, 100, 100, 100],  // 25 mm
+  [54, 100, 100, 100],  // 19 mm
+  [17, 95, 100, 100],   // 12.5 mm
+  [5, 37, 100, 100],    // 9.5 mm
+  [2, 4, 95, 98],       // 4.75 mm
+  [1, 1, 59, 92],       // 2.36 mm
+  [0, 0, 43, 89],       // 1.18 mm
+  [0, 0, 30, 85],       // 0.6 mm
+  [0, 0, 26, 81],       // 0.3 mm
+  [0, 0, 8, 71],        // 0.15 mm
+  [0, 0, 0, 0],         // 0.075 mm (75 µm)
+];
+const ORIGINAL_PROPS = [0.39, 0.16, 0.34, 0.11]; // 骨料1-4 比例
+
+const TWINTEC_LOWER = [100, 90, 58, 46, 36, 26, 17, 11, 6, 1, 0];
+const TWINTEC_UPPER = [100, 100, 80, 70, 53, 44, 32, 21, 13, 3, 2];
+
+const AGG_NAMES = ['碎石 ①（20mm）', '碎石 ②（10mm）', '砂 ①（5mm 机制砂）', '砂 ②（超细砂）'];
+const AGG_COLORS = ['#4a6880', '#4d8c70', '#c49555', '#8a7098']; // 靛青 松绿 赭色 藕荷
+const DMAX = 25;
+
+// ========== STATE ==========
+let aggData = ORIGINAL_DATA.map(r => [...r]);
+let proportions = [...ORIGINAL_PROPS];
+let chart;
+let concreteGrade = 'C35';
+
+// ========== DERIVED COMPUTATIONS ==========
+function getCombined() {
+  return SIEVE_SIZES.map((_, i) => {
+    let sum = 0;
+    for (let a = 0; a < 4; a++) sum += aggData[i][a] * proportions[a];
+    return sum;
+  });
+}
+
+function getStatus(val, lo, hi) {
+  if (val >= lo && val <= hi) return 'pass';
+  const margin = (hi - lo) * 0.05;
+  if (val >= lo - margin && val <= hi + margin) return 'warn';
+  return 'fail';
+}
+
+function calcFM(passingArr) {
+  const sieveIndices = [4, 5, 6, 7, 8, 9]; // 4.75 ~ 0.15 mm
+  let sumRetained = 0;
+  sieveIndices.forEach(i => sumRetained += (100 - passingArr[i]));
+  return sumRetained / 100;
+}
+
+// ========== BUILD FORM TABLE ==========
+// ========== BUILD FORM TABLES ==========
+function buildFormTable() {
+  // Stone sieves: 25mm – 4.75mm (indices 0–4), columns aggs 0,1
+  const stoneSieves = [0,1,2,3,4]; // indices into SIEVE_SIZES
+  const tbodyStone = document.querySelector('#stoneForm tbody');
+  tbodyStone.innerHTML = '';
+  stoneSieves.forEach(i => {
+    const tr = document.createElement('tr');
+    const is25mm = (i === 0);
+    tr.innerHTML = `
+      <td><strong>${METRIC_LABELS[i]}</strong></td>
+      <td><small style="color:var(--muted)">${IMPERIAL_LABELS[i]}</small></td>
+      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="0" value="${aggData[i][0]}"></td>
+      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="1" value="${aggData[i][1]}" ${is25mm ? 'readonly style="background:#ede9e0;"' : ''}></td>
+    `;
+    tbodyStone.appendChild(tr);
+  });
+
+  // Sand sieves: 4.75mm – 0.075mm (indices 4–10), columns aggs 2,3
+  const sandSieves = [4,5,6,7,8,9,10];
+  const tbodySand = document.querySelector('#sandForm tbody');
+  tbodySand.innerHTML = '';
+  sandSieves.forEach(i => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${METRIC_LABELS[i]}</strong></td>
+      <td><small style="color:var(--muted)">${IMPERIAL_LABELS[i]}</small></td>
+      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="2" value="${aggData[i][2]}"></td>
+      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="3" value="${aggData[i][3]}"></td>
+    `;
+    tbodySand.appendChild(tr);
+  });
+
+  // Combined results table: all sieves
+  const tbodyCombined = document.querySelector('#combinedForm tbody');
+  tbodyCombined.innerHTML = '';
+  SIEVE_SIZES.forEach((s, i) => {
+    const combined = getCombined();
+    const st = getStatus(combined[i], TWINTEC_LOWER[i], TWINTEC_UPPER[i]);
+    const badge = st === 'pass' ? '<span style="color:#6b8e78;font-weight:700;">✅</span>'
+                : st === 'warn' ? '<span style="color:#c49555;font-weight:700;">⚠</span>'
+                : '<span style="color:#b85a3f;font-weight:700;">❌</span>';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${METRIC_LABELS[i]}</strong></td>
+      <td><small style="color:var(--muted)">${IMPERIAL_LABELS[i]}</small></td>
+      <td class="highlight-col"><strong>${combined[i].toFixed(2)}</strong></td>
+      <td>${TWINTEC_LOWER[i]}</td>
+      <td>${TWINTEC_UPPER[i]}</td>
+      <td>${badge}</td>
+    `;
+    if (st === 'fail') tr.style.background = '#f9f4ee';
+    tbodyCombined.appendChild(tr);
+  });
+
+  document.querySelectorAll('.agg-data').forEach(inp => {
+    inp.addEventListener('input', onDataChange);
+  });
+  document.querySelectorAll('.agg-prop').forEach(inp => {
+    inp.addEventListener('input', onPropChange);
+  });
+
+  updateAll();
+}
+
+// ========== EVENT HANDLERS ==========
+function onDataChange(e) {
+  const sieve = parseInt(e.target.dataset.sieve);
+  const agg = parseInt(e.target.dataset.agg);
+  let val = parseFloat(e.target.value);
+  if (isNaN(val)) val = 0;
+  val = Math.max(0, Math.min(100, val));
+  aggData[sieve][agg] = val;
+  updateAll();
+}
+
+function onPropChange(e) {
+  const agg = parseInt(e.target.dataset.agg);
+  let val = parseFloat(e.target.value);
+  if (isNaN(val)) val = 0;
+  val = Math.max(0, Math.min(100, val));
+  proportions[agg] = val / 100;
+  const sum = proportions.reduce((a, b) => a + b, 0);
+  document.getElementById('propSum').textContent = (sum * 100).toFixed(1);
+  document.getElementById('propSum').style.color = Math.abs(sum - 1) > 0.01 ? 'var(--fail)' : 'var(--accent)';
+  updateAll();
+}
+
+// ========== UPDATE ALL ==========
+function updateAll() {
+  updateFormTableDisplay();
+  updateChart();
+  updateFM();
+  updateMixDesign();
+  updateCompliance();
+  updateAdjustments();
+}
+
+function updateFormTableDisplay() {
+  const combined = getCombined();
+
+  // Update stone inputs
+  [0,1,2,3,4].forEach(i => {
+    for (let a = 0; a < 2; a++) {
+      const inp = document.querySelector(`#stoneForm .agg-data[data-sieve="${i}"][data-agg="${a}"]`);
+      if (inp && document.activeElement !== inp) inp.value = aggData[i][a];
+    }
+  });
+
+  // Update sand inputs
+  [4,5,6,7,8,9,10].forEach(i => {
+    for (let a = 2; a < 4; a++) {
+      const inp = document.querySelector(`#sandForm .agg-data[data-sieve="${i}"][data-agg="${a}"]`);
+      if (inp && document.activeElement !== inp) inp.value = aggData[i][a];
+    }
+  });
+
+  // Update combined results table
+  const rows = document.querySelectorAll('#combinedForm tbody tr');
+  rows.forEach((tr, i) => {
+    const st = getStatus(combined[i], TWINTEC_LOWER[i], TWINTEC_UPPER[i]);
+    const badge = st === 'pass' ? '<span style="color:#6b8e78;font-weight:700;">✅</span>'
+                : st === 'warn' ? '<span style="color:#c49555;font-weight:700;">⚠</span>'
+                : '<span style="color:#b85a3f;font-weight:700;">❌</span>';
+    const cells = tr.querySelectorAll('td');
+    cells[2].innerHTML = `<strong>${combined[i].toFixed(2)}</strong>`;
+    cells[5].innerHTML = badge;
+    tr.style.background = st === 'fail' ? '#f9f4ee' : '';
+  });
+
+  // Update proportion inputs
+  document.querySelectorAll('.agg-prop').forEach(inp => {
+    const a = parseInt(inp.dataset.agg);
+    if (document.activeElement !== inp) inp.value = (proportions[a] * 100).toFixed(0);
+  });
+  const sum = proportions.reduce((a, b) => a + b, 0);
+  document.getElementById('propSum').textContent = (sum * 100).toFixed(1);
+  document.getElementById('propSum').style.color = Math.abs(sum - 1) > 0.01 ? 'var(--fail)' : 'var(--accent)';
+}
+
+// ========== CHART ==========
+function interpolateCombined(d, aggData, proportions) {
+  function interp(arr, d) {
+    for (let i = 0; i < SIEVE_SIZES.length - 1; i++) {
+      if (d >= SIEVE_SIZES[i + 1] && d <= SIEVE_SIZES[i]) {
+        const logD = Math.log(d);
+        const logD0 = Math.log(SIEVE_SIZES[i]);
+        const logD1 = Math.log(SIEVE_SIZES[i + 1]);
+        const t = (logD - logD0) / (logD1 - logD0);
+        return arr[i] + t * (arr[i + 1] - arr[i]);
+      }
+    }
+    if (d > SIEVE_SIZES[0]) return arr[0];
+    return arr[arr.length - 1];
+  }
+  let sum = 0;
+  for (let a = 0; a < 4; a++) {
+    const arr = aggData.map(r => r[a]);
+    sum += interp(arr, d) * proportions[a];
+  }
+  return sum;
+}
+
+function updateChart() {
+  const combined = getCombined();
+  const fineX = [], fineCombined = [], fineLower = [], fineUpper = [];
+
+  for (let i = 0; i <= 200; i++) {
+    const d = 0.075 + (25 - 0.075) * (i / 200);
+    fineX.push(d);
+    fineCombined.push(interpolateCombined(d, aggData, proportions));
+    for (let j = 0; j < SIEVE_SIZES.length - 1; j++) {
+      if (d >= SIEVE_SIZES[j + 1] && d <= SIEVE_SIZES[j]) {
+        const logD = Math.log(d), logD0 = Math.log(SIEVE_SIZES[j]), logD1 = Math.log(SIEVE_SIZES[j + 1]);
+        const t = (logD - logD0) / (logD1 - logD0);
+        fineLower.push(TWINTEC_LOWER[j] + t * (TWINTEC_LOWER[j + 1] - TWINTEC_LOWER[j]));
+        fineUpper.push(TWINTEC_UPPER[j] + t * (TWINTEC_UPPER[j + 1] - TWINTEC_UPPER[j]));
+        break;
+      }
+    }
+  }
+
+  const fullerData = fineX.map(d => ({ x: d, y: Math.min(100, 100 * Math.pow(d / DMAX, 0.45)) }));
+
+  const datasets = [
+    {
+      label: 'Twintec 上限',
+      data: fineX.map((x, i) => ({ x, y: fineUpper[i] })),
+      borderColor: 'rgba(138,181,168,.22)', backgroundColor: 'transparent',
+      borderWidth: 1, pointRadius: 0, fill: false, order: 10,
+    },
+    {
+      label: 'Twintec 下限',
+      data: fineX.map((x, i) => ({ x, y: fineLower[i] })),
+      borderColor: 'rgba(138,181,168,.22)',
+      backgroundColor: 'rgba(138,181,168,.08)',
+      borderWidth: 1, pointRadius: 0,
+      fill: { target: '-1', above: 'rgba(138,181,168,.06)' },
+      order: 10,
+    },
+    ...[0, 1, 2, 3].map(a => ({
+      label: AGG_NAMES[a],
+      data: SIEVE_SIZES.map((x, i) => ({ x, y: aggData[i][a] })),
+      borderColor: AGG_COLORS[a], backgroundColor: 'transparent',
+      borderWidth: 1.5, borderDash: [6, 3], pointRadius: 3,
+      pointBackgroundColor: AGG_COLORS[a], tension: 0.2, order: 20,
+    })),
+    {
+      label: 'Fuller n=0.45',
+      data: fullerData,
+      borderColor: '#8a9080', backgroundColor: 'transparent',
+      borderWidth: 1.5, borderDash: [4, 6], pointRadius: 0, order: 15,
+    },
+    {
+      label: '组合级配（内插）',
+      data: fineX.map((x, i) => ({ x, y: fineCombined[i] })),
+      borderColor: '#d48865', backgroundColor: 'transparent',
+      borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0, order: 5,
+    },
+    {
+      label: '组合级配',
+      data: SIEVE_SIZES.map((x, i) => ({ x, y: combined[i] })),
+      borderColor: '#b85a3f', backgroundColor: '#b85a3f',
+      borderWidth: 2.8, pointRadius: 6, pointHoverRadius: 8,
+      pointBackgroundColor: '#b85a3f', pointBorderColor: '#faf8f3', pointBorderWidth: 2,
+      showLine: true, tension: 0, order: 1,
+    },
+  ];
+
+  if (chart) {
+    chart.data.datasets = datasets;
+    chart.update();
+  } else {
+    const ctx = document.getElementById('gradingChart').getContext('2d');
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: { datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'nearest', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}% @ ${ctx.parsed.x.toFixed(2)} mm`,
+            }
+          }
+        },
+        scales: {
+          x: {
+            type: 'logarithmic',
+            title: { display: true, text: '筛孔尺寸 (mm) — 对数坐标', font: { size: 12, weight: '600' }, color: '#2e2a25' },
+            min: 0.06, max: 30,
+            ticks: { callback: v => v >= 0.06 ? v : '', font: { size: 11 }, color: '#8a8278' },
+            grid: {
+              color: ctx => {
+                const v = ctx.tick.value;
+                return [0.075, 0.15, 0.3, 0.6, 1.18, 2.36, 4.75, 9.5, 12.5, 19, 25].includes(v)
+                  ? '#ddd7cb' : '#ebe6db';
+              }
+            }
+          },
+          y: {
+            title: { display: true, text: '累计过筛率 (%)', font: { size: 12, weight: '600' }, color: '#2e2a25' },
+            min: 0, max: 100,
+            ticks: { stepSize: 10, font: { size: 11 }, color: '#8a8278' },
+            grid: { color: '#e5e0d6' }
+          }
+        }
+      }
+    });
+  }
+}
+
+// ========== FM & SAND RATIO ==========
+function updateFM() {
+  const fms = [];
+  for (let a = 2; a < 4; a++) {
+    const arr = aggData.map(r => r[a]);
+    fms.push({ name: AGG_NAMES[a], fm: calcFM(arr), color: AGG_COLORS[a], pct: proportions[a] });
+  }
+  const sandProps = [proportions[2], proportions[3]];
+  const sandSum = sandProps[0] + sandProps[1];
+  const combinedFM = sandSum > 0
+    ? fms[0].fm * (sandProps[0] / sandSum) + fms[1].fm * (sandProps[1] / sandSum)
+    : 0;
+
+  const fmInRange = combinedFM >= 2.5 && combinedFM <= 3.2;
+
+  // ===== Sand Ratio (砂率) =====
+  const totalAgg = proportions.reduce((a, b) => a + b, 0);
+  const sandRatio = totalAgg > 0 ? (sandSum / totalAgg) * 100 : 0;
+
+  const grid = document.getElementById('fmGrid');
+  grid.innerHTML = `
+    <table style="font-size:.78rem;margin-top:4px;">
+      <thead>
+        <tr><th>砂种类</th><th>占比</th><th>细度模数 FM</th></tr>
+      </thead>
+      <tbody>
+        ${fms.map(f => `
+          <tr>
+            <td style="text-align:left;"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${f.color};margin-right:6px;"></span>${f.name}</td>
+            <td>${(f.pct * 100).toFixed(0)}%</td>
+            <td><strong>${f.fm.toFixed(2)}</strong></td>
+          </tr>
+        `).join('')}
+        <tr style="font-weight:700;border-top:2px solid #d8d2c4;background:#f9f6ef;">
+          <td style="text-align:left;">混合砂组合 FM</td>
+          <td>100%</td>
+          <td><strong style="font-size:1.05rem;color:var(--accent);">${combinedFM.toFixed(2)}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:12px;padding:10px 14px;border-radius:8px;font-size:.76rem;${fmInRange ? 'background:#ebf2ec;color:#4a6b55;' : 'background:#f7e9e3;color:#9b5040;'}">
+      <strong>组合 FM = ${fms[0].fm.toFixed(2)} × ${(sandProps[0]/sandSum*100).toFixed(0)}% + ${fms[1].fm.toFixed(2)} × ${(sandProps[1]/sandSum*100).toFixed(0)}% = ${combinedFM.toFixed(2)}</strong><br>
+      地坪推荐混合砂 FM：2.5 – 3.2 &nbsp; ${fmInRange ? '✅ 合规' : '⚠ 超出推荐范围'}
+    </div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0 10px;">
+    <table style="font-size:.78rem;">
+      <thead>
+        <tr><th colspan="3" style="text-align:left;font-size:.8rem;">砂率 (Sand Ratio)</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="text-align:left;">碎石 ① + ②</td>
+          <td>${fmtPct1((1-sandSum/totalAgg)*100)}%</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td style="text-align:left;">砂 ① + ②</td>
+          <td>${fmtPct1(sandSum/totalAgg*100)}%</td>
+          <td></td>
+        </tr>
+        <tr style="font-weight:700;border-top:2px solid #d8d2c4;background:#f9f6ef;">
+          <td style="text-align:left;">砂率</td>
+          <td colspan="2"><strong style="font-size:1.05rem;color:var(--accent);">${fmtPct1(sandRatio)}%</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+}
+
+// Format percentage: one decimal, strip .0
+function fmtPct1(v) { return (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, ''); }
+
+// ========== MIX DESIGN ==========
+function updateMixDesign() {
+  const sum = proportions.reduce((a, b) => a + b, 0);
+  const totalAgg = 1853; // 原始总骨料 kg
+  const aggKgs = proportions.map((p, i) => Math.round(totalAgg * p / sum));
+
+  const mixRows = [
+    { name: '普通硅酸盐水泥 (P·O 42.5)', kg: 293 },
+    { name: '粉煤灰', kg: 35 },
+    { name: '矿粉 (GGBS)', kg: 77 },
+    { name: '碎石 ①（20mm）', kg: aggKgs[0] },
+    { name: '碎石 ②（10mm）', kg: aggKgs[1] },
+    { name: '砂 ①（5mm 机制砂）', kg: aggKgs[2] },
+    { name: '砂 ②（超细砂）', kg: aggKgs[3] },
+    { name: '用水量', kg: 185 },
+    { name: '减水剂 (PC)', kg: 6.5, unit: 'L' },
+    { name: '钢纤维', kg: 30 },
+  ];
+
+  const totalBinder = 293 + 35 + 77; // cement + fly ash + ggbs
+  const wcm = (185 / totalBinder).toFixed(3);
+
+  const totalKg = mixRows.reduce((s, r) => s + (r.unit ? 0 : r.kg), 0);
+  const tbody = document.getElementById('mixTable');
+  tbody.innerHTML = mixRows.map(r => `
+    <tr>
+      <td>${r.name}</td>
+      <td>${r.kg}${r.unit ? ' ' + r.unit : ''}</td>
+      <td>${r.unit ? '—' : ((r.kg / totalKg) * 100).toFixed(1) + '%'}</td>
+    </tr>
+  `).join('');
+  document.getElementById('mixTotal').textContent = totalKg + ' kg';
+
+  // Grade-specific note
+  const gradeNotes = {
+    'C20': { binder: [260,300], wc: [0.55,0.65], desc: '适用于轻交通地面（Class 1–3），低强度需求' },
+    'C25': { binder: [300,340], wc: [0.50,0.60], desc: '适用于中等交通地面（Class 3–4），一般工业厂房' },
+    'C30': { binder: [330,370], wc: [0.47,0.55], desc: '适用于中等至重交通工业地面（Class 4–5）' },
+    'C35': { binder: [360,410], wc: [0.44,0.52], desc: '适用于重交通工业地面（Class 5–6），钢纤维混凝土地坪常用等级' },
+    'C40': { binder: [390,440], wc: [0.40,0.48], desc: '适用于高磨损工业地面（Class 6–7）' },
+    'C45': { binder: [420,470], wc: [0.37,0.44], desc: '适用于重载耐磨面层（Class 7–8）' },
+    'C50': { binder: [450,500], wc: [0.34,0.40], desc: '适用于超重载/特殊耐磨地面（Class 7–9）' },
+  };
+
+  const g = gradeNotes[concreteGrade] || gradeNotes['C35'];
+  const binderOk = totalBinder >= g.binder[0] && totalBinder <= g.binder[1];
+  const wcOk = wcm >= parseFloat(g.wc[0]) && wcm <= parseFloat(g.wc[1]);
+
+  document.getElementById('gradeNote').innerHTML =
+    `${g.desc}。当前胶材总量 <strong>${totalBinder} kg</strong>（推荐 ${g.binder[0]}–${g.binder[1]} kg）${binderOk ? ' ✅' : ' ⚠'} &nbsp;|&nbsp; 水胶比 <strong>${wcm}</strong>（推荐 ${g.wc[0]}–${g.wc[1]}）${wcOk ? ' ✅' : ' ⚠'}`;
+}
+
+// ========== GRADE CHANGE ==========
+function onGradeChange() {
+  concreteGrade = document.getElementById('gradeSelect').value;
+  updateMixDesign();
+}
+
+// ========== COMPLIANCE (骨料连续级配评估) ==========
+function updateCompliance() {
+  const combined = getCombined();
+  const issues = [], badges = [];
+
+  SIEVE_SIZES.forEach((s, i) => {
+    const st = getStatus(combined[i], TWINTEC_LOWER[i], TWINTEC_UPPER[i]);
+    const label = `${METRIC_LABELS[i]} (${IMPERIAL_LABELS[i]})`;
+    if (st === 'fail') {
+      if (combined[i] < TWINTEC_LOWER[i]) {
+        issues.push(`<li><strong>${label}：</strong>组合过筛率 <strong>${combined[i].toFixed(2)}%</strong> 低于下限 <strong>${TWINTEC_LOWER[i]}%</strong>，粗骨料偏多/偏粗，可能导致表面裸露或包裹性不足。</li>`);
+        badges.push(`<span class="badge badge-fail">❌ ${label} — 低于下限</span>`);
+      } else {
+        issues.push(`<li><strong>${label}：</strong>组合过筛率 <strong>${combined[i].toFixed(2)}%</strong> 超出上限 <strong>${TWINTEC_UPPER[i]}%</strong>，细颗粒偏多，增加收缩开裂风险。</li>`);
+        badges.push(`<span class="badge badge-fail">❌ ${label} — 超出上限</span>`);
+      }
+    } else if (st === 'warn') {
+      badges.push(`<span class="badge badge-warn">⚠ ${label} — 临界</span>`);
+    } else {
+      badges.push(`<span class="badge badge-ok">✅ ${label}</span>`);
+    }
+  });
+
+  const callout = document.getElementById('complianceCallout');
+  if (issues.length === 0) {
+    callout.innerHTML = '<strong>✅ 所有筛孔均合规！</strong> 组合级配完全落在 Twintec SFRC 目标范围内，骨料连续级配良好。';
+    callout.className = 'callout info';
+  } else {
+    callout.innerHTML = `<strong>⚠️ 发现 ${issues.length} 处不合规：</strong><ul style="margin:8px 0 0 18px; line-height:1.8;">${issues.join('')}</ul>`;
+    callout.className = 'callout';
+  }
+  document.getElementById('complianceBadges').innerHTML = badges.join('');
+}
+
+// ========== ADJUSTMENTS ==========
+function updateAdjustments() {
+  const combined = getCombined();
+  const container = document.getElementById('adjustmentsContainer');
+  const suggestions = [];
+
+  SIEVE_SIZES.forEach((s, i) => {
+    const val = combined[i], lo = TWINTEC_LOWER[i], hi = TWINTEC_UPPER[i];
+    const label = `${METRIC_LABELS[i]}（${IMPERIAL_LABELS[i]}）`;
+
+    if (val < lo) {
+      const contributions = [0, 1, 2, 3].map(a => ({
+        agg: a, name: AGG_NAMES[a], passing: aggData[i][a],
+        contrib: aggData[i][a] * proportions[a], pct: proportions[a],
+      }));
+      const helpers = contributions.filter(c => c.passing > 50 && c.pct < 0.60);
+      const reducers = contributions.filter(c => c.passing < 50 && c.pct > 0.05);
+      const deficit = lo - val;
+      let suggestion = `<strong>问题：</strong>${label} 组合过筛率 <span class="highlight-val">${val.toFixed(2)}%</span>，低于下限 <span class="highlight-val">${lo}%</span>（差值 ${deficit.toFixed(1)} 个百分点）。<br>`;
+      if (helpers.length > 0) {
+        const h = helpers[0];
+        const needed = deficit / (h.passing / 100);
+        suggestion += `<strong>建议：</strong>增加 <span class="highlight-val">${h.name}</span> 比例约 <span class="highlight-val">+${Math.round(needed)}%</span>`;
+        if (reducers.length > 0) suggestion += `，同时减少 <span class="highlight-val">${reducers[0].name}</span> 比例`;
+        suggestion += `。该骨料在此筛孔过筛率 ${h.passing}%，提高其占比可有效提升该档组合过筛率。`;
+      } else if (reducers.length > 0) {
+        suggestion += `<strong>建议：</strong>减少 <span class="highlight-val">${reducers[0].name}</span> 比例（当前过筛率仅 ${reducers[0].passing}%），用细骨料替代。`;
+      }
+      suggestions.push({ sieve: i, label, type: 'low', suggestion });
+    } else if (val > hi) {
+      const contributions = [0, 1, 2, 3].map(a => ({
+        agg: a, name: AGG_NAMES[a], passing: aggData[i][a],
+        contrib: aggData[i][a] * proportions[a], pct: proportions[a],
+      }));
+      const helpers = contributions.filter(c => c.passing > 80 && c.pct > 0.05);
+      const excess = val - hi;
+      let suggestion = `<strong>问题：</strong>${label} 组合过筛率 <span class="highlight-val">${val.toFixed(2)}%</span>，超出上限 <span class="highlight-val">${hi}%</span>（超标 ${excess.toFixed(1)} 个百分点）。<br>`;
+      if (helpers.length > 0) {
+        const h = helpers[0];
+        suggestion += `<strong>建议：</strong>减少 <span class="highlight-val">${h.name}</span> 比例约 <span class="highlight-val">−${Math.round(excess)}%</span>`;
+        const coarseAlt = contributions.find(c => c.passing < 50 && c.pct < 0.60);
+        if (coarseAlt) suggestion += `，改用 <span class="highlight-val">${coarseAlt.name}</span> 替代（该骨料在此筛孔过筛率仅 ${coarseAlt.passing}%）。`;
+        suggestion += `<br><span style="font-size:.73rem;color:var(--muted);">此筛孔超标通常因为超细砂/粉料过多。检查超细砂的 &lt;0.15mm 含量，必要时水洗或更换为更粗的砂源。</span>`;
+      }
+      suggestions.push({ sieve: i, label, type: 'high', suggestion });
+    }
+  });
+
+  if (suggestions.length === 0) {
+    container.innerHTML = '<p style="color:#6b8e78;font-weight:600;">✅ 当前材料级配完全合规，骨料连续级配良好。各筛孔过筛率均在 Twintec 目标范围之内。</p>';
+  } else {
+    container.innerHTML = suggestions.map((sg, idx) => `
+      <div class="adjust-card" style="border-left:3px solid ${sg.type === 'high' ? 'var(--fail)' : 'var(--warn)'};">
+        <h4>🔧 调整 ${idx + 1}：${sg.label}</h4>
+        <div class="suggestion">${sg.suggestion}</div>
+      </div>
+    `).join('');
+
+    const lowCount = suggestions.filter(s => s.type === 'low').length;
+    const highCount = suggestions.filter(s => s.type === 'high').length;
+    let summary = '';
+    if (lowCount > 0 && highCount > 0) {
+      summary = `<strong>综合建议：</strong>级配曲线在粗端偏低（偏粗）同时在细端偏高（偏细），说明中间粒径骨料（5mm 粗砂）比例可能偏大。建议：<strong>微调 20mm 粗骨料和超细砂比例</strong>，将超细砂比例降低 3–5%，20mm 粗骨料比例提高 3–5%，使曲线整体向 Fuller 理想线靠拢。`;
+    } else if (lowCount > 0) {
+      summary = `<strong>综合建议：</strong>粗端整体偏粗，建议在保持细端不超标的前提下，适当减少最大粒径骨料比例，或选用 10–20mm 中间档骨料补充。`;
+    } else if (highCount > 0) {
+      summary = `<strong>综合建议：</strong>细端整体偏细，主要原因可能是超细砂含粉量过高。建议：<strong>(1)</strong> 降低超细砂比例 3–5%；<strong>(2)</strong> 检查超细砂的亚甲蓝值和含泥量；<strong>(3)</strong> 考虑用 FM ≈ 1.5–2.0 的中砂替代部分超细砂。`;
+    }
+    container.innerHTML += `<div class="callout info" style="margin-top:16px;">${summary}</div>`;
+  }
+}
+
+// ========== BUTTONS ==========
+function resetToOriginal() {
+  aggData = ORIGINAL_DATA.map(r => [...r]);
+  proportions = [...ORIGINAL_PROPS];
+  document.querySelectorAll('.agg-prop').forEach(inp => {
+    const a = parseInt(inp.dataset.agg);
+    inp.value = (proportions[a] * 100).toFixed(0);
+  });
+  document.getElementById('autoMsg').textContent = '';
+  updateAll();
+  // Restore all editable sieve data inputs
+  document.querySelectorAll('#stoneForm .agg-data, #sandForm .agg-data').forEach(inp => {
+    const sieve = parseInt(inp.dataset.sieve);
+    const agg = parseInt(inp.dataset.agg);
+    inp.value = aggData[sieve][agg];
+  });
+}
+
+function countViolations(props) {
+  let count = 0;
+  SIEVE_SIZES.forEach((_, i) => {
+    let sum = 0;
+    for (let a = 0; a < 4; a++) sum += aggData[i][a] * props[a];
+    if (sum < TWINTEC_LOWER[i] || sum > TWINTEC_UPPER[i]) count++;
+  });
+  return count;
+}
+
+// Score quality of fit: sum of squared normalized deviations from target center
+// Lower score = better fit within the target range
+function fitScore(props) {
+  let score = 0;
+  SIEVE_SIZES.forEach((_, i) => {
+    let combined = 0;
+    for (let a = 0; a < 4; a++) combined += aggData[i][a] * props[a];
+    const lo = TWINTEC_LOWER[i];
+    const hi = TWINTEC_UPPER[i];
+    const range = hi - lo;
+    if (range === 0) return;
+    const center = (lo + hi) / 2;
+    const dev = (combined - center) / range;
+    score += dev * dev;
+    // Extra penalty if outside bounds
+    if (combined < lo) score += Math.pow((lo - combined) / range, 2) * 10;
+    if (combined > hi) score += Math.pow((combined - hi) / range, 2) * 10;
+  });
+  return score;
+}
+
+// Distance from current proportions (L2 norm)
+function distFromCurrent(props) {
+  let d = 0;
+  for (let a = 0; a < 4; a++) d += Math.pow(props[a] - proportions[a], 2);
+  return Math.sqrt(d);
+}
+
+function autoOptimize() {
+  const initialViolations = countViolations(proportions);
+  const msgEl = document.getElementById('autoMsg');
+
+  if (initialViolations === 0) {
+    msgEl.textContent = '✅ 已处于合规状态，无需优化。';
+    return;
+  }
+
+  msgEl.textContent = '⏳ 正在搜索最优级配组合...';
+  // Yield to the DOM so the message renders before heavy computation
+  setTimeout(() => runOptimization(initialViolations, msgEl), 60);
+}
+
+function runOptimization(initialViolations, msgEl) {
+  const MIN = 0.01, MAX = 0.65;
+
+  // ===== Phase 1: Coarse 3-D grid search =====
+  // p0 + p1 + p2 + p3 = 1, so search over p0, p1, p2; p3 is derived
+  const COARSE = 0.03;
+  let candidates = [];
+  const currentProps = [...proportions];
+
+  for (let p0 = MIN; p0 <= MAX; p0 += COARSE) {
+    for (let p1 = MIN; p1 <= MAX; p1 += COARSE) {
+      const maxP2 = 1 - p0 - p1 - MIN;
+      if (maxP2 < MIN) continue;
+      for (let p2 = MIN; p2 <= Math.min(MAX, maxP2); p2 += COARSE) {
+        const p3 = 1 - p0 - p1 - p2;
+        if (p3 < MIN || p3 > MAX) continue;
+        const props = [p0, p1, p2, p3];
+        const v = countViolations(props);
+        const fit = fitScore(props);
+        const dist = distFromCurrent(props);
+        candidates.push({ props, violations: v, fit, dist });
+      }
+    }
+  }
+
+  // ===== Also search a dense local neighborhood around current proportions =====
+  const LOCAL_RANGE = 0.10;
+  const LOCAL_STEP = 0.015;
+  for (let dp0 = -LOCAL_RANGE; dp0 <= LOCAL_RANGE; dp0 += LOCAL_STEP) {
+    for (let dp1 = -LOCAL_RANGE; dp1 <= LOCAL_RANGE; dp1 += LOCAL_STEP) {
+      for (let dp2 = -LOCAL_RANGE; dp2 <= LOCAL_RANGE; dp2 += LOCAL_STEP) {
+        const p0 = currentProps[0] + dp0;
+        const p1 = currentProps[1] + dp1;
+        const p2 = currentProps[2] + dp2;
+        const p3 = 1 - p0 - p1 - p2;
+        if (p0 < MIN || p0 > MAX || p1 < MIN || p1 > MAX ||
+            p2 < MIN || p2 > MAX || p3 < MIN || p3 > MAX) continue;
+        const props = [p0, p1, p2, p3];
+        const v = countViolations(props);
+        const fit = fitScore(props);
+        const dist = distFromCurrent(props);
+        candidates.push({ props, violations: v, fit, dist });
+      }
+    }
+  }
+
+  // ===== Sort: violations ASC, then composite score ASC =====
+  candidates.sort((a, b) => {
+    if (a.violations !== b.violations) return a.violations - b.violations;
+    // When violations equal: prefer better fit; if both compliant, prefer closer to current
+    if (a.violations === 0 && b.violations === 0) {
+      return (a.fit + a.dist * 0.5) - (b.fit + b.dist * 0.5);
+    }
+    return a.fit - b.fit;
+  });
+
+  // ===== Phase 2: Fine refinement around top candidates =====
+  const topK = candidates.slice(0, Math.min(8, candidates.length));
+  let fineCandidates = [];
+  const FINE_STEP = 0.006;
+  const FINE_RANGE = 0.025;
+
+  for (const c of topK) {
+    for (let dp0 = -FINE_RANGE; dp0 <= FINE_RANGE; dp0 += FINE_STEP) {
+      for (let dp1 = -FINE_RANGE; dp1 <= FINE_RANGE; dp1 += FINE_STEP) {
+        for (let dp2 = -FINE_RANGE; dp2 <= FINE_RANGE; dp2 += FINE_STEP) {
+          if (dp0 === 0 && dp1 === 0 && dp2 === 0) continue;
+          const p0 = c.props[0] + dp0;
+          const p1 = c.props[1] + dp1;
+          const p2 = c.props[2] + dp2;
+          const p3 = 1 - p0 - p1 - p2;
+          if (p0 < MIN || p0 > MAX || p1 < MIN || p1 > MAX ||
+              p2 < MIN || p2 > MAX || p3 < MIN || p3 > MAX) continue;
+          const props = [p0, p1, p2, p3];
+          const v = countViolations(props);
+          const fit = fitScore(props);
+          const dist = distFromCurrent(props);
+          fineCandidates.push({ props, violations: v, fit, dist });
+        }
+      }
+    }
+  }
+
+  // Merge and re-sort
+  const allCandidates = [...candidates, ...fineCandidates];
+  allCandidates.sort((a, b) => {
+    if (a.violations !== b.violations) return a.violations - b.violations;
+    if (a.violations === 0 && b.violations === 0) {
+      return (a.fit + a.dist * 0.3) - (b.fit + b.dist * 0.3);
+    }
+    return a.fit - b.fit;
+  });
+
+  const best = allCandidates[0];
+
+  if (best.violations < initialViolations) {
+    proportions = best.props;
+    document.querySelectorAll('.agg-prop').forEach(inp => {
+      const a = parseInt(inp.dataset.agg);
+      inp.value = (proportions[a] * 100).toFixed(0);
+    });
+
+    if (best.violations === 0) {
+      const pcts = best.props.map(p => (p * 100).toFixed(0));
+      msgEl.textContent = `✅ 已自动优化至完全合规！建议比例：骨料1 ${pcts[0]}% / 骨料2 ${pcts[1]}% / 骨料3 ${pcts[2]}% / 骨料4 ${pcts[3]}%`;
+    } else {
+      msgEl.textContent = `已优化：不合规从 ${initialViolations} 处降至 ${best.violations} 处（共 ${candidates.length.toLocaleString()} 个组合中搜索）。已达骨料级配下的最优解，建议手动调整骨料来源或级配曲线。`;
+    }
+    updateAll();
+  } else {
+    msgEl.textContent = `已搜索 ${allCandidates.length.toLocaleString()} 个比例组合，当前骨料级配下无法找到更优解。建议更换骨料来源或调整各骨料自身的级配曲线。`;
+  }
+}
+
+// ========== INIT ==========
+buildFormTable();
+</script>
+
+</body>
+</html>
