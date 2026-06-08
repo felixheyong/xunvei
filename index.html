@@ -11,28 +11,30 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* ── 南宋基底：官窑灰青 + 西湖烟雨 ── */
-    --bg: #f2efe8;
-    --bg-card: #f8f5ef;
-    --edge: rgba(148,142,132,0.12);
-    --edge-hover: rgba(148,142,132,0.20);
-    --shadow: 0 2px 16px rgba(55,45,30,0.025);
-    --shadow-hover: 0 4px 22px rgba(55,45,30,0.05);
-    --highlight: inset 0 1px 0 rgba(255,255,255,0.45);
-    --highlight-hover: inset 0 1px 0 rgba(255,255,255,0.62);
+    /* ── 唐 · 敦煌基底：壁画地仗 + 铅白 ── */
+    --bg: #efe6d6;
+    --bg-card: #f6f0e5;
+    --edge: rgba(180,160,130,0.14);
+    --edge-hover: rgba(180,160,130,0.25);
+    --shadow: 0 2px 16px rgba(80,50,20,0.03);
+    --shadow-hover: 0 4px 22px rgba(80,50,20,0.06);
+    --highlight: inset 0 1px 0 rgba(255,255,255,0.4);
+    --highlight-hover: inset 0 1px 0 rgba(255,255,255,0.58);
 
     /* ── 松烟墨 ── */
-    --ink: #2e2b26;
-    --ink-2: #48453e;
-    --ink-3: #65625b;
-    --ink-4: #8a8781;
-    --ink-5: #b2afa8;
+    --ink: #362e24;
+    --ink-2: #4f463a;
+    --ink-3: #6b6052;
+    --ink-4: #938878;
+    --ink-5: #b8ae9e;
 
-    /* ── 官窑粉青 ── */
-    --ru: #b0bbb3;
-    --ru-light: #c4cec7;
-    --ru-deep: #6e8776;
-    --ru-mist: #cad2cc;
+    /* ── 敦煌矿物色 ── */
+    --azurite: #3d5a8e;      /* 石青 */
+    --malachite: #4a7c6b;    /* 石绿 */
+    --cinnabar: #c44a3a;     /* 朱砂 */
+    --gold: #c49a4a;         /* 金粉 */
+    --ochre: #b8834a;        /* 赭石 */
+    --earth: #c4a878;        /* 土黄 */
 
   }
 
@@ -49,19 +51,19 @@
   /* ── 氛围背景 ── */
   .bg-layer{position:fixed;inset:0;pointer-events:none;z-index:0}
   .bg-gradient{background:
-    radial-gradient(ellipse 58% 38% at 20% 8%, rgba(176,187,179,0.10) 0%,transparent 48%),
-    radial-gradient(ellipse 42% 58% at 74% 38%, rgba(196,206,199,0.07) 0%,transparent 48%),
-    radial-gradient(ellipse 48% 28% at 36% 88%, rgba(202,210,204,0.04) 0%,transparent 40%),
-    radial-gradient(ellipse 65% 45% at 50% 50%, rgba(188,198,193,0.035) 0%,transparent 58%)}
+    radial-gradient(ellipse 60% 40% at 18% 10%, rgba(196,154,74,0.08) 0%,transparent 50%),
+    radial-gradient(ellipse 45% 55% at 75% 42%, rgba(61,90,142,0.05) 0%,transparent 50%),
+    radial-gradient(ellipse 50% 32% at 40% 86%, rgba(196,74,58,0.04) 0%,transparent 42%),
+    radial-gradient(ellipse 65% 48% at 52% 48%, rgba(196,168,120,0.04) 0%,transparent 56%)}
   .paper-texture{
-    position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.18;
-    background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(130,122,110,0.007) 2px,rgba(130,122,110,0.007) 3px)}
+    position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.2;
+    background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(150,130,100,0.008) 2px,rgba(150,130,100,0.008) 3px)}
 
-  .orb{position:fixed;border-radius:50%;filter:blur(130px);opacity:.16;animation:orbBreathe 20s ease-in-out infinite;pointer-events:none;z-index:0}
-  .orb-1{width:520px;height:520px;background:rgba(176,187,179,.08);top:-18%;left:-14%;animation-delay:0s}
-  .orb-2{width:380px;height:380px;background:rgba(196,206,199,.05);bottom:-16%;right:-10%;animation-delay:-7s}
-  .orb-3{width:300px;height:300px;background:rgba(202,210,204,.035);top:38%;left:54%;animation-delay:-13s}
-  @keyframes orbBreathe{0%,100%{transform:scale(1);opacity:.16}50%{transform:scale(1.08);opacity:.28}}
+  .orb{position:fixed;border-radius:50%;filter:blur(120px);opacity:.14;animation:orbBreathe 20s ease-in-out infinite;pointer-events:none;z-index:0}
+  .orb-1{width:480px;height:480px;background:rgba(196,154,74,.07);top:-16%;left:-12%;animation-delay:0s}
+  .orb-2{width:360px;height:360px;background:rgba(61,90,142,.04);bottom:-14%;right:-8%;animation-delay:-7s}
+  .orb-3{width:280px;height:280px;background:rgba(196,74,58,.03);top:40%;left:56%;animation-delay:-13s}
+  @keyframes orbBreathe{0%,100%{transform:scale(1);opacity:.14}50%{transform:scale(1.08);opacity:.25}}
 
   /* ── 主容器 ── */
   .main{position:relative;z-index:1;width:100%;max-width:680px;padding:32px 18px 48px;display:flex;flex-direction:column;gap:26px}
@@ -70,29 +72,46 @@
   .card{background:rgba(250,247,241,.42);border:1px solid var(--edge);border-radius:16px;padding:28px 24px;backdrop-filter:blur(16px) saturate(120%);-webkit-backdrop-filter:blur(16px) saturate(120%);box-shadow:var(--shadow),var(--highlight);transition:all .5s cubic-bezier(.2,0,0,1)}
   .card:hover{border-color:var(--edge-hover);box-shadow:var(--shadow-hover),var(--highlight-hover);transform:translateY(-1px)}
 
-  .hero{text-align:center;padding:50px 22px 36px;background:rgba(248,245,239,.35);border:1px solid rgba(148,142,132,.10);border-radius:20px;backdrop-filter:blur(20px) saturate(125%);-webkit-backdrop-filter:blur(20px) saturate(125%);box-shadow:0 3px 24px rgba(55,45,30,.025),inset 0 1px 0 rgba(255,255,255,.6)}
+  .hero{text-align:center;position:relative;overflow:hidden;
+    padding:60px 24px 44px;
+    background:linear-gradient(175deg,rgba(248,240,228,.45) 0%,rgba(240,228,210,.42) 100%);
+    border:1px solid rgba(196,154,74,.15);border-radius:22px;
+    backdrop-filter:blur(20px) saturate(125%);-webkit-backdrop-filter:blur(20px) saturate(125%);
+    box-shadow:0 4px 28px rgba(80,50,20,.03),inset 0 1px 0 rgba(255,255,255,.55)}
+  .hero::before{
+    content:"";position:absolute;inset:8px;pointer-events:none;z-index:0;
+    border:1px solid rgba(196,154,74,.08);border-radius:16px}
+
+  /* ── 敦煌装饰：藻井纹样 ── */
+  .dh-deco{position:absolute;pointer-events:none;z-index:0;opacity:.35}
+  .dh-lotus-t{top:14px;left:50%;transform:translateX(-50%);width:60px;height:20px}
+  .dh-lotus-b{bottom:14px;left:50%;transform:translateX(-50%);width:60px;height:20px}
+  .dh-cloud-l{top:50%;left:16px;transform:translateY(-50%);width:16px;height:50px}
+  .dh-cloud-r{top:50%;right:16px;transform:translateY(-50%);width:16px;height:50px}
 
   /* ── 大字 ── */
-  .chars{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:10px}
+  .chars{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px;position:relative;z-index:1}
   .char-block{display:flex;flex-direction:column;align-items:center}
-  .char-large{font-size:clamp(4.2rem,10.5vw,6.6rem);font-weight:700;line-height:1.04;letter-spacing:8px;
-    background:linear-gradient(170deg,#3a352d 0%,#4e4840 22%,#7a9c8e 48%,#608068 100%);
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-  .char-sep{width:1px;height:70px;background:linear-gradient(180deg,transparent,rgba(150,140,118,.16),transparent)}
-  .pinyin{font-size:.72rem;color:var(--ink-4);letter-spacing:3px;font-family:"Inter","SF Pro Display","Segoe UI",sans-serif;margin-top:2px}
-  .subtitle{font-size:.88rem;color:var(--ink-3);letter-spacing:6px;margin-top:10px}
+  .char-large{font-size:clamp(4.5rem,11vw,7rem);font-weight:700;line-height:1.02;letter-spacing:6px;
+    background:linear-gradient(172deg,#3a2818 0%,#5c3a1e 18%,#c49a4a 48%,#8b4a2a 76%,#4a2010 100%);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    filter:drop-shadow(0 2px 6px rgba(180,120,50,.15))}
+  .char-sep{width:2px;height:65px;position:relative;z-index:1;
+    background:linear-gradient(180deg,transparent,rgba(196,154,74,.3),rgba(196,74,58,.2),transparent)}
+  .pinyin{font-size:.7rem;color:var(--ink-4);letter-spacing:3px;font-family:"Inter","SF Pro Display",sans-serif;margin-top:2px;position:relative;z-index:1}
+  .subtitle{font-size:.85rem;color:var(--ink-3);letter-spacing:5px;margin-top:8px;position:relative;z-index:1}
 
   /* ── 引用块 ── */
   .quote{text-align:center}
   .qt{font-size:1.1rem;line-height:2.4;letter-spacing:2px;color:var(--ink)}
-  .qt em{font-style:normal;color:var(--ru-deep);font-weight:600}
+  .qt em{font-style:normal;color:var(--cinnabar);font-weight:600}
   .qt-src{margin-top:14px;font-size:.7rem;color:var(--ink-5);letter-spacing:2px}
   .qt-note{font-size:.78rem;line-height:2.1;color:var(--ink-3);letter-spacing:1.5px;margin-top:20px}
-  .qt-note em{font-style:normal;color:var(--ru-deep);font-weight:500}
-  .divider{width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(156,148,135,.3),transparent);margin:22px auto}
+  .qt-note em{font-style:normal;color:var(--cinnabar);font-weight:500}
+  .divider{width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(196,154,74,.25),transparent);margin:22px auto}
 
   /* ── 隐喻 ── */
-  .meta-section{text-align:center;padding:28px 22px;border-left:2px solid rgba(157,181,172,.3)}
+  .meta-section{text-align:center;padding:28px 22px;border-left:2px solid rgba(196,154,74,.25)}
   .meta-label{font-size:.64rem;letter-spacing:5px;color:var(--ink-5);margin-bottom:6px}
   .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
   @media(max-width:520px){.meta-grid{grid-template-columns:1fr}}
@@ -109,17 +128,17 @@
   /* ── 页脚 ── */
   .footer{text-align:center;padding:2px}
   .footer-refs{font-size:.64rem;color:var(--ink-5);letter-spacing:2px}
-  .footer-domain{font-size:.72rem;color:var(--ru-deep);letter-spacing:3px;margin-top:4px;font-family:"Inter","SF Pro Display","Segoe UI",sans-serif;font-weight:500}
+  .footer-domain{font-size:.72rem;color:var(--gold);letter-spacing:3px;margin-top:4px;font-family:"Inter","SF Pro Display","Segoe UI",sans-serif;font-weight:500}
   .footer-owner{font-size:.58rem;color:var(--ink-5);letter-spacing:3px;margin-top:6px;font-family:"Inter","SF Pro Display","Segoe UI",sans-serif}
 
   /* ── 动画 ── */
   .reveal{opacity:0;transform:translateY(18px);transition:opacity .8s ease,transform .8s ease}
   .reveal.visible{opacity:1;transform:translateY(0)}
 
-  ::selection{background:rgba(110,135,118,.16);color:var(--ink)}
+  ::selection{background:rgba(196,74,58,.15);color:var(--ink)}
   ::-webkit-scrollbar{width:4px}
   ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{background:rgba(148,142,132,.14);border-radius:2px}
+  ::-webkit-scrollbar-thumb{background:rgba(196,154,74,.12);border-radius:2px}
 </style>
 </head>
 <body>
@@ -132,6 +151,13 @@
 
   <!-- Hero -->
   <section class="hero reveal">
+    <!-- 藻井莲花装饰 -->
+    <svg class="dh-deco dh-lotus-t" viewBox="0 0 60 20"><path d="M30 2 L34 8 L40 8 L35 13 L37 19 L30 15 L23 19 L25 13 L20 8 L26 8Z" fill="none" stroke="rgba(196,154,74,.35)" stroke-width=".8"/><circle cx="30" cy="10" r="2" fill="rgba(196,74,58,.25)"/></svg>
+    <svg class="dh-deco dh-lotus-b" viewBox="0 0 60 20"><path d="M30 18 L34 12 L40 12 L35 7 L37 1 L30 5 L23 1 L25 7 L20 12 L26 12Z" fill="none" stroke="rgba(196,154,74,.35)" stroke-width=".8"/><circle cx="30" cy="10" r="2" fill="rgba(196,74,58,.25)"/></svg>
+    <!-- 云纹侧饰 -->
+    <svg class="dh-deco dh-cloud-l" viewBox="0 0 16 50"><path d="M8 5 Q2 12 2 20 Q2 28 8 32 Q4 38 4 42 Q4 48 8 48" fill="none" stroke="rgba(196,154,74,.2)" stroke-width=".7"/><circle cx="8" cy="25" r="1.5" fill="rgba(196,154,74,.18)"/></svg>
+    <svg class="dh-deco dh-cloud-r" viewBox="0 0 16 50"><path d="M8 5 Q14 12 14 20 Q14 28 8 32 Q12 38 12 42 Q12 48 8 48" fill="none" stroke="rgba(196,154,74,.2)" stroke-width=".7"/><circle cx="8" cy="25" r="1.5" fill="rgba(196,154,74,.18)"/></svg>
+
     <div class="chars">
       <div class="char-block"><span class="char-large">寻</span><span class="pinyin">xún</span></div>
       <div class="char-sep"></div>
@@ -155,22 +181,22 @@
     <div class="divider"></div>
     <div class="meta-grid">
       <div class="meta-item">
-        <div class="meta-icon"><svg viewBox="0 0 40 40" width="28" height="28"><path d="M20 36 Q18 30 20 22" fill="none" stroke="#b89352" stroke-width="1.1"/><path d="M20 22 Q11 15 14 7 Q17 4 20 11Z" fill="none" stroke="#b89352" stroke-width="1.1"/><path d="M20 22 Q29 15 26 7 Q23 4 20 11Z" fill="none" stroke="#b89352" stroke-width="1.1"/><path d="M20 22 Q20 13 20 3 Q22 6 20 11Z" fill="none" stroke="#b89352" stroke-width=".9"/><circle cx="20" cy="4" r="1.5" fill="#b88050"/></svg></div>
+        <div class="meta-icon"><svg viewBox="0 0 40 40" width="28" height="28"><path d="M20 36 Q18 30 20 22" fill="none" stroke="#c49a4a" stroke-width="1.1"/><path d="M20 22 Q11 15 14 7 Q17 4 20 11Z" fill="none" stroke="#c49a4a" stroke-width="1.1"/><path d="M20 22 Q29 15 26 7 Q23 4 20 11Z" fill="none" stroke="#c49a4a" stroke-width="1.1"/><path d="M20 22 Q20 13 20 3 Q22 6 20 11Z" fill="none" stroke="#c49a4a" stroke-width=".9"/><circle cx="20" cy="4" r="1.5" fill="#c44a3a"/></svg></div>
         <div class="meta-title">寻微 · Debug</div>
         <div class="meta-desc">一枚指针的偏移、<br>一次竞态条件的偶现——<br>卓越的工程师从不放过<br>任何一个「不合理的小事」。</div>
       </div>
       <div class="meta-item">
-        <div class="meta-icon"><svg viewBox="0 0 40 40" width="28" height="28"><rect x="5" y="5" width="30" height="30" fill="none" stroke="#b89352" stroke-width="1.1"/><rect x="5" y="5" width="30" height="30" fill="none" stroke="#b89352" stroke-width=".8" transform="rotate(45 20 20)"/><circle cx="20" cy="20" r="2" fill="#b88050"/><circle cx="12" cy="12" r=".8" fill="#b89352"/><circle cx="28" cy="12" r=".8" fill="#b89352"/><circle cx="12" cy="28" r=".8" fill="#b89352"/><circle cx="28" cy="28" r=".8" fill="#b89352"/></svg></div>
+        <div class="meta-icon"><svg viewBox="0 0 40 40" width="28" height="28"><rect x="5" y="5" width="30" height="30" fill="none" stroke="#c49a4a" stroke-width="1.1"/><rect x="5" y="5" width="30" height="30" fill="none" stroke="#c49a4a" stroke-width=".8" transform="rotate(45 20 20)"/><circle cx="20" cy="20" r="2" fill="#c44a3a"/><circle cx="12" cy="12" r=".8" fill="#b89352"/><circle cx="28" cy="12" r=".8" fill="#b89352"/><circle cx="12" cy="28" r=".8" fill="#b89352"/><circle cx="28" cy="28" r=".8" fill="#b89352"/></svg></div>
         <div class="meta-title">原始 · Architecture</div>
         <div class="meta-desc">第一性原理即「原始」——<br>回溯问题的本质，<br>从根基推导系统的边界，<br>而非在表象上叠加补丁。</div>
       </div>
       <div class="meta-item">
-        <div class="meta-icon"><svg viewBox="0 0 40 40" width="28" height="28"><path d="M8 22 Q12 14 20 15 Q28 14 32 22" fill="none" stroke="#b89352" stroke-width="1.2"/><path d="M10 24 Q20 30 30 24" fill="none" stroke="#b89352" stroke-width=".9"/><ellipse cx="20" cy="20" rx="2.8" ry="2.3" fill="#b88050"/><circle cx="20" cy="20" r="1.1" fill="#faf7f1"/><line x1="8" y1="18" x2="4" y2="16" stroke="#b89352" stroke-width=".7"/><line x1="32" y1="18" x2="36" y2="16" stroke="#b89352" stroke-width=".7"/></svg></div>
+        <div class="meta-icon"><svg viewBox="0 0 40 40" width="28" height="28"><path d="M8 22 Q12 14 20 15 Q28 14 32 22" fill="none" stroke="#c49a4a" stroke-width="1.2"/><path d="M10 24 Q20 30 30 24" fill="none" stroke="#c49a4a" stroke-width=".9"/><ellipse cx="20" cy="20" rx="2.8" ry="2.3" fill="#c44a3a"/><circle cx="20" cy="20" r="1.1" fill="#f6f0e5"/><line x1="8" y1="18" x2="4" y2="16" stroke="#c49a4a" stroke-width=".7"/><line x1="32" y1="18" x2="36" y2="16" stroke="#c49a4a" stroke-width=".7"/></svg></div>
         <div class="meta-title">知著 · Observability</div>
         <div class="meta-desc">信号隐于噪声，<br>趋势藏于毫末。<br>可观测性之道，<br>即从微弱的指标波动中<br>读出系统的全貌。</div>
       </div>
       <div class="meta-item">
-        <div class="meta-icon"><svg viewBox="0 0 40 40" width="28" height="28"><path d="M20 34 Q20 30 20 24" fill="none" stroke="#b89352" stroke-width="1.1"/><path d="M20 24 Q22 26 26 22 Q24 18 22 20 Q20 16 18 20 Q16 18 14 22 Q18 26 20 24Z" fill="none" stroke="#b89352" stroke-width=".9"/><path d="M20 24 Q22 26 24 22 Q22 20 21 22Z" fill="none" stroke="#b89352" stroke-width=".6"/><path d="M20 24 Q18 26 16 22 Q18 20 19 22Z" fill="none" stroke="#b89352" stroke-width=".6"/><circle cx="20" cy="22" r="1.6" fill="#b88050"/></svg></div>
+        <div class="meta-icon"><svg viewBox="0 0 40 40" width="28" height="28"><path d="M20 34 Q20 30 20 24" fill="none" stroke="#c49a4a" stroke-width="1.1"/><path d="M20 24 Q22 26 26 22 Q24 18 22 20 Q20 16 18 20 Q16 18 14 22 Q18 26 20 24Z" fill="none" stroke="#c49a4a" stroke-width=".9"/><path d="M20 24 Q22 26 24 22 Q22 20 21 22Z" fill="none" stroke="#c49a4a" stroke-width=".6"/><path d="M20 24 Q18 26 16 22 Q18 20 19 22Z" fill="none" stroke="#c49a4a" stroke-width=".6"/><circle cx="20" cy="22" r="1.6" fill="#c44a3a"/></svg></div>
         <div class="meta-title">见终 · Foresight</div>
         <div class="meta-desc">「吾畏其卒，故怖其始」——<br>每一个技术决策的当下，<br>都隐含着数年之后<br>要么是护城河、<br>要么是技术债的终局。</div>
       </div>
