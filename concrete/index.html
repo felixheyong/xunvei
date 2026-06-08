@@ -3,8 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Twintec 钢纤维混凝土组合级配分析</title>
+<title>Twintec 混凝土组合骨料级配分析</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<meta name="copyright" content="HE YONG — Twintec SFRC Mix 技术整合和汉化">
+<meta name="author" content="HE YONG">
+<meta name="robots" content="noarchive">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
 
@@ -45,20 +48,6 @@
   }
 
   .container { max-width: 1280px; margin: 0 auto; padding: 32px 24px 64px; }
-
-  /* ── 水印：宋式墨迹，全页覆盖 ── */
-  .wm-layer {
-    position: fixed; inset: 0; z-index: 99999; pointer-events: none;
-    overflow: hidden; user-select: none; -webkit-user-select: none;
-  }
-  .wm-row {
-    display: flex; justify-content: center; gap: 120px;
-    transform: rotate(-18deg); opacity: .06;
-    font-family: "Noto Serif SC","Source Han Serif SC","Songti SC",serif;
-    font-size: 1.6rem; font-weight: 600; letter-spacing: .16em;
-    color: var(--text); white-space: nowrap;
-    line-height: 3.2; pointer-events: none;
-  }
 
   /* ===== Header ===== */
   .header {
@@ -209,13 +198,15 @@
     background: #faf8f3;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    padding: 9px 12px;
+    padding: 10px 14px;
     margin: 10px 0;
     font-family: 'Courier New', 'Noto Sans SC', monospace;
-    font-size: .81rem;
+    font-size: .84rem;
     color: var(--text);
     text-align: center;
     letter-spacing: .02em;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   /* ===== Adjustment cards ===== */
@@ -256,15 +247,46 @@
     padding-top: 22px;
     border-top: 1px solid var(--border);
   }
+
+  /* ── 水印 ── */
+  .watermark-layer {
+    position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden;
+  }
+  .watermark-layer svg {
+    width: 100%; height: 100%;
+  }
+  .watermark-text {
+    font-size: 48px;           /* 大字 */
+    fill: rgba(46,42,37,.04);  /* 极淡墨色 */
+    font-family: 'Inter', 'Noto Sans SC', sans-serif;
+    font-weight: 700;
+    letter-spacing: 6px;
+  }
 </style>
 </head>
 <body>
 
+<!-- 水印层 -->
+<div class="watermark-layer">
+  <svg xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="wm" x="0" y="0" width="520" height="180" patternUnits="userSpaceOnUse">
+        <text x="260" y="90" text-anchor="middle" dominant-baseline="middle"
+              class="watermark-text" transform="rotate(-25, 260, 90)">HE YONG</text>
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#wm)"/>
+  </svg>
+</div>
+
 <!-- ===== HEADER ===== -->
 <div class="header">
   <div class="container">
-    <h1>钢纤维混凝土组合骨料级配分析</h1>
-    <p class="sub">基于 Twintec SFRC Mix 配合比技术</p>
+    <h1>混凝土组合骨料级配分析</h1>
+    <p class="sub">
+      基于 Twintec SFRC Mix 配合比技术 &nbsp;·&nbsp; 技术整合和汉化 HE YONG
+      <span style="display:inline-block;margin-left:10px;font-size:.62rem;padding:2px 8px;border-radius:50px;border:1px solid rgba(255,255,255,.2);color:#c4bcb0;vertical-align:middle;">© 版权所有</span>
+    </p>
   </div>
 </div>
 
@@ -393,14 +415,19 @@
       </select>
       <span style="font-size:.76rem;color:var(--muted);">每立方米材料用量，骨料用量随比例自动换算。</span>
     </p>
-    <table style="font-size:.78rem;">
+    <table style="font-size:.78rem;table-layout:fixed;width:100%;">
+      <colgroup>
+        <col style="width:55%;">
+        <col style="width:22%;">
+        <col style="width:23%;">
+      </colgroup>
       <thead><tr><th>材料</th><th>用量 (kg)</th><th>占比</th></tr></thead>
       <tbody id="mixTable"></tbody>
       <tfoot>
         <tr style="font-weight:700;border-top:2px solid #d8d2c4;">
-          <td>总 计</td>
-          <td id="mixTotal">—</td>
-          <td>100%</td>
+          <td style="text-align:center;">容重</td>
+          <td id="mixTotal" style="text-align:center;">—</td>
+          <td style="text-align:center;">100%</td>
         </tr>
       </tfoot>
     </table>
@@ -492,7 +519,7 @@
 </div>
 
 <footer>
-  Twintec Combined Grading Analysis — Particle Packing Density Theory (Fuller · Andreasen · CPM)
+  Twintec Combined Grading Analysis · Particle Packing Density Theory (Fuller · Andreasen · CPM) &nbsp;|&nbsp; HE YONG
 </footer>
 
 </div><!-- /container -->
@@ -876,9 +903,12 @@ function updateFM() {
       地坪推荐混合砂 FM：2.5 – 3.2 &nbsp; ${fmInRange ? '✅ 合规' : '⚠ 超出推荐范围'}
     </div>
     <hr style="border:none;border-top:1px solid var(--border);margin:14px 0 10px;">
-    <table style="font-size:.78rem;">
+    <table style="font-size:.78rem;table-layout:fixed;width:100%;">
+      <colgroup>
+        <col style="width:55%;"><col style="width:20%;"><col style="width:25%;">
+      </colgroup>
       <thead>
-        <tr><th colspan="3" style="text-align:left;font-size:.8rem;">砂率 (Sand Ratio)</th></tr>
+        <tr><th colspan="3" style="text-align:left;font-size:.78rem;">砂率 (Sand Ratio)</th></tr>
       </thead>
       <tbody>
         <tr>
@@ -892,8 +922,9 @@ function updateFM() {
           <td></td>
         </tr>
         <tr style="font-weight:700;border-top:2px solid #d8d2c4;background:#f9f6ef;">
-          <td style="text-align:left;">砂率</td>
-          <td colspan="2"><strong style="font-size:1.05rem;color:var(--accent);">${fmtPct1(sandRatio)}%</strong></td>
+          <td style="text-align:left;">砂 率</td>
+          <td><strong style="font-size:1.05rem;color:var(--accent);">${fmtPct1(sandRatio)}%</strong></td>
+          <td></td>
         </tr>
       </tbody>
     </table>
@@ -929,9 +960,9 @@ function updateMixDesign() {
   const tbody = document.getElementById('mixTable');
   tbody.innerHTML = mixRows.map(r => `
     <tr>
-      <td>${r.name}</td>
-      <td>${r.kg}${r.unit ? ' ' + r.unit : ''}</td>
-      <td>${r.unit ? '—' : ((r.kg / totalKg) * 100).toFixed(1) + '%'}</td>
+      <td style="text-align:center;">${r.name}</td>
+      <td style="text-align:center;">${r.kg}${r.unit ? ' ' + r.unit : ''}</td>
+      <td style="text-align:center;">${r.unit ? '—' : ((r.kg / totalKg) * 100).toFixed(1) + '%'}</td>
     </tr>
   `).join('');
   document.getElementById('mixTotal').textContent = totalKg + ' kg';
@@ -1255,19 +1286,85 @@ function runOptimization(initialViolations, msgEl) {
 buildFormTable();
 </script>
 
+<!-- 访问日志记录 — 调用 visit_log.php -->
+<script>
+(function(){
+  var logUrl = 'visit_log.php?json=1';
+  if (window.fetch) {
+    fetch(logUrl, { method: 'GET', cache: 'no-cache' }).catch(function(){});
+  } else {
+    var img = new Image();
+    img.src = logUrl;
+  }
+})();
+</script>
 
-<!-- 水印：宋式松烟墨迹，全页保护 -->
-<div class="wm-layer" aria-hidden="true">
-  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
-  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
-  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
-  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
-  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
-  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
-  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
-  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
-  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
-  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
-</div>
+<!-- 版权保护 -->
+<script>
+(function() {
+  // 控制台版权声明
+  console.log('%c© HE YONG — Twintec SFRC Mix 技术整合和汉化 %c未经授权禁止复制、转载、套用',
+    'font-size:14px;font-weight:bold;color:#6b8e89;','font-size:12px;color:#c49555;');
+  console.log('%c本页面受版权保护，侵权必究','font-size:11px;color:#b85a3f;');
+
+  // 禁用右键菜单（在全文中生效）
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    showCopyAlert();
+    return false;
+  });
+
+  // 禁用 Ctrl+U / Ctrl+S / Ctrl+Shift+I / F12
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S')) {
+      e.preventDefault(); showCopyAlert(); return false;
+    }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I' || e.key === 'j' || e.key === 'J' || e.key === 'c' || e.key === 'C')) {
+      e.preventDefault(); showCopyAlert(); return false;
+    }
+    if (e.key === 'F12') { e.preventDefault(); showCopyAlert(); return false; }
+  });
+
+  // 复制提示
+  var alertShown = false;
+  function showCopyAlert() {
+    if (alertShown) return;
+    alertShown = true;
+    var div = document.createElement('div');
+    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99999;'
+      + 'background:rgba(46,42,37,.92);color:#f3efe8;padding:18px 32px;border-radius:10px;'
+      + 'font-family:Inter,"Noto Sans SC",sans-serif;font-size:.92rem;text-align:center;'
+      + 'box-shadow:0 8px 32px rgba(0,0,0,.25);border:1px solid rgba(196,154,74,.3);'
+      + 'animation:fadeIn .3s ease;';
+    div.innerHTML = '© HE YONG<br><span style="font-size:.72rem;color:#c4bcb0;">本页面内容受版权保护，未经授权禁止复制、转载。</span>';
+    document.body.appendChild(div);
+    setTimeout(function() { div.remove(); alertShown = false; }, 2200);
+  }
+
+  // CSS 动画注入
+  var style = document.createElement('style');
+  style.textContent = '@keyframes fadeIn{from{opacity:0;transform:translate(-50%,-50%) scale(.92)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}';
+  document.head.appendChild(style);
+
+  // 防止选中关键内容区域
+  document.addEventListener('DOMContentLoaded', function() {
+    var protectSelectors = [
+      '.card h2',       // 卡片标题
+      '.callout',       // 结论
+      '#fmGrid',        // FM 数据
+      '.theory-grid',   // 理论卡片
+      '.formula',       // 公式
+    ];
+    protectSelectors.forEach(function(sel) {
+      var els = document.querySelectorAll(sel);
+      els.forEach(function(el) {
+        el.style.userSelect = 'none';
+        el.style.webkitUserSelect = 'none';
+      });
+    });
+  });
+})();
+</script>
+
 </body>
 </html>
