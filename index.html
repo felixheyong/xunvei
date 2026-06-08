@@ -13,7 +13,6 @@
   :root {
     /* ── 唐 · 敦煌基底：壁画地仗 + 铅白 ── */
     --bg: #efe6d6;
-    --bg-card: #f6f0e5;
     --edge: rgba(180,160,130,0.14);
     --edge-hover: rgba(180,160,130,0.25);
     --shadow: 0 2px 16px rgba(80,50,20,0.03);
@@ -21,20 +20,14 @@
     --highlight: inset 0 1px 0 rgba(255,255,255,0.4);
     --highlight-hover: inset 0 1px 0 rgba(255,255,255,0.58);
 
-    /* ── 松烟墨 ── */
     --ink: #362e24;
-    --ink-2: #4f463a;
     --ink-3: #6b6052;
     --ink-4: #938878;
     --ink-5: #b8ae9e;
 
-    /* ── 敦煌矿物色 ── */
-    --azurite: #3d5a8e;      /* 石青 */
-    --malachite: #4a7c6b;    /* 石绿 */
-    --cinnabar: #c44a3a;     /* 朱砂 */
-    --gold: #c49a4a;         /* 金粉 */
-    --ochre: #b8834a;        /* 赭石 */
-    --earth: #c4a878;        /* 土黄 */
+    --sans: "Inter","SF Pro Display","Segoe UI",sans-serif;
+    --cinnabar: #c44a3a;
+    --gold: #c49a4a;
 
   }
 
@@ -91,15 +84,15 @@
 
   /* ── 大字 ── */
   .chars{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px;position:relative;z-index:1}
+  .chars>*{position:relative;z-index:1}
   .char-block{display:flex;flex-direction:column;align-items:center}
   .char-large{font-size:clamp(4.5rem,11vw,7rem);font-weight:700;line-height:1.02;letter-spacing:6px;
     background:linear-gradient(172deg,#3a2818 0%,#5c3a1e 18%,#c49a4a 48%,#8b4a2a 76%,#4a2010 100%);
     -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
     filter:drop-shadow(0 2px 6px rgba(180,120,50,.15))}
-  .char-sep{width:2px;height:65px;position:relative;z-index:1;
-    background:linear-gradient(180deg,transparent,rgba(196,154,74,.3),rgba(196,74,58,.2),transparent)}
-  .pinyin{font-size:.7rem;color:var(--ink-4);letter-spacing:3px;font-family:"Inter","SF Pro Display",sans-serif;margin-top:2px;position:relative;z-index:1}
-  .subtitle{font-size:.85rem;color:var(--ink-3);letter-spacing:5px;margin-top:8px;position:relative;z-index:1}
+  .char-sep{width:2px;height:65px;background:linear-gradient(180deg,transparent,rgba(196,154,74,.3),rgba(196,74,58,.2),transparent)}
+  .pinyin{font-size:.7rem;color:var(--ink-4);letter-spacing:3px;font-family:"Inter","SF Pro Display",sans-serif;margin-top:2px}
+  .subtitle{font-size:.85rem;color:var(--ink-3);letter-spacing:5px;margin-top:8px}
 
   /* ── 引用块 ── */
   .quote{text-align:center}
@@ -128,8 +121,8 @@
   /* ── 页脚 ── */
   .footer{text-align:center;padding:2px}
   .footer-refs{font-size:.64rem;color:var(--ink-5);letter-spacing:2px}
-  .footer-domain{font-size:.72rem;color:var(--gold);letter-spacing:3px;margin-top:4px;font-family:"Inter","SF Pro Display","Segoe UI",sans-serif;font-weight:500}
-  .footer-owner{font-size:.58rem;color:var(--ink-5);letter-spacing:3px;margin-top:6px;font-family:"Inter","SF Pro Display","Segoe UI",sans-serif}
+  .footer-domain{font-size:.72rem;color:var(--gold);letter-spacing:3px;margin-top:4px;font-family:var(--sans);font-weight:500}
+  .footer-owner{font-size:.58rem;color:var(--ink-5);letter-spacing:3px;margin-top:6px;font-family:var(--sans)}
 
   /* ── 动画 ── */
   .reveal{opacity:0;transform:translateY(18px);transition:opacity .8s ease,transform .8s ease}
@@ -177,7 +170,7 @@
   <!-- 技术隐喻 -->
   <section class="card meta-section reveal">
     <p class="meta-label">—— 隐喻 ——</p>
-    <p class="outro-text" style="font-size:.8rem">技术亦然。<br>一道边界条件的疏忽，一次依赖链的微末改动，<br>一行未经审视的日志警告——<br>皆如<em style="font-style:normal;color:var(--ru-deep);font-weight:500">象牙之箸</em>，<br>在时间的复利中，孕育着系统的命运。</p>
+    <p class="outro-text" style="font-size:.8rem">技术亦然。<br>一道边界条件的疏忽，一次依赖链的微末改动，<br>一行未经审视的日志警告——<br>皆如<em style="font-style:normal;color:var(--cinnabar);font-weight:500">象牙之箸</em>，<br>在时间的复利中，孕育着系统的命运。</p>
     <div class="divider"></div>
     <div class="meta-grid">
       <div class="meta-item">
@@ -186,7 +179,7 @@
         <div class="meta-desc">一枚指针的偏移、<br>一次竞态条件的偶现——<br>卓越的工程师从不放过<br>任何一个「不合理的小事」。</div>
       </div>
       <div class="meta-item">
-        <div class="meta-icon"><svg viewBox="0 0 40 40" width="28" height="28"><rect x="5" y="5" width="30" height="30" fill="none" stroke="#c49a4a" stroke-width="1.1"/><rect x="5" y="5" width="30" height="30" fill="none" stroke="#c49a4a" stroke-width=".8" transform="rotate(45 20 20)"/><circle cx="20" cy="20" r="2" fill="#c44a3a"/><circle cx="12" cy="12" r=".8" fill="#b89352"/><circle cx="28" cy="12" r=".8" fill="#b89352"/><circle cx="12" cy="28" r=".8" fill="#b89352"/><circle cx="28" cy="28" r=".8" fill="#b89352"/></svg></div>
+        <div class="meta-icon"><svg viewBox="0 0 40 40" width="28" height="28"><rect x="5" y="5" width="30" height="30" fill="none" stroke="#c49a4a" stroke-width="1.1"/><rect x="5" y="5" width="30" height="30" fill="none" stroke="#c49a4a" stroke-width=".8" transform="rotate(45 20 20)"/><circle cx="20" cy="20" r="2" fill="#c44a3a"/><circle cx="12" cy="12" r=".8" fill="#c49a4a"/><circle cx="28" cy="12" r=".8" fill="#c49a4a"/><circle cx="12" cy="28" r=".8" fill="#c49a4a"/><circle cx="28" cy="28" r=".8" fill="#c49a4a"/></svg></div>
         <div class="meta-title">原始 · Architecture</div>
         <div class="meta-desc">第一性原理即「原始」——<br>回溯问题的本质，<br>从根基推导系统的边界，<br>而非在表象上叠加补丁。</div>
       </div>
