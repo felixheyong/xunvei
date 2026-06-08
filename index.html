@@ -11,33 +11,29 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* ── 北宋基底：汝窑天青 + 定窑象牙白 ── */
-    --bg: #f8f5ef;
-    --bg-card: #fcfaf5;
-    --edge: rgba(170,155,130,0.12);
-    --edge-hover: rgba(170,155,130,0.22);
-    --shadow: 0 2px 16px rgba(70,50,25,0.025);
-    --shadow-hover: 0 4px 22px rgba(70,50,25,0.05);
-    --highlight: inset 0 1px 0 rgba(255,255,255,0.5);
-    --highlight-hover: inset 0 1px 0 rgba(255,255,255,0.7);
+    /* ── 南宋基底：官窑灰青 + 西湖烟雨 ── */
+    --bg: #f2efe8;
+    --bg-card: #f8f5ef;
+    --edge: rgba(148,142,132,0.12);
+    --edge-hover: rgba(148,142,132,0.20);
+    --shadow: 0 2px 16px rgba(55,45,30,0.025);
+    --shadow-hover: 0 4px 22px rgba(55,45,30,0.05);
+    --highlight: inset 0 1px 0 rgba(255,255,255,0.45);
+    --highlight-hover: inset 0 1px 0 rgba(255,255,255,0.62);
 
     /* ── 松烟墨 ── */
-    --ink: #302c26;
-    --ink-2: #4d4840;
-    --ink-3: #6c675e;
-    --ink-4: #908c84;
-    --ink-5: #b8b4ab;
+    --ink: #2e2b26;
+    --ink-2: #48453e;
+    --ink-3: #65625b;
+    --ink-4: #8a8781;
+    --ink-5: #b2afa8;
 
-    /* ── 汝窑天青 ── */
-    --ru: #9db5ac;
-    --ru-light: #b8cec5;
-    --ru-deep: #7a9c8e;
-    --ru-mist: #c8d8d1;
+    /* ── 官窑粉青 ── */
+    --ru: #b0bbb3;
+    --ru-light: #c4cec7;
+    --ru-deep: #6e8776;
+    --ru-mist: #cad2cc;
 
-    /* ── 唐金（圣教序段落专用） ── */
-    --tang-gold: #b89352;
-    --tang-ochre: #b88050;
-    --tang-glow: 0 0 36px rgba(184,147,82,0.03);
   }
 
   * { margin:0;padding:0;box-sizing:border-box }
@@ -53,18 +49,18 @@
   /* ── 氛围背景 ── */
   .bg-layer{position:fixed;inset:0;pointer-events:none;z-index:0}
   .bg-gradient{background:
-    radial-gradient(ellipse 58% 38% at 20% 8%, rgba(157,181,172,0.12) 0%,transparent 48%),
-    radial-gradient(ellipse 42% 58% at 74% 38%, rgba(184,206,197,0.08) 0%,transparent 48%),
-    radial-gradient(ellipse 48% 28% at 36% 88%, rgba(200,216,209,0.05) 0%,transparent 40%),
-    radial-gradient(ellipse 65% 45% at 50% 50%, rgba(190,200,195,0.04) 0%,transparent 58%)}
+    radial-gradient(ellipse 58% 38% at 20% 8%, rgba(176,187,179,0.10) 0%,transparent 48%),
+    radial-gradient(ellipse 42% 58% at 74% 38%, rgba(196,206,199,0.07) 0%,transparent 48%),
+    radial-gradient(ellipse 48% 28% at 36% 88%, rgba(202,210,204,0.04) 0%,transparent 40%),
+    radial-gradient(ellipse 65% 45% at 50% 50%, rgba(188,198,193,0.035) 0%,transparent 58%)}
   .paper-texture{
     position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.18;
     background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(130,122,110,0.007) 2px,rgba(130,122,110,0.007) 3px)}
 
   .orb{position:fixed;border-radius:50%;filter:blur(130px);opacity:.16;animation:orbBreathe 20s ease-in-out infinite;pointer-events:none;z-index:0}
-  .orb-1{width:520px;height:520px;background:rgba(157,181,172,.09);top:-18%;left:-14%;animation-delay:0s}
-  .orb-2{width:380px;height:380px;background:rgba(184,206,197,.06);bottom:-16%;right:-10%;animation-delay:-7s}
-  .orb-3{width:300px;height:300px;background:rgba(200,216,209,.04);top:38%;left:54%;animation-delay:-13s}
+  .orb-1{width:520px;height:520px;background:rgba(176,187,179,.08);top:-18%;left:-14%;animation-delay:0s}
+  .orb-2{width:380px;height:380px;background:rgba(196,206,199,.05);bottom:-16%;right:-10%;animation-delay:-7s}
+  .orb-3{width:300px;height:300px;background:rgba(202,210,204,.035);top:38%;left:54%;animation-delay:-13s}
   @keyframes orbBreathe{0%,100%{transform:scale(1);opacity:.16}50%{transform:scale(1.08);opacity:.28}}
 
   /* ── 主容器 ── */
@@ -74,7 +70,7 @@
   .card{background:rgba(250,247,241,.42);border:1px solid var(--edge);border-radius:16px;padding:28px 24px;backdrop-filter:blur(16px) saturate(120%);-webkit-backdrop-filter:blur(16px) saturate(120%);box-shadow:var(--shadow),var(--highlight);transition:all .5s cubic-bezier(.2,0,0,1)}
   .card:hover{border-color:var(--edge-hover);box-shadow:var(--shadow-hover),var(--highlight-hover);transform:translateY(-1px)}
 
-  .hero{text-align:center;padding:50px 22px 36px;background:rgba(250,247,241,.35);border:1px solid rgba(156,148,135,.10);border-radius:20px;backdrop-filter:blur(20px) saturate(125%);-webkit-backdrop-filter:blur(20px) saturate(125%);box-shadow:0 3px 24px rgba(60,45,25,.025),inset 0 1px 0 rgba(255,255,255,.65)}
+  .hero{text-align:center;padding:50px 22px 36px;background:rgba(248,245,239,.35);border:1px solid rgba(148,142,132,.10);border-radius:20px;backdrop-filter:blur(20px) saturate(125%);-webkit-backdrop-filter:blur(20px) saturate(125%);box-shadow:0 3px 24px rgba(55,45,30,.025),inset 0 1px 0 rgba(255,255,255,.6)}
 
   /* ── 大字 ── */
   .chars{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:10px}
@@ -94,12 +90,6 @@
   .qt-note{font-size:.78rem;line-height:2.1;color:var(--ink-3);letter-spacing:1.5px;margin-top:20px}
   .qt-note em{font-style:normal;color:var(--ru-deep);font-weight:500}
   .divider{width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(156,148,135,.3),transparent);margin:22px auto}
-
-  /* ── 盛唐段落（圣教序） ── */
-  .tang-section .qt em{color:var(--tang-gold)}
-  .tang-section .qt-note em{color:var(--tang-gold)}
-  .tang-divider{width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(184,147,82,.35),transparent);margin:22px auto}
-  .tang-section{border-left:2px solid rgba(184,147,82,.25);box-shadow:var(--shadow),var(--tang-glow),var(--highlight)}
 
   /* ── 隐喻 ── */
   .meta-section{text-align:center;padding:28px 22px;border-left:2px solid rgba(157,181,172,.3)}
@@ -126,10 +116,10 @@
   .reveal{opacity:0;transform:translateY(18px);transition:opacity .8s ease,transform .8s ease}
   .reveal.visible{opacity:1;transform:translateY(0)}
 
-  ::selection{background:rgba(106,135,116,.18);color:var(--ink)}
+  ::selection{background:rgba(110,135,118,.16);color:var(--ink)}
   ::-webkit-scrollbar{width:4px}
   ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{background:rgba(156,148,135,.16);border-radius:2px}
+  ::-webkit-scrollbar-thumb{background:rgba(148,142,132,.14);border-radius:2px}
 </style>
 </head>
 <body>
@@ -164,18 +154,6 @@
     <p class="qt-src">—— 南朝宋 · 刘义庆《世说新语 · 赏誉》</p>
     <div class="divider"></div>
     <p class="qt-note" style="font-size:.74rem">王濛赞叹支道林阐发玄理时<em>寻绎精微</em>的功夫，<br>丝毫不逊于少年天才王弼。<br>魏晋名士以「寻微」为至高的智识品格——<br>能于经典的缝隙中见人所未见，<br>于义理的毫芒处开天辟地。</p>
-  </section>
-
-  <!-- 3. 圣教序（盛唐） -->
-  <section class="card quote tang-section reveal" style="padding:30px 26px">
-    <p class="qt" style="font-size:1.02rem;line-height:2.5">盖闻<em>二仪有像</em>，显覆载以含生；<br><em>四时无形</em>，潜寒暑以化物。<br>是以像显可征，虽愚不惑；<br><em>形潜莫睹，在智犹迷</em>。</p>
-    <div class="tang-divider"></div>
-    <p class="qt" style="font-size:1.02rem;line-height:2.5">大之则<em>弥于宇宙</em>，细之则<em>摄于毫厘</em>。<br>无灭无生，历千劫而不古；<br>若隐若显，运百福而长今。</p>
-    <div class="tang-divider"></div>
-    <p class="qt" style="font-size:1.02rem">承至言于先圣，受真教于上贤，<br><em>探赜妙门，精穷奥业</em>。</p>
-    <p class="qt-src">—— 唐 · 太宗李世民《大唐三藏圣教序》</p>
-    <div class="divider"></div>
-    <p class="qt-note" style="font-size:.74rem">佛道崇虚，乘幽控寂。<br>大的，弥满宇宙；小的，纳入毫厘。<br>有形之物，愚者亦能辨识；<em>无形之理，智者尚且沉迷</em>。<br>玄奘西行十七载，<br><em>探赜妙门</em>——于幽微处叩问真理之门；<br><em>精穷奥业</em>——以毕生心力穷尽深奥之业。<br>此与「<em>寻微</em>」异曲同工：<br>皆是以微末之身，探宇宙之赜。</p>
   </section>
 
   <!-- 技术隐喻 -->
@@ -215,7 +193,7 @@
   </section>
 
   <footer class="footer reveal">
-    <p class="footer-refs">晋 ·《抱朴子》| 南朝宋 ·《世说新语》| 唐 ·《圣教序》</p>
+    <p class="footer-refs">晋 ·《抱朴子》| 南朝宋 ·《世说新语》</p>
     <p class="footer-domain">xunvei.com</p>
     <p class="footer-owner">HE YONG</p>
   </footer>
