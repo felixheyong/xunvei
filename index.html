@@ -8,339 +8,213 @@
 <title>寻微 — 寻微以知著，原始以见终</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* Dominant: warm stone/earth — one neutral system */
-    --stone-50: #f8f3ea;
-    --stone-100: #efe8db;
-    --stone-200: #e0d6c4;
-    --stone-500: #a89880;
-    --stone-700: #5c5040;
+    /* ── 唐 · 敦煌基底：壁画地仗 + 铅白 ── */
+    --bg: #efe6d6;
+    --edge: rgba(180,160,130,0.14);
+    --edge-hover: rgba(180,160,130,0.25);
+    --shadow: 0 2px 16px rgba(80,50,20,0.03);
+    --shadow-hover: 0 4px 22px rgba(80,50,20,0.06);
+    --highlight: inset 0 1px 0 rgba(255,255,255,0.4);
+    --highlight-hover: inset 0 1px 0 rgba(255,255,255,0.58);
 
-    /* Accent: cinnabar — below 80% saturation, WCAG AA on stone */
-    --accent: #b84138;
+    --ink: #362e24;
+    --ink-3: #6b6052;
+    --ink-4: #938878;
+    --ink-5: #b8ae9e;
 
-    /* Ink */
-    --ink: #2a231c;
+    --sans: "Inter","SF Pro Display","Segoe UI",sans-serif;
+    --cinnabar: #c44a3a;
+    --gold: #c49a4a;
 
-    /* Spatial rhythm: 4px grid */
-    --s0: 4px;
-    --s2: 8px;
-    --s4: 16px;
-    --s6: 24px;
-    --s8: 32px;
-    --s10: 40px;
-    --s16: 64px;
   }
 
-  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box }
+  * { margin:0;padding:0;box-sizing:border-box }
 
   body {
-    font-family: "Noto Serif SC", "Noto Sans SC", serif;
-    background: var(--stone-100);
-    color: var(--ink);
-    min-height: 100dvh;
-    display: flex; align-items: flex-start; justify-content: center;
-    padding: var(--s16) var(--s4);
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
+    font-family: "Noto Serif SC","Noto Sans SC","Source Han Serif SC","Songti SC",serif;
+    min-height:100vh;background:var(--bg);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    overflow-x:hidden;position:relative;
+    -webkit-font-smoothing:antialiased;
   }
 
-  /* ── Fixed backdrop layer: grain texture ── */
-  body::before {
-    content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-    opacity: .12;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
+  /* ── 氛围背景 ── */
+  .bg-layer{position:fixed;inset:0;pointer-events:none;z-index:0}
+  .bg-gradient{background:
+    radial-gradient(ellipse 60% 40% at 18% 10%, rgba(196,154,74,0.08) 0%,transparent 50%),
+    radial-gradient(ellipse 45% 55% at 75% 42%, rgba(61,90,142,0.05) 0%,transparent 50%),
+    radial-gradient(ellipse 50% 32% at 40% 86%, rgba(196,74,58,0.04) 0%,transparent 42%),
+    radial-gradient(ellipse 65% 48% at 52% 48%, rgba(196,168,120,0.04) 0%,transparent 56%)}
+  .paper-texture{
+    position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.2;
+    background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(150,130,100,0.008) 2px,rgba(150,130,100,0.008) 3px)}
 
-  .main {
-    position: relative; z-index: 1;
-    width: 100%; max-width: 640px;
-    display: flex; flex-direction: column;
-    gap: var(--s10);
-    padding-bottom: var(--s16);
-  }
+  .orb{position:fixed;border-radius:50%;filter:blur(120px);opacity:.14;animation:orbBreathe 20s ease-in-out infinite;pointer-events:none;z-index:0}
+  .orb-1{width:480px;height:480px;background:rgba(196,154,74,.07);top:-16%;left:-12%;animation-delay:0s}
+  .orb-2{width:360px;height:360px;background:rgba(61,90,142,.04);bottom:-14%;right:-8%;animation-delay:-7s}
+  .orb-3{width:280px;height:280px;background:rgba(196,74,58,.03);top:40%;left:56%;animation-delay:-13s}
+  @keyframes orbBreathe{0%,100%{transform:scale(1);opacity:.14}50%{transform:scale(1.08);opacity:.25}}
 
-  /* ── Hero: asymmetric, no gradient, solid ink ── */
-  .hero {
-    position: relative;
-    padding: var(--s16) var(--s8) var(--s10);
-    border-left: 3px solid var(--accent);
-    margin-left: var(--s8);
-  }
+  /* ── 主容器 ── */
+  .main{position:relative;z-index:1;width:100%;max-width:680px;padding:32px 18px 48px;display:flex;flex-direction:column;gap:26px}
 
-  .hero-char {
-    font-family: "Noto Serif SC", serif;
-    font-size: clamp(5rem, 13vw, 8.5rem);
-    font-weight: 700;
-    line-height: 1;
-    color: var(--ink);
-    letter-spacing: -.02em;
-  }
+  /* ── 卡片 ── */
+  .card{background:rgba(250,247,241,.42);border:1px solid var(--edge);border-radius:16px;padding:28px 24px;backdrop-filter:blur(16px) saturate(120%);-webkit-backdrop-filter:blur(16px) saturate(120%);box-shadow:var(--shadow),var(--highlight);transition:all .5s cubic-bezier(.2,0,0,1)}
+  .card:hover{border-color:var(--edge-hover);box-shadow:var(--shadow-hover),var(--highlight-hover);transform:translateY(-1px)}
 
-  .hero-sub {
-    font-family: "Noto Sans SC", sans-serif;
-    font-size: .8rem;
-    font-weight: 400;
-    color: var(--stone-700);
-    letter-spacing: .3em;
-    margin-top: var(--s4);
-    text-transform: uppercase;
-  }
+  .hero{text-align:center;position:relative;overflow:hidden;
+    padding:60px 24px 44px;
+    background:linear-gradient(175deg,rgba(248,240,228,.45) 0%,rgba(240,228,210,.42) 100%);
+    border:1px solid rgba(196,154,74,.15);border-radius:22px;
+    backdrop-filter:blur(20px) saturate(125%);-webkit-backdrop-filter:blur(20px) saturate(125%);
+    box-shadow:0 4px 28px rgba(80,50,20,.03),inset 0 1px 0 rgba(255,255,255,.55)}
+  .hero::before{
+    content:"";position:absolute;inset:8px;pointer-events:none;z-index:0;
+    border:1px solid rgba(196,154,74,.08);border-radius:16px}
 
-  .hero-sub em {
-    font-style: normal;
-    color: var(--accent);
-    font-weight: 500;
-  }
+  /* ── 敦煌装饰：藻井纹样 ── */
+  .dh-deco{position:absolute;pointer-events:none;z-index:0;opacity:.35}
+  .dh-lotus-t{top:14px;left:50%;transform:translateX(-50%);width:60px;height:20px}
+  .dh-lotus-b{bottom:14px;left:50%;transform:translateX(-50%);width:60px;height:20px}
+  .dh-cloud-l{top:50%;left:16px;transform:translateY(-50%);width:16px;height:50px}
+  .dh-cloud-r{top:50%;right:16px;transform:translateY(-50%);width:16px;height:50px}
 
-  /* ── Decorative motes: sparse, GPU-only ── */
-  .mote {
-    position: fixed; pointer-events: none; z-index: 0;
-    width: 2px; height: 2px; background: var(--accent);
-    border-radius: 50%;
-    animation: moteFloat 12s ease-in-out infinite;
-    opacity: 0;
-  }
-  @keyframes moteFloat {
-    0%, 100% { opacity: 0; transform: translateY(100vh); }
-    10% { opacity: .5; }
-    50% { opacity: .35; }
-    90% { opacity: .1; transform: translateY(5vh); }
-  }
+  /* ── 大字 ── */
+  .chars{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px;position:relative;z-index:1}
+  .chars>*{position:relative;z-index:1}
+  .char-block{display:flex;flex-direction:column;align-items:center}
+  .char-large{font-size:clamp(4.5rem,11vw,7rem);font-weight:700;line-height:1.02;letter-spacing:6px;
+    background:linear-gradient(172deg,#3a2818 0%,#5c3a1e 18%,#c49a4a 48%,#8b4a2a 76%,#4a2010 100%);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    filter:drop-shadow(0 2px 6px rgba(180,120,50,.15))}
+  .char-sep{width:2px;height:65px;background:linear-gradient(180deg,transparent,rgba(196,154,74,.3),rgba(196,74,58,.2),transparent)}
+  .pinyin{font-size:.7rem;color:var(--ink-4);letter-spacing:3px;font-family:"Inter","SF Pro Display",sans-serif;margin-top:2px}
+  .subtitle{font-size:.85rem;color:var(--ink-3);letter-spacing:5px;margin-top:8px}
 
-  /* ── Section divider ── */
-  .rule {
-    width: 48px; height: 2px;
-    background: var(--stone-200);
-    margin: var(--s2) 0 var(--s6);
-  }
+  /* ── 引用块 ── */
+  .quote{text-align:center}
+  .qt{font-size:1.1rem;line-height:2.4;letter-spacing:2px;color:var(--ink)}
+  .qt em{font-style:normal;color:var(--cinnabar);font-weight:600}
+  .qt-src{margin-top:14px;font-size:.7rem;color:var(--ink-5);letter-spacing:2px}
+  .qt-note{font-size:.78rem;line-height:2.1;color:var(--ink-3);letter-spacing:1.5px;margin-top:20px}
+  .qt-note em{font-style:normal;color:var(--cinnabar);font-weight:500}
+  .divider{width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(196,154,74,.25),transparent);margin:22px auto}
 
-  /* ── Classic quote card — matte, no glass ── */
-  .card {
-    background: var(--stone-50);
-    border: 1px solid var(--stone-200);
-    padding: var(--s10) var(--s8);
-    transition: border-color .3s ease;
-  }
-  .card:hover { border-color: var(--stone-500); }
+  /* ── 隐喻 ── */
+  .meta-section{text-align:center;padding:28px 22px;border-left:2px solid rgba(196,154,74,.25)}
+  .meta-label{font-size:.64rem;letter-spacing:5px;color:var(--ink-5);margin-bottom:6px}
+  .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+  @media(max-width:520px){.meta-grid{grid-template-columns:1fr}}
+  .meta-item{text-align:center;padding:14px 12px}
+  .meta-icon{margin-bottom:6px}
+  .meta-icon svg{display:block;margin:0 auto}
+  .meta-title{font-size:.76rem;font-weight:600;letter-spacing:1.5px;color:var(--ink);margin-bottom:3px}
+  .meta-desc{font-size:.68rem;line-height:1.8;color:var(--ink-3);letter-spacing:1px}
 
-  /* ── Typography ── */
-  .source-text {
-    font-size: 1.05rem;
-    line-height: 2.2;
-    letter-spacing: .04em;
-    color: var(--ink);
-  }
-  .source-text em {
-    font-style: normal;
-    color: var(--accent);
-    font-weight: 600;
-  }
-  .citation {
-    font-size: .7rem;
-    color: var(--stone-500);
-    letter-spacing: .12em;
-    margin-top: var(--s4);
-  }
-  .interpretation {
-    font-size: .78rem;
-    line-height: 2;
-    color: var(--stone-700);
-    margin-top: var(--s6);
-    padding-top: var(--s6);
-    border-top: 1px solid var(--stone-200);
-  }
-  .interpretation em {
-    font-style: normal;
-    color: var(--accent);
-    font-weight: 500;
-  }
+  /* ── 结语 ── */
+  .outro{text-align:center}
+  .outro-text{font-size:.8rem;line-height:2.4;color:var(--ink-3);letter-spacing:2px}
 
-  /* ── Tech metaphor grid — asymmetric 2-col ── */
-  .meta-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: var(--s4);
-    margin-top: var(--s6);
-  }
-  @media (max-width: 520px) { .meta-grid { grid-template-columns: 1fr; } }
+  /* ── 页脚 ── */
+  .footer{text-align:center;padding:2px}
+  .footer-refs{font-size:.64rem;color:var(--ink-5);letter-spacing:2px}
+  .footer-domain{font-size:.72rem;color:var(--gold);letter-spacing:3px;margin-top:4px;font-family:var(--sans);font-weight:500}
+  .footer-owner{font-size:.58rem;color:var(--ink-5);letter-spacing:3px;margin-top:6px;font-family:var(--sans)}
 
-  .meta-item {
-    border: 1px solid var(--stone-200);
-    padding: var(--s6);
-    background: var(--stone-50);
-    transition: border-color .3s ease;
-  }
-  .meta-item:hover { border-color: var(--stone-500); }
+  /* ── 动画 ── */
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .8s ease,transform .8s ease}
+  .reveal.visible{opacity:1;transform:translateY(0)}
 
-  .meta-title {
-    font-family: "Noto Sans SC", sans-serif;
-    font-size: .72rem;
-    font-weight: 600;
-    letter-spacing: .06em;
-    color: var(--accent);
-    margin-bottom: var(--s2);
-  }
-  .meta-desc {
-    font-size: .68rem;
-    line-height: 1.8;
-    color: var(--stone-700);
-  }
-
-  .meta-intro {
-    font-size: .8rem;
-    line-height: 2;
-    color: var(--stone-700);
-    margin-bottom: var(--s4);
-  }
-  .meta-intro em {
-    font-style: normal;
-    color: var(--accent);
-    font-weight: 500;
-  }
-
-  /* ── Outro ── */
-  .outro {
-    text-align: right;
-    padding-right: var(--s6);
-    border-right: 3px solid var(--stone-200);
-    margin-right: var(--s8);
-  }
-  .outro-text {
-    font-size: .8rem;
-    line-height: 2.2;
-    color: var(--stone-700);
-    letter-spacing: .04em;
-  }
-
-  /* ── Footer ── */
-  .footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    font-family: "Noto Sans SC", sans-serif;
-    font-size: .62rem;
-    color: var(--stone-500);
-    letter-spacing: .1em;
-    padding-top: var(--s6);
-    border-top: 1px solid var(--stone-200);
-  }
-
-  /* ── Reveal animation: GPU-only, spring-like timing ── */
-  .reveal {
-    opacity: 0;
-    transform: translateY(24px);
-    transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1);
-  }
-  .reveal.visible { opacity: 1; transform: translateY(0); }
-
-  @media (prefers-reduced-motion: reduce) {
-    .reveal { transition: none; opacity: 1; transform: none; }
-    .mote { display: none; }
-  }
-
-  ::selection { background: rgba(184,65,56,.15); color: var(--ink); }
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--stone-200); border-radius: 2px; }
+  ::selection{background:rgba(196,74,58,.15);color:var(--ink)}
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(196,154,74,.12);border-radius:2px}
 </style>
 </head>
 <body>
 
-<!-- Decorative motes: sparse GPU-only particles -->
-<div class="mote" style="left:8%;animation-delay:0s"></div>
-<div class="mote" style="left:22%;animation-delay:-3s"></div>
-<div class="mote" style="left:45%;animation-delay:-6s"></div>
-<div class="mote" style="left:68%;animation-delay:-9s"></div>
-<div class="mote" style="left:85%;animation-delay:-2s"></div>
+<div class="bg-layer bg-gradient"></div>
+<div class="paper-texture"></div>
+<div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
 
 <main class="main">
 
-  <!-- Hero: asymmetric, solid ink, left-border accent -->
+  <!-- Hero -->
   <section class="hero reveal">
-    <div class="hero-char">寻微</div>
-    <div class="hero-sub">寻微以知著&emsp;<em>原始以见终</em></div>
+    <!-- 藻井莲花装饰 -->
+    <svg class="dh-deco dh-lotus-t" viewBox="0 0 60 20"><path d="M30 2 L34 8 L40 8 L35 13 L37 19 L30 15 L23 19 L25 13 L20 8 L26 8Z" fill="none" stroke="rgba(196,154,74,.35)" stroke-width=".8"/><circle cx="30" cy="10" r="2" fill="rgba(196,74,58,.25)"/></svg>
+    <svg class="dh-deco dh-lotus-b" viewBox="0 0 60 20"><path d="M30 18 L34 12 L40 12 L35 7 L37 1 L30 5 L23 1 L25 7 L20 12 L26 12Z" fill="none" stroke="rgba(196,154,74,.35)" stroke-width=".8"/><circle cx="30" cy="10" r="2" fill="rgba(196,74,58,.25)"/></svg>
+    <!-- 云纹侧饰 -->
+    <svg class="dh-deco dh-cloud-l" viewBox="0 0 16 50"><path d="M8 5 Q2 12 2 20 Q2 28 8 32 Q4 38 4 42 Q4 48 8 48" fill="none" stroke="rgba(196,154,74,.2)" stroke-width=".7"/><circle cx="8" cy="25" r="1.5" fill="rgba(196,154,74,.18)"/></svg>
+    <svg class="dh-deco dh-cloud-r" viewBox="0 0 16 50"><path d="M8 5 Q14 12 14 20 Q14 28 8 32 Q12 38 12 42 Q12 48 8 48" fill="none" stroke="rgba(196,154,74,.2)" stroke-width=".7"/><circle cx="8" cy="25" r="1.5" fill="rgba(196,154,74,.18)"/></svg>
+
+    <div class="chars">
+      <div class="char-block"><span class="char-large">寻</span><span class="pinyin">xún</span></div>
+      <div class="char-sep"></div>
+      <div class="char-block"><span class="char-large">微</span><span class="pinyin">wēi</span></div>
+    </div>
+    <div class="subtitle">寻微以知著&emsp;原始以见终</div>
   </section>
 
-  <!-- 抱朴子 · 嘉遁 -->
-  <section class="card reveal">
-    <p class="source-text">
-      昔<em>箕子</em>睹象箸而流泣，<br>
-      <em>尼父</em>闻偶葬而永叹，<br>
-      盖<em>寻微以知著</em>，<em>原始以见终</em>。
-    </p>
-    <p class="citation">—— 晋 · 葛洪《抱朴子 · 嘉遁》</p>
-
-    <div class="interpretation">
-      从象牙筷子的微末之变，预见王朝倾覆；<br>
-      自殉葬之制的滥觞之初，洞察礼崩乐坏。<br>
-      圣贤之智，不在通天彻地，<br>
-      而在<em>见微末而知大势，溯本源而见终局</em>。
-    </div>
+  <!-- 1. 抱朴子 -->
+  <section class="card quote reveal">
+    <p class="qt">昔<em>箕子</em>睹象箸而流泣，<br><em>尼父</em>闻偶葬而永叹，<br>盖<em>寻微以知著</em>，<em>原始以见终</em>。</p>
+    <p class="qt-src">—— 晋 · 葛洪《抱朴子 · 嘉遁》</p>
+    <div class="divider"></div>
+    <p class="qt-note">从象牙筷子的微末之变，预见王朝倾覆；<br>自殉葬之制的滥觞之初，洞察礼崩乐坏。<br>圣贤之智，不在通天彻地，<br>而在<em>见微末而知大势，溯本源而见终局</em>。</p>
   </section>
 
   <!-- 技术隐喻 -->
-  <section class="card reveal">
-    <div class="rule"></div>
-    <p class="meta-intro">
-      技术亦然。一道边界条件的疏忽，一次依赖链的微末改动，<br>
-      一行未经审视的日志警告——<br>
-      皆如<em>象牙之箸</em>，在时间的复利中，孕育着系统的命运。
-    </p>
-
+  <section class="card meta-section reveal">
+    <p class="meta-label">—— 隐喻 ——</p>
+    <p class="outro-text" style="font-size:.8rem">技术亦然。<br>一道边界条件的疏忽，一次依赖链的微末改动，<br>一行未经审视的日志警告——<br>皆如<em style="font-style:normal;color:var(--cinnabar);font-weight:500">象牙之箸</em>，<br>在时间的复利中，孕育着系统的命运。</p>
+    <div class="divider"></div>
     <div class="meta-grid">
       <div class="meta-item">
+        <div class="meta-icon"><svg viewBox="0 0 40 40" width="28" height="28"><path d="M20 36 Q18 30 20 22" fill="none" stroke="#c49a4a" stroke-width="1.1"/><path d="M20 22 Q11 15 14 7 Q17 4 20 11Z" fill="none" stroke="#c49a4a" stroke-width="1.1"/><path d="M20 22 Q29 15 26 7 Q23 4 20 11Z" fill="none" stroke="#c49a4a" stroke-width="1.1"/><path d="M20 22 Q20 13 20 3 Q22 6 20 11Z" fill="none" stroke="#c49a4a" stroke-width=".9"/><circle cx="20" cy="4" r="1.5" fill="#c44a3a"/></svg></div>
         <div class="meta-title">寻微 · Debug</div>
-        <div class="meta-desc">一枚指针的偏移、一次竞态条件的偶现——卓越的工程师从不放过任何一个「不合理的小事」。</div>
+        <div class="meta-desc">一枚指针的偏移、<br>一次竞态条件的偶现——<br>卓越的工程师从不放过<br>任何一个「不合理的小事」。</div>
       </div>
       <div class="meta-item">
+        <div class="meta-icon"><svg viewBox="0 0 40 40" width="28" height="28"><rect x="5" y="5" width="30" height="30" fill="none" stroke="#c49a4a" stroke-width="1.1"/><rect x="5" y="5" width="30" height="30" fill="none" stroke="#c49a4a" stroke-width=".8" transform="rotate(45 20 20)"/><circle cx="20" cy="20" r="2" fill="#c44a3a"/><circle cx="12" cy="12" r=".8" fill="#c49a4a"/><circle cx="28" cy="12" r=".8" fill="#c49a4a"/><circle cx="12" cy="28" r=".8" fill="#c49a4a"/><circle cx="28" cy="28" r=".8" fill="#c49a4a"/></svg></div>
         <div class="meta-title">原始 · Architecture</div>
-        <div class="meta-desc">第一性原理即「原始」——回溯问题的本质，从根基推导系统的边界，而非在表象上叠加补丁。</div>
+        <div class="meta-desc">第一性原理即「原始」——<br>回溯问题的本质，<br>从根基推导系统的边界，<br>而非在表象上叠加补丁。</div>
       </div>
       <div class="meta-item">
+        <div class="meta-icon"><svg viewBox="0 0 40 40" width="28" height="28"><path d="M8 22 Q12 14 20 15 Q28 14 32 22" fill="none" stroke="#c49a4a" stroke-width="1.2"/><path d="M10 24 Q20 30 30 24" fill="none" stroke="#c49a4a" stroke-width=".9"/><ellipse cx="20" cy="20" rx="2.8" ry="2.3" fill="#c44a3a"/><circle cx="20" cy="20" r="1.1" fill="#f6f0e5"/><line x1="8" y1="18" x2="4" y2="16" stroke="#c49a4a" stroke-width=".7"/><line x1="32" y1="18" x2="36" y2="16" stroke="#c49a4a" stroke-width=".7"/></svg></div>
         <div class="meta-title">知著 · Observability</div>
-        <div class="meta-desc">信号隐于噪声，趋势藏于毫末。可观测性之道，即从微弱的指标波动中读出系统的全貌。</div>
+        <div class="meta-desc">信号隐于噪声，<br>趋势藏于毫末。<br>可观测性之道，<br>即从微弱的指标波动中<br>读出系统的全貌。</div>
       </div>
       <div class="meta-item">
+        <div class="meta-icon"><svg viewBox="0 0 40 40" width="28" height="28"><path d="M20 34 Q20 30 20 24" fill="none" stroke="#c49a4a" stroke-width="1.1"/><path d="M20 24 Q22 26 26 22 Q24 18 22 20 Q20 16 18 20 Q16 18 14 22 Q18 26 20 24Z" fill="none" stroke="#c49a4a" stroke-width=".9"/><path d="M20 24 Q22 26 24 22 Q22 20 21 22Z" fill="none" stroke="#c49a4a" stroke-width=".6"/><path d="M20 24 Q18 26 16 22 Q18 20 19 22Z" fill="none" stroke="#c49a4a" stroke-width=".6"/><circle cx="20" cy="22" r="1.6" fill="#c44a3a"/></svg></div>
         <div class="meta-title">见终 · Foresight</div>
-        <div class="meta-desc">「吾畏其卒，故怖其始」——每一个技术决策都隐含着数年之后护城河或技术债的终局。</div>
+        <div class="meta-desc">「吾畏其卒，故怖其始」——<br>每一个技术决策的当下，<br>都隐含着数年之后<br>要么是护城河、<br>要么是技术债的终局。</div>
       </div>
     </div>
   </section>
 
   <!-- 结语 -->
   <section class="card outro reveal">
-    <p class="outro-text">
-      万物皆有其兆。<br>
-      微末之处，藏天地之机；<br>
-      起始之端，蕴终结之果。<br>
-      智者的眼睛，不在于看得更远，<br>
-      而在于看得更深。
-    </p>
+    <p class="outro-text">万物皆有其兆。<br>微末之处，藏天地之机；<br>起始之端，蕴终结之果。<br>智者的眼睛，不在于看得更远，<br>而在于看得更深。</p>
+    <div class="divider"></div>
+    <p class="outro-text" style="font-size:.7rem;color:var(--ink-5)">「寻微」—— 于无声处听惊雷，于细微处见真章</p>
   </section>
 
   <footer class="footer reveal">
-    <span>晋 ·《抱朴子》</span>
-    <span>xunvei.com</span>
-    <span>HE YONG</span>
+    <p class="footer-refs">晋 ·《抱朴子》</p>
+    <p class="footer-domain">xunvei.com</p>
+    <p class="footer-owner">HE YONG</p>
   </footer>
 
 </main>
 
 <script>
-const o = new IntersectionObserver((entries) => {
-  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-}, { threshold: 0.1, rootMargin: '0px 0px -20px 0px' });
-document.querySelectorAll('.reveal').forEach(el => o.observe(el));
-window.addEventListener('load', () => {
-  document.querySelectorAll('.reveal').forEach(el => {
-    if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('visible');
-  });
-  // Render initial motes
-  document.querySelectorAll('.mote').forEach(m => m.style.opacity = '');
-});
+const o=new IntersectionObserver((e)=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible')})},{threshold:.08,rootMargin:'0px 0px -12px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>o.observe(el));
+window.addEventListener('load',()=>{document.querySelectorAll('.reveal').forEach(el=>{if(el.getBoundingClientRect().top<window.innerHeight)el.classList.add('visible')})});
 </script>
 </body>
 </html>
