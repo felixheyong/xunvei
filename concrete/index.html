@@ -46,6 +46,20 @@
 
   .container { max-width: 1280px; margin: 0 auto; padding: 32px 24px 64px; }
 
+  /* ── 水印：宋式墨迹，全页覆盖 ── */
+  .wm-layer {
+    position: fixed; inset: 0; z-index: 99999; pointer-events: none;
+    overflow: hidden; user-select: none; -webkit-user-select: none;
+  }
+  .wm-row {
+    display: flex; justify-content: center; gap: 120px;
+    transform: rotate(-18deg); opacity: .06;
+    font-family: "Noto Serif SC","Source Han Serif SC","Songti SC",serif;
+    font-size: 1.6rem; font-weight: 600; letter-spacing: .16em;
+    color: var(--text); white-space: nowrap;
+    line-height: 3.2; pointer-events: none;
+  }
+
   /* ===== Header ===== */
   .header {
     background: linear-gradient(165deg, #2a2722 0%, #3b3630 40%, #4a3f35 100%);
@@ -1241,5 +1255,19 @@ function runOptimization(initialViolations, msgEl) {
 buildFormTable();
 </script>
 
+
+<!-- 水印：宋式松烟墨迹，全页保护 -->
+<div class="wm-layer" aria-hidden="true">
+  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
+  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
+  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
+  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
+  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
+  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
+  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
+  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
+  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
+  <div class="wm-row">HE YONG  HE YONG  HE YONG  HE YONG  HE YONG</div>
+</div>
 </body>
 </html>
