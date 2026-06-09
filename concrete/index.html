@@ -560,6 +560,15 @@ let proportions = [...ORIGINAL_PROPS];
 let chart;
 let concreteGrade = 'C35';
 
+// mixQtys: [cement, flyAsh, ggbs, agg0, agg1, agg2, agg3, water, pc, steelFiber]
+let mixQtys = [];
+function initMixQtys() {
+  const sum = proportions.reduce((a, b) => a + b, 0);
+  const totalAgg = 1853; // 标准总骨料重量基准
+  const aggKgs = proportions.map((p, i) => Math.round(totalAgg * p / sum));
+  mixQtys = [293, 35, 77, aggKgs[0], aggKgs[1], aggKgs[2], aggKgs[3], 185, 6.5, 30];
+}
+
 // ========== DERIVED COMPUTATIONS ==========
 function getCombined() {
   return SIEVE_SIZES.map((_, i) => {
@@ -669,6 +678,55 @@ function onPropChange(e) {
   const sum = proportions.reduce((a, b) => a + b, 0);
   document.getElementById('propSum').textContent = (sum * 100).toFixed(1);
   document.getElementById('propSum').style.color = Math.abs(sum - 1) > 0.01 ? 'var(--fail)' : 'var(--accent)';
+  // Sync aggregate quantities in mix design from new proportions
+  syncMixFromAgg();
+  updateAll();
+}
+
+// ========== MIX QUANTITY <-> PROPORTION SYNC ==========
+function syncMixFromAgg() {
+  // Derive aggregate mix quantities from current proportions
+  const totalAgg = mixQtys[3] + mixQtys[4] + mixQtys[5] + mixQtys[6];
+  const sum = proportions.reduce((a, b) => a + b, 0);
+  if (sum > 0 && totalAgg > 0) {
+    for (let i = 0; i < 4; i++) {
+      mixQtys[3 + i] = Math.round(totalAgg * proportions[i] / sum);
+    }
+  }
+}
+
+function syncAggFromMix() {
+  // Derive aggregate proportions from current mix quantities
+  const totalAgg = mixQtys[3] + mixQtys[4] + mixQtys[5] + mixQtys[6];
+  if (totalAgg > 0) {
+    for (let i = 0; i < 4; i++) {
+      proportions[i] = mixQtys[3 + i] / totalAgg;
+    }
+  } else {
+    // If all aggregates are zero, keep proportions unchanged
+  }
+}
+
+function onMixQtyChange(e) {
+  const idx = parseInt(e.target.dataset.idx);
+  let val = parseFloat(e.target.value);
+  if (isNaN(val)) val = 0;
+  val = Math.max(0, Math.min(3000, val));
+  mixQtys[idx] = Math.round(val);
+
+  // If an aggregate quantity changed, update grading proportions
+  if (idx >= 3 && idx <= 6) {
+    syncAggFromMix();
+    // Update proportion input displays
+    document.querySelectorAll('.agg-prop').forEach(inp => {
+      const a = parseInt(inp.dataset.agg);
+      if (document.activeElement !== inp) inp.value = (proportions[a] * 100).toFixed(0);
+    });
+    const sum = proportions.reduce((a, b) => a + b, 0);
+    document.getElementById('propSum').textContent = (sum * 100).toFixed(1);
+    document.getElementById('propSum').style.color = Math.abs(sum - 1) > 0.01 ? 'var(--fail)' : 'var(--accent)';
+  }
+
   updateAll();
 }
 
@@ -936,36 +994,69 @@ function fmtPct1(v) { return (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/
 
 // ========== MIX DESIGN ==========
 function updateMixDesign() {
-  const sum = proportions.reduce((a, b) => a + b, 0);
-  const totalAgg = 1853; // 原始总骨料 kg
-  const aggKgs = proportions.map((p, i) => Math.round(totalAgg * p / sum));
-
   const mixRows = [
-    { name: '普通硅酸盐水泥 (P·O 42.5)', kg: 293 },
-    { name: '粉煤灰', kg: 35 },
-    { name: '矿粉 (GGBS)', kg: 77 },
-    { name: '碎石 ①（20mm）', kg: aggKgs[0] },
-    { name: '碎石 ②（10mm）', kg: aggKgs[1] },
-    { name: '砂 ①（5mm 机制砂）', kg: aggKgs[2] },
-    { name: '砂 ②（超细砂）', kg: aggKgs[3] },
-    { name: '用水量', kg: 185 },
-    { name: '减水剂 (PC)', kg: 6.5, unit: 'L' },
-    { name: '钢纤维', kg: 30 },
+    { id: 'cement',  name: '普通硅酸盐水泥 (P·O 42.5)', idx: 0 },
+    { id: 'flyash',  name: '粉煤灰',                     idx: 1 },
+    { id: 'ggbs',    name: '矿粉 (GGBS)',                 idx: 2 },
+    { id: 'agg0',    name: '碎石 ①（20mm）',              idx: 3 },
+    { id: 'agg1',    name: '碎石 ②（10mm）',              idx: 4 },
+    { id: 'agg2',    name: '砂 ①（5mm 机制砂）',          idx: 5 },
+    { id: 'agg3',    name: '砂 ②（超细砂）',              idx: 6 },
+    { id: 'water',   name: '用水量',                      idx: 7 },
+    { id: 'pc',      name: '减水剂 (PC)',                 idx: 8, unit: 'L' },
+    { id: 'steel',   name: '钢纤维',                      idx: 9 },
   ];
 
-  const totalBinder = 293 + 35 + 77; // cement + fly ash + ggbs
-  const wcm = (185 / totalBinder).toFixed(3);
+  const totalBinder = mixQtys[0] + mixQtys[1] + mixQtys[2];
+  const wcm = mixQtys[7] > 0 ? (mixQtys[7] / totalBinder).toFixed(3) : '—';
 
-  const totalKg = mixRows.reduce((s, r) => s + (r.unit ? 0 : r.kg), 0);
+  // total kg: exclude liquid admixtures (index 8 has unit)
+  const totalKg = mixQtys.reduce((s, q, i) => {
+    if (i === 8) return s; // PC is liquid, excluded from mass total
+    return s + q;
+  }, 0);
+
   const tbody = document.getElementById('mixTable');
-  tbody.innerHTML = mixRows.map(r => `
-    <tr>
-      <td style="text-align:center;">${r.name}</td>
-      <td style="text-align:center;">${r.kg}${r.unit ? ' ' + r.unit : ''}</td>
-      <td style="text-align:center;">${r.unit ? '—' : ((r.kg / totalKg) * 100).toFixed(1) + '%'}</td>
-    </tr>
-  `).join('');
+
+  // Preserve focused input state before rebuilding
+  const activeEl = document.activeElement;
+  const savedIdx = activeEl && activeEl.classList.contains('mix-qty') ? parseInt(activeEl.dataset.idx) : -1;
+  const savedStart = savedIdx >= 0 ? activeEl.selectionStart : 0;
+  const savedEnd   = savedIdx >= 0 ? activeEl.selectionEnd : 0;
+
+  tbody.innerHTML = mixRows.map(r => {
+    const qty = mixQtys[r.idx];
+    const hasUnit = !!r.unit;
+    const pct = hasUnit ? '—' : ((qty / totalKg) * 100).toFixed(1) + '%';
+    const isAgg = r.idx >= 3 && r.idx <= 6;
+    return `
+      <tr>
+        <td style="text-align:center;">${r.name}</td>
+        <td style="text-align:center;">
+          <input class="num-input mix-qty ${isAgg ? 'wide' : ''}"
+                 data-idx="${r.idx}" value="${qty}" ${hasUnit ? 'style="width:52px;"' : ''}>
+          ${hasUnit ? ' ' + r.unit : ''}
+        </td>
+        <td style="text-align:center;${isAgg ? 'color:var(--accent);' : ''}">${pct}</td>
+      </tr>
+    `;
+  }).join('');
+
   document.getElementById('mixTotal').textContent = totalKg + ' kg';
+
+  // Attach event listeners
+  document.querySelectorAll('.mix-qty').forEach(inp => {
+    inp.addEventListener('input', onMixQtyChange);
+  });
+
+  // Restore focus & cursor position if previously focused
+  if (savedIdx >= 0) {
+    const restored = document.querySelector(`.mix-qty[data-idx="${savedIdx}"]`);
+    if (restored) {
+      restored.focus();
+      restored.setSelectionRange(savedStart, savedEnd);
+    }
+  }
 
   // Grade-specific note
   const gradeNotes = {
@@ -980,7 +1071,7 @@ function updateMixDesign() {
 
   const g = gradeNotes[concreteGrade] || gradeNotes['C35'];
   const binderOk = totalBinder >= g.binder[0] && totalBinder <= g.binder[1];
-  const wcOk = wcm >= parseFloat(g.wc[0]) && wcm <= parseFloat(g.wc[1]);
+  const wcOk = wcm !== '—' && parseFloat(wcm) >= parseFloat(g.wc[0]) && parseFloat(wcm) <= parseFloat(g.wc[1]);
 
   document.getElementById('gradeNote').innerHTML =
     `${g.desc}。当前胶材总量 <strong>${totalBinder} kg</strong>（推荐 ${g.binder[0]}–${g.binder[1]} kg）${binderOk ? ' ✅' : ' ⚠'} &nbsp;|&nbsp; 水胶比 <strong>${wcm}</strong>（推荐 ${g.wc[0]}–${g.wc[1]}）${wcOk ? ' ✅' : ' ⚠'}`;
@@ -1102,6 +1193,7 @@ function updateAdjustments() {
 function resetToOriginal() {
   aggData = ORIGINAL_DATA.map(r => [...r]);
   proportions = [...ORIGINAL_PROPS];
+  initMixQtys();
   document.querySelectorAll('.agg-prop').forEach(inp => {
     const a = parseInt(inp.dataset.agg);
     inp.value = (proportions[a] * 100).toFixed(0);
@@ -1265,6 +1357,7 @@ function runOptimization(initialViolations, msgEl) {
 
   if (best.violations < initialViolations) {
     proportions = best.props;
+    syncMixFromAgg();
     document.querySelectorAll('.agg-prop').forEach(inp => {
       const a = parseInt(inp.dataset.agg);
       inp.value = (proportions[a] * 100).toFixed(0);
@@ -1283,6 +1376,7 @@ function runOptimization(initialViolations, msgEl) {
 }
 
 // ========== INIT ==========
+initMixQtys();
 buildFormTable();
 </script>
 
