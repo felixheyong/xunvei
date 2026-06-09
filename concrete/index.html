@@ -254,7 +254,7 @@
   .modal-dialog {
     background: var(--card); border-radius: var(--radius-lg); border: 1px solid var(--border);
     box-shadow: 0 12px 48px rgba(46,42,37,.18);
-    padding: 32px 36px; max-width: 400px; width: 90%;
+    padding: 32px 36px; max-width: 420px; width: 90%;
     text-align: center; animation: modalIn .25s ease;
   }
   @keyframes modalIn { from { opacity:0; transform:translateY(-20px) scale(.96); } to { opacity:1; transform:translateY(0) scale(1); } }
@@ -268,6 +268,11 @@
   .modal-dialog input[type="password"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(107,142,137,.14); }
   .modal-dialog .modal-error { font-size: .76rem; color: var(--fail); margin-top: 10px; min-height: 1.2em; }
   .modal-dialog .modal-btns { margin-top: 16px; display: flex; gap: 10px; justify-content: center; }
+  .modal-dialog .lockout-msg {
+    display: none; font-size: .82rem; color: var(--fail); line-height: 1.7;
+    padding: 14px; background: #fdf5f4; border-radius: var(--radius-sm); border: 1px solid #f0d5d2;
+  }
+  .modal-dialog .lockout-msg strong { display: block; margin-bottom: 4px; }
 
   footer {
     text-align: center;
@@ -574,13 +579,19 @@
 <!-- ===== 密码弹窗 ===== -->
 <div class="modal-overlay" id="passwordModal">
   <div class="modal-dialog">
-    <h3>🔐 访问验证</h3>
-    <p class="modal-desc">请输入访问密码以查看分析结果</p>
-    <input type="password" id="passwordInput" placeholder="请输入密码" autocomplete="off" onkeydown="if(event.key==='Enter')verifyPassword()">
-    <div class="modal-error" id="passwordError"></div>
-    <div class="modal-btns">
-      <button class="btn primary" onclick="verifyPassword()">确认</button>
-      <button class="btn" onclick="closePasswordModal()">取消</button>
+    <h3 id="modalTitle">🔐 访问验证</h3>
+    <p class="modal-desc" id="modalDesc">请输入访问密码以查看分析结果</p>
+    <div id="loginForm">
+      <input type="password" id="passwordInput" placeholder="请输入密码" autocomplete="off" onkeydown="if(event.key==='Enter')verifyPassword()">
+      <div class="modal-error" id="passwordError"></div>
+      <div class="modal-btns">
+        <button class="btn primary" onclick="verifyPassword()">确认</button>
+        <button class="btn" onclick="closePasswordModal()">取消</button>
+      </div>
+    </div>
+    <div class="lockout-msg" id="lockoutMsg">
+      <strong>🚫 密码错误次数过多</strong>
+      您已连续 3 次输入错误密码，访问已被暂时锁定。<br>请联系网站管理员获取新的访问密码。
     </div>
   </div>
 </div>
@@ -794,7 +805,6 @@ function onMixQtyChange(e) {
 // ========== UPDATE ALL ==========
 function updateAll() {
   updateFormTableDisplay();
-  // Only render heavy visuals if results section is visible (authorized)
   var resultsVisible = document.getElementById('resultsSection');
   if (resultsVisible && resultsVisible.style.display !== 'none') {
     updateChart();
@@ -1312,7 +1322,6 @@ function distFromCurrent(props) {
 }
 
 function autoOptimize() {
-  // Password check — must be authorized to use optimization
   if (!isAuthorized()) {
     showAnalysis();
     return;
@@ -1326,7 +1335,6 @@ function autoOptimize() {
   }
 
   msgEl.textContent = '⏳ 正在搜索最优级配组合...';
-  // Yield to the DOM so the message renders before heavy computation
   setTimeout(() => runOptimization(initialViolations, msgEl), 60);
 }
 
@@ -1450,7 +1458,8 @@ initMixQtys();
 buildFormTable();
 
 // ========== PASSWORD SYSTEM ==========
-// SHA-256 via Web Crypto API
+const MAX_ATTEMPTS = 3;
+
 async function sha256(message) {
   const msgBuffer = new TextEncoder().encode(message);
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -1458,7 +1467,6 @@ async function sha256(message) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Valid password hashes (100 one-time + 1 master)
 const VALID_HASHES = [
   '8924a1515bd0062775df4875fe3ff1664bacaf07c8283024283e00f182d9bbcc',
   '6c246ba3131a73400c548a0254d83f3d9ff0f410b9c36d91011667bcfd825448',
@@ -1561,7 +1569,6 @@ const VALID_HASHES = [
   'd9da7caec943d2a285ccefd983e4673e0bdc8970a1dc077681424832c712fa87',
   'f951dd608a6340c6082dcc7c4e3d4c5739a6f073e076013bfda4ea22c863380b',
 ];
-// Master password hash (19921080011) — always valid, never consumed
 const MASTER_HASH = '2d88ffbc912883f569bdd47bd68c351cedb751e3aebab40fba24dce3989cb9e8';
 
 function getUsedPasswords() {
@@ -1580,6 +1587,25 @@ function isAuthorized() {
 function setAuthorized() {
   try { sessionStorage.setItem('concrete_authorized', 'true'); } catch(e) {}
 }
+function getFailedAttempts() {
+  try { return parseInt(sessionStorage.getItem('concrete_failed') || '0'); }
+  catch(e) { return 0; }
+}
+function incrementFailed() {
+  var n = getFailedAttempts() + 1;
+  try { sessionStorage.setItem('concrete_failed', String(n)); } catch(e) {}
+  return n;
+}
+function isLockedOut() {
+  return getFailedAttempts() >= MAX_ATTEMPTS;
+}
+
+function showLockout() {
+  document.getElementById('modalTitle').textContent = '🔒 访问已锁定';
+  document.getElementById('modalDesc').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('lockoutMsg').style.display = 'block';
+}
 
 function showAnalysis() {
   if (isAuthorized()) {
@@ -1587,9 +1613,19 @@ function showAnalysis() {
     updateAll();
     return;
   }
-  document.getElementById('passwordModal').classList.add('active');
+  if (isLockedOut()) {
+    showLockout();
+    document.getElementById('passwordModal').classList.add('active');
+    return;
+  }
+  // Reset modal to login state
+  document.getElementById('modalTitle').textContent = '🔐 访问验证';
+  document.getElementById('modalDesc').style.display = '';
+  document.getElementById('loginForm').style.display = '';
+  document.getElementById('lockoutMsg').style.display = 'none';
   document.getElementById('passwordInput').value = '';
   document.getElementById('passwordError').textContent = '';
+  document.getElementById('passwordModal').classList.add('active');
   setTimeout(function() { document.getElementById('passwordInput').focus(); }, 150);
 }
 
@@ -1598,32 +1634,53 @@ function closePasswordModal() {
 }
 
 async function verifyPassword() {
-  const input = document.getElementById('passwordInput').value.trim();
-  const errorEl = document.getElementById('passwordError');
+  if (isLockedOut()) {
+    showLockout();
+    return;
+  }
+  var input = document.getElementById('passwordInput').value.trim();
+  var errorEl = document.getElementById('passwordError');
   if (!input) { errorEl.textContent = '请输入密码'; return; }
-  const hash = await sha256(input);
-  const used = getUsedPasswords();
+  var hash = await sha256(input);
+  var used = getUsedPasswords();
   if (hash === MASTER_HASH) {
     setAuthorized();
+    try { sessionStorage.removeItem('concrete_failed'); } catch(e) {}
     document.getElementById('passwordModal').classList.remove('active');
     document.getElementById('resultsSection').style.display = '';
     updateAll();
     return;
   }
-  const validIdx = VALID_HASHES.indexOf(hash);
+  var validIdx = VALID_HASHES.indexOf(hash);
   if (validIdx >= 0) {
     if (used.indexOf(hash) >= 0) {
       errorEl.textContent = '❌ 此密码已被使用，请使用新的密码';
+      incrementFailed();
+      checkLockout();
       return;
     }
     markPasswordUsed(hash);
     setAuthorized();
+    try { sessionStorage.removeItem('concrete_failed'); } catch(e) {}
     document.getElementById('passwordModal').classList.remove('active');
     document.getElementById('resultsSection').style.display = '';
     updateAll();
     return;
   }
-  errorEl.textContent = '❌ 密码错误，请重试';
+  // Wrong password
+  var attempts = incrementFailed();
+  var remaining = MAX_ATTEMPTS - attempts;
+  if (remaining > 0) {
+    errorEl.textContent = '❌ 密码错误，还剩 ' + remaining + ' 次尝试机会';
+  } else {
+    showLockout();
+  }
+}
+
+function checkLockout() {
+  if (isLockedOut()) {
+    showLockout();
+  }
 }
 
 (function() {
