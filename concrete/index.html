@@ -328,8 +328,6 @@
   <p class="desc">公制单位 (mm/µm) 为主，英制单位为辅。按商混站提供的碎石和砂筛分报告分别填入，组合级配曲线及评估结果自动更新。比例栏为各材料在总骨料中的质量占比，四项之和保持 100%。</p>
   <div class="btn-row">
     <button class="btn primary" onclick="resetToOriginal()">↺ 恢复原始数据</button>
-    <button class="btn" onclick="autoOptimize()">🎯 基于当前材料自动优化级配</button>
-    <span style="font-size:.74rem;color:var(--muted);align-self:center;margin-left:8px;" id="autoMsg"></span>
   </div>
 
   <!-- ==== 碎石筛分 ==== -->
@@ -437,7 +435,7 @@
   </div>
 
   <div class="card">
-    <h2>配合比摘要</h2>
+    <h2>配合比评估</h2>
     <p class="desc">
       <label for="gradeSelect" style="font-weight:600;color:var(--text);">混凝土强度等级：</label>
       <select id="gradeSelect" onchange="onGradeChange()" style="
@@ -482,6 +480,16 @@
   <p class="desc">当前材料的级配 vs Twintec 目标范围评估</p>
   <div class="callout" id="complianceCallout"></div>
   <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:12px;" id="complianceBadges"></div>
+</div>
+
+<!-- ===== 自动优化级配 ===== -->
+<div class="card">
+  <h2>🎯 基于当前材料自动优化级配</h2>
+  <p class="desc">基于组合过筛率理论和堆积密度模型，在当前骨料级配数据下自动搜索最优比例组合，使组合级配曲线尽可能落在 Twintec 目标范围内。</p>
+  <div class="btn-row" style="margin-bottom:0;">
+    <button class="btn primary" onclick="autoOptimize()">🎯 开始自动优化</button>
+    <span style="font-size:.74rem;color:var(--muted);align-self:center;" id="autoMsg"></span>
+  </div>
 </div>
 
 <!-- ===== 调整建议 ===== -->
@@ -1451,7 +1459,6 @@ async function sha256(message) {
 
 // Valid password hashes (100 one-time + 1 master)
 const VALID_HASHES = [
-  // One-time passwords (100)
   '8924a1515bd0062775df4875fe3ff1664bacaf07c8283024283e00f182d9bbcc',
   '6c246ba3131a73400c548a0254d83f3d9ff0f410b9c36d91011667bcfd825448',
   'a3ecad959a813091f2cf2dc22826e4a4a7c4613fe8801fb6e25846a36c4e4dde',
@@ -1557,9 +1564,8 @@ const VALID_HASHES = [
 const MASTER_HASH = '2d88ffbc912883f569bdd47bd68c351cedb751e3aebab40fba24dce3989cb9e8';
 
 function getUsedPasswords() {
-  try {
-    return JSON.parse(localStorage.getItem('concrete_used_passwords') || '[]');
-  } catch(e) { return []; }
+  try { return JSON.parse(localStorage.getItem('concrete_used_passwords') || '[]'); }
+  catch(e) { return []; }
 }
 function markPasswordUsed(hash) {
   const used = getUsedPasswords();
@@ -1567,24 +1573,19 @@ function markPasswordUsed(hash) {
   localStorage.setItem('concrete_used_passwords', JSON.stringify(used));
 }
 function isAuthorized() {
-  try {
-    return sessionStorage.getItem('concrete_authorized') === 'true';
-  } catch(e) { return false; }
+  try { return sessionStorage.getItem('concrete_authorized') === 'true'; }
+  catch(e) { return false; }
 }
 function setAuthorized() {
-  try {
-    sessionStorage.setItem('concrete_authorized', 'true');
-  } catch(e) {}
+  try { sessionStorage.setItem('concrete_authorized', 'true'); } catch(e) {}
 }
 
 function showAnalysis() {
   if (isAuthorized()) {
-    // Already authorized — show results directly
     document.getElementById('resultsSection').style.display = '';
     updateAll();
     return;
   }
-  // Show password modal
   document.getElementById('passwordModal').classList.add('active');
   document.getElementById('passwordInput').value = '';
   document.getElementById('passwordError').textContent = '';
@@ -1598,16 +1599,9 @@ function closePasswordModal() {
 async function verifyPassword() {
   const input = document.getElementById('passwordInput').value.trim();
   const errorEl = document.getElementById('passwordError');
-
-  if (!input) {
-    errorEl.textContent = '请输入密码';
-    return;
-  }
-
+  if (!input) { errorEl.textContent = '请输入密码'; return; }
   const hash = await sha256(input);
   const used = getUsedPasswords();
-
-  // Check if it's the master password
   if (hash === MASTER_HASH) {
     setAuthorized();
     document.getElementById('passwordModal').classList.remove('active');
@@ -1615,15 +1609,12 @@ async function verifyPassword() {
     updateAll();
     return;
   }
-
-  // Check if it's a valid one-time password
   const validIdx = VALID_HASHES.indexOf(hash);
   if (validIdx >= 0) {
     if (used.indexOf(hash) >= 0) {
       errorEl.textContent = '❌ 此密码已被使用，请使用新的密码';
       return;
     }
-    // Valid and unused — consume it
     markPasswordUsed(hash);
     setAuthorized();
     document.getElementById('passwordModal').classList.remove('active');
@@ -1631,12 +1622,9 @@ async function verifyPassword() {
     updateAll();
     return;
   }
-
-  // Invalid password
   errorEl.textContent = '❌ 密码错误，请重试';
 }
 
-// On page load: if previously authorized this session, restore results
 (function() {
   if (isAuthorized()) {
     var resultsEl = document.getElementById('resultsSection');
