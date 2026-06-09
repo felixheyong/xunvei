@@ -239,6 +239,36 @@
   .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
   .btn.primary:hover { background: #5f827c; }
 
+  /* ── 分析按钮 ── */
+  .analyze-btn-wrap { text-align: center; margin: 28px 0 20px; padding: 20px 0; border-top: 1px dashed var(--border); border-bottom: 1px dashed var(--border); }
+  .btn.analyze-btn { font-size: 1rem; padding: 14px 48px; border-radius: var(--radius); letter-spacing: .04em; }
+  .btn.analyze-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(107,142,137,.25); }
+
+  /* ── 密码弹窗 ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 10000;
+    background: rgba(46,42,37,.55); backdrop-filter: blur(4px);
+    justify-content: center; align-items: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-dialog {
+    background: var(--card); border-radius: var(--radius-lg); border: 1px solid var(--border);
+    box-shadow: 0 12px 48px rgba(46,42,37,.18);
+    padding: 32px 36px; max-width: 400px; width: 90%;
+    text-align: center; animation: modalIn .25s ease;
+  }
+  @keyframes modalIn { from { opacity:0; transform:translateY(-20px) scale(.96); } to { opacity:1; transform:translateY(0) scale(1); } }
+  .modal-dialog h3 { font-size: 1.05rem; margin-bottom: 6px; letter-spacing: .02em; }
+  .modal-dialog .modal-desc { font-size: .78rem; color: var(--muted); margin-bottom: 18px; }
+  .modal-dialog input[type="password"] {
+    width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: .95rem; font-family: inherit; text-align: center; letter-spacing: .08em;
+    background: #fdfdfc; transition: border-color .15s;
+  }
+  .modal-dialog input[type="password"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(107,142,137,.14); }
+  .modal-dialog .modal-error { font-size: .76rem; color: var(--fail); margin-top: 10px; min-height: 1.2em; }
+  .modal-dialog .modal-btns { margin-top: 16px; display: flex; gap: 10px; justify-content: center; }
+
   footer {
     text-align: center;
     font-size: .7rem;
@@ -347,6 +377,17 @@
     <span><strong>砂 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="2" value="34" style="width:60px;">% — 5mm 机制砂</span>
     <span><strong>砂 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="3" value="11" style="width:60px;">% — 超细砂</span>
   </div>
+
+  <!-- ==== 分析按钮 ==== -->
+  <div class="analyze-btn-wrap">
+    <button class="btn primary analyze-btn" onclick="showAnalysis()">
+      🔍 开始分析级配
+    </button>
+    <p style="font-size:.74rem;color:var(--muted);margin-top:8px;">点击分析组合级配结果，需要输入访问密码</p>
+  </div>
+
+  <!-- ==== 结果区域（密码保护）==== -->
+  <div id="resultsSection" style="display:none;">
 
   <!-- ==== 组合级配结果 ==== -->
   <h3 style="font-size:.9rem;font-weight:700;margin:20px 0 8px;color:var(--accent2);">
@@ -462,6 +503,8 @@
   </div>
 </div>
 
+  </div><!-- /resultsSection -->
+
 <!-- ===== 堆积密度理论（已隐藏） ===== -->
 <div class="card" style="display:none">
   <h2>组合过筛率理论 — 颗粒堆积密度模型</h2>
@@ -521,6 +564,20 @@
 <footer>
   Twintec Combined Grading Analysis · Particle Packing Density Theory (Fuller · Andreasen · CPM) &nbsp;|&nbsp; HE YONG
 </footer>
+
+<!-- ===== 密码弹窗 ===== -->
+<div class="modal-overlay" id="passwordModal">
+  <div class="modal-dialog">
+    <h3>🔐 访问验证</h3>
+    <p class="modal-desc">请输入访问密码以查看分析结果</p>
+    <input type="password" id="passwordInput" placeholder="请输入密码" autocomplete="off" onkeydown="if(event.key==='Enter')verifyPassword()">
+    <div class="modal-error" id="passwordError"></div>
+    <div class="modal-btns">
+      <button class="btn primary" onclick="verifyPassword()">确认</button>
+      <button class="btn" onclick="closePasswordModal()">取消</button>
+    </div>
+  </div>
+</div>
 
 </div><!-- /container -->
 
@@ -733,11 +790,15 @@ function onMixQtyChange(e) {
 // ========== UPDATE ALL ==========
 function updateAll() {
   updateFormTableDisplay();
-  updateChart();
-  updateFM();
-  updateMixDesign();
-  updateCompliance();
-  updateAdjustments();
+  // Only render heavy visuals if results section is visible (authorized)
+  var resultsVisible = document.getElementById('resultsSection');
+  if (resultsVisible && resultsVisible.style.display !== 'none') {
+    updateChart();
+    updateFM();
+    updateMixDesign();
+    updateCompliance();
+    updateAdjustments();
+  }
 }
 
 function updateFormTableDisplay() {
@@ -1378,6 +1439,210 @@ function runOptimization(initialViolations, msgEl) {
 // ========== INIT ==========
 initMixQtys();
 buildFormTable();
+
+// ========== PASSWORD SYSTEM ==========
+// SHA-256 via Web Crypto API
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Valid password hashes (100 one-time + 1 master)
+const VALID_HASHES = [
+  // One-time passwords (100)
+  '8924a1515bd0062775df4875fe3ff1664bacaf07c8283024283e00f182d9bbcc',
+  '6c246ba3131a73400c548a0254d83f3d9ff0f410b9c36d91011667bcfd825448',
+  'a3ecad959a813091f2cf2dc22826e4a4a7c4613fe8801fb6e25846a36c4e4dde',
+  '4d423987224d109340dceb3e0a378814dbd26d66a94123b43b277bedec824917',
+  '5063ea2b59494dc3fafa350db2133397cf6e0b7124c76c78969334ac87f7af21',
+  'bd15a1203f166ee052ca11652afe3c38b7a17e285182e4a8452b0c48d2c73f88',
+  '4cfb9d65ff0de3c4994ddda3d36e5bdf16a8f3397097af1fecb987fd53cb3502',
+  '534ad074836134e8a2beb54189eee8c777d6adb6da9657b8c062b19cebc81876',
+  'dfce45cbf857264a99677d7e4fa59262b24de7b9afa803bee678d91bd0ec1b7a',
+  'ec3efba8781434360a9c6bccb93f24b7933ead5055a53b1e0184480357a056de',
+  'ba12a49f2d9280e7e4859795f0b8e5c9a7805d8b64ca177e4a6bfcad659ac9df',
+  '6bc06532ecf57cf8848b010bfcca00992713157f4fc2b82b3f6d1887f5c617ca',
+  '6c09320d35db293aadd52c2708da400564cbec79d2b21c734a3eb03fbbe7553c',
+  '01b52c5c0c209abc2a1aadb6edd0737b36352a2ae43bb8cbc3709237ae2cc2d2',
+  'd535eb6a457092de068046817cab7f752e6e86bb8c938272ef839bd5702d90ba',
+  'b558e65cbad1d82c2a010c5a94e8a3cd0915a8e487e84675ffc9f162e9602e9b',
+  '693f670f07aaf4377a01243601f9afba1a7ec70490e77bdc2d15035d4e315bb4',
+  '16cadabf97cb3a9f6e7fe531e8d060ebefe59a7d5f43f2fbb3126095120c6259',
+  '9f4921baa11a0927bcc91d6453a3e6c363f0cb62f95fb14b38aacbd5572f0955',
+  'fa64b3b7c4b8efa7d8f5d0a1ebd71558a80aaed206111e0046a0c867080a10ca',
+  '60da4a15212c58fd1d731f7a4a85d1659e5910ffd8a05fb57d83d0d3c797f0d3',
+  '47af63aca7010b8d29ce8f25d01b34da9aca18c02c9e50517a341757c1037ec8',
+  'fa4f8d350afbd027daeb605caac4dab376d6e52b1d12a9e0c446c1fc53eb90ed',
+  '440ce97ad5e8e382c316f0badfb5a621a02c79842ad71107259186887abe50ee',
+  'e2f1ca42d49aac68316fa7edd6f9725e5f5af4f2dcdb2cbcb35c3ee90a2a5e06',
+  '53d9677ab5d85d9a9f21f3b2022a3fa8fc08f72dac06b7b2e93ee68dcd7167bc',
+  '16e7815c3f71dd7979f51c96b4e64385e8a8cb90a3983f97dd7486dee9cc1a25',
+  '0b244c453337d7622484085afc5141a45bdaeac66c234214083bf1363fd18f4b',
+  'f058e1ee69ba882d0a78fbf5909f8989c7d53700d6bd6b4dba24d5eadec04a3e',
+  'a77571ba499e1c742d8b8b7f258b0091c0f688366a82b0e5f39a6511eacf3d4b',
+  '54e10ea7e000e0f4d3c5578bf6887f5726244c23dc6907ccc3a80fe3298baefc',
+  'b0a3f10241abd74387da23ae7fa96a5df66d845d4840daa331bed3d5bc42326a',
+  '647f4bd3eb83534569e383294b0cd4b6676fc708778351a22a98b534624944cc',
+  'a0c46b7c107aa0c91a96d5bdead3b89a4e456f3ebdb434b9a88c6012f2d467c0',
+  '8061791dcac77dd5d2ed474422b0726a40dcce643011201160b7e903a67c11d9',
+  '15d7c3a7597db21c19b02e1e493fc7b9f556fc95c1f1a087b65c44b7615a05b9',
+  '8155dbb89d0cb78852155bf812ed0ac43d8cf4114b6a9037a670fca55ab52094',
+  '418597f8c3ec91125079f3367bcc0f0cc23f09340373b05cce9cd6fc7dd76fe2',
+  'fa589a951a8d28778893d1537cdf3298b41e2bc61da40c478d06e044ad7382cc',
+  '4af916173a1aeefaab230ccc2a456d8defac06f097558c301fb41498ed7c9af8',
+  '4197c32b3d6122705e9abb0cf85e576a41eae45f5786d901fb6c816df4d0d5bf',
+  'd1bfe99b0742b48067b0e3c6929d362c8e98082a631ab352881c313f2a20213f',
+  '5a15c80cf70704ac1c74e6d73d7dbde0a3519050b8a2375ebaff76367d323d5f',
+  '3d532e84fa202365a6447eb6fd3f2f915cdfa827785f5053e087a914ddefb33b',
+  '60cac82bfce30ab3081b7326dd62b691887239dc290e0bb042e081611c225c81',
+  '10a0031e1ce907fa5772a1666209d4349a0ee8af1202f31cf0fed5a3209f250d',
+  '64db5408f497b02a9e5fbe24d38827b8758829dbcd1b35da4593e5a48fe83730',
+  '707b4349e61478ee3388ae12a10232a4bafaecd055a9dd3a9ee4a11a1db393d3',
+  '16d5f707ef7c3d21b6ca1d6f34cd50a6c116aac4446d97105e2091479dacaa64',
+  'cae2519a2fad641667eec19157aedccd2ad5daabc61bddd1b0eb8eda4fe94a64',
+  '158638cd67d693f512780e8d533e6e0828b8190cecd3db4ae18503622a2e9d45',
+  '2453745f95e41c8cadd0c982edd089eda058c599123ffd04a2a7d83c2f936b1d',
+  'c2c7248ce094b3ca87bd403584c7859d9f131221cf5328c45394ababd7c32667',
+  '796d4585b697ffebba0489f4ec13775dd69ff820a84519d330269611636bc50d',
+  'b5fd753201c4b1992c8bec2960afd17896d8dc7d304fbb037f300b598e697f04',
+  '65292f5f07bdd3d6255a0c9801fe7be42692db753ae47114ca0998e778b38402',
+  'ce45bbd78b0443fcc6b1e3047ed06ff9dc0a386e33b77359826173074a09f092',
+  '397d5206faf0e750a04aa444fe1bde31f0bdabbee25eea6cfe45555fd0a5e78d',
+  '36d016f77179cb09d80e44978bcc5da297443f64f781009f2d00fee08f4cbbae',
+  'b01a283dbff5677e7e30ecb3569b4001595cf48b8c07cbdf16cf96a4c7c0cfc5',
+  'eb07698391a0a13ffd9a83146fe8550af9759319e6ce166190f535767410863a',
+  'd9a76f297bcfb4a0fb87b648fd57a97c5d66a85bf4ae7597dd845e579bde443e',
+  '27c4f1a8be52153c1e7788a34c1e088738c8ee91117993c808bfc3d548f25571',
+  '3fc2c6541ba5cabbd14df450b8b2dfbb33262ea896a385db72b71e537c47c37f',
+  '3b5167d50fd211eba40cd000347b7fdeb6f020b1a2042219f7fd7c1ce928b244',
+  '3a3e4d9828c971556564e6982cf90583ba4c10bbc62ebb7ce08a83027e03ad09',
+  '5acb3efefee229f2f3828f3756ff779514298bee34e17685c673cc65f2415e9b',
+  '3276de75b9a6e90c2104c3086d09aacc40e97b7203275fff2fe1c4dc5d942d0d',
+  'b215b8de707c0e6f27d085e95c039cc423c2d10d205e0117f20895837c7c4c46',
+  '1afa94216f0fa11ac5d5a967c8a2ba1fb52f66ea0371136099ab6eff6d98b42a',
+  '30b72e14ba05790aa3252aa423b2792aed85bafe9faa91adede3bebd794ff8c3',
+  '313a8fbfd9bf5d868054543a9cf7fc6cf9a63a09ab73b1437bf129db2b3fe4ab',
+  'aae686ec98398a56c7c0e4c316c3976f014e1dbe5e31ef1c72417c42b4a19859',
+  'd627aa09060c07319b00b40801b009dbae2da9929dd4def9e634b6aa77d1c959',
+  '43d3b947b8cd554fcd1aa21b76ef7749f5c54a479566ed9eab74c558ad4b59fb',
+  '4cdb064aa5251017269a0b15400863599d41cc6c0bf036009498be278504786a',
+  '3b5cec3eb99379a5077f0ac61bfa0c4162459640e25725d98dfcb07cc9b8e679',
+  'f1c9e0f1e9907dce5704f0b7493699f07fd6717f9148f9207094605404dc776e',
+  'd2127f699dc6cba87b4e27007352371152a8c343cf04cd347a757b29f244fea0',
+  '33838a12c6a3dd3de3e7e94c63da16bff1ae36aaad2f14116fac948621355819',
+  '1d3d44a0edb144110d32c95bfc648129217f03d5bd51b823d394047965c24734',
+  '7b678f1b644a75fb478120cdcf6ec77827190ebaa3fadbf83141a692261602c1',
+  'dc6ebd2e9423f3d9bc1751f81687a485b7b67b4652e7c4360efcef17a823e8cd',
+  '497b638e4681d49f2f92d6c454d46c20a4f99a2b5813d2e9f92510ef506e2a3f',
+  '5c2cc428f95b5558547395283e2ce0b6dcc2946c3fe7031c6b540ca6025e5c13',
+  '2c1dff43cd21979a2dd5f1c74f91c47caae5591652ec1f3e4e72e6b4ec9f4f02',
+  '56924052279de8ab01559cc0414fafb182eea4acd597b88f30b38d1017b98f52',
+  'bd20faabb88b879756368f133758344aa68a0bf7df409e9db50b3cc82601e267',
+  '7b0337c2a2aebe1e4a2728e2fc7a5be8b0e5606e5fafb9f47263d3a46f6997bb',
+  'd136b1c93d894db5224badfd3fcd55668f8210d1008e0e12bf05701686252506',
+  '2bd64b6c3a3849667f657f3ca7a09cdd6f30b2288a117658d89ffd8922187632',
+  '2f2043c5105f5bf6eec31021ae1db8e2f8604cfe3612769b09780d144cb42d22',
+  '0a7ffe23a89d67db8d5be8b8949c5c114da61f4a0e05b81a7c4879adbd7559d8',
+  '52e292f6566eaa54ebe1f4b1ad5cfb7ef0d171767be4171af726d57735b0420f',
+  'ee33ac6618df35841a55c7a648b58edb5826ffd03e83b4f968a989b684136667',
+  'b4ebe25c607246da5bfdaebc2faa37e99f86aa8a4c9d413b1f2e149dfb8f58ee',
+  'eca4f5d196ec183fa15474055fd7a8f890afbe78328d1a502f81c4a3b2688f51',
+  '9d9b4b1491eef3b86042c8a84c71de7bed008b13f63541c5de5c1078f7e40aef',
+  'd9da7caec943d2a285ccefd983e4673e0bdc8970a1dc077681424832c712fa87',
+  'f951dd608a6340c6082dcc7c4e3d4c5739a6f073e076013bfda4ea22c863380b',
+];
+// Master password hash (19921080011) — always valid, never consumed
+const MASTER_HASH = '2d88ffbc912883f569bdd47bd68c351cedb751e3aebab40fba24dce3989cb9e8';
+
+function getUsedPasswords() {
+  try {
+    return JSON.parse(localStorage.getItem('concrete_used_passwords') || '[]');
+  } catch(e) { return []; }
+}
+function markPasswordUsed(hash) {
+  const used = getUsedPasswords();
+  used.push(hash);
+  localStorage.setItem('concrete_used_passwords', JSON.stringify(used));
+}
+function isAuthorized() {
+  try {
+    return sessionStorage.getItem('concrete_authorized') === 'true';
+  } catch(e) { return false; }
+}
+function setAuthorized() {
+  try {
+    sessionStorage.setItem('concrete_authorized', 'true');
+  } catch(e) {}
+}
+
+function showAnalysis() {
+  if (isAuthorized()) {
+    // Already authorized — show results directly
+    document.getElementById('resultsSection').style.display = '';
+    updateAll();
+    return;
+  }
+  // Show password modal
+  document.getElementById('passwordModal').classList.add('active');
+  document.getElementById('passwordInput').value = '';
+  document.getElementById('passwordError').textContent = '';
+  setTimeout(function() { document.getElementById('passwordInput').focus(); }, 150);
+}
+
+function closePasswordModal() {
+  document.getElementById('passwordModal').classList.remove('active');
+}
+
+async function verifyPassword() {
+  const input = document.getElementById('passwordInput').value.trim();
+  const errorEl = document.getElementById('passwordError');
+
+  if (!input) {
+    errorEl.textContent = '请输入密码';
+    return;
+  }
+
+  const hash = await sha256(input);
+  const used = getUsedPasswords();
+
+  // Check if it's the master password
+  if (hash === MASTER_HASH) {
+    setAuthorized();
+    document.getElementById('passwordModal').classList.remove('active');
+    document.getElementById('resultsSection').style.display = '';
+    updateAll();
+    return;
+  }
+
+  // Check if it's a valid one-time password
+  const validIdx = VALID_HASHES.indexOf(hash);
+  if (validIdx >= 0) {
+    if (used.indexOf(hash) >= 0) {
+      errorEl.textContent = '❌ 此密码已被使用，请使用新的密码';
+      return;
+    }
+    // Valid and unused — consume it
+    markPasswordUsed(hash);
+    setAuthorized();
+    document.getElementById('passwordModal').classList.remove('active');
+    document.getElementById('resultsSection').style.display = '';
+    updateAll();
+    return;
+  }
+
+  // Invalid password
+  errorEl.textContent = '❌ 密码错误，请重试';
+}
+
+// On page load: if previously authorized this session, restore results
+(function() {
+  if (isAuthorized()) {
+    var resultsEl = document.getElementById('resultsSection');
+    if (resultsEl) { resultsEl.style.display = ''; }
+  }
+})();
 </script>
 
 <!-- 访问日志记录 — 调用 visit_log.php -->
