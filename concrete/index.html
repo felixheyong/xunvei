@@ -1316,6 +1316,11 @@ function distFromCurrent(props) {
 }
 
 function autoOptimize() {
+  // Password check — must be authorized to use optimization
+  if (!isAuthorized()) {
+    showAnalysis();
+    return;
+  }
   const initialViolations = countViolations(proportions);
   const msgEl = document.getElementById('autoMsg');
 
