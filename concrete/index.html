@@ -387,9 +387,9 @@
   <!-- ==== 结果区域（密码保护）==== -->
   <div id="resultsSection" style="display:none;">
 
-  <!-- ==== 组合级配结果 ==== -->
+  <!-- ==== 粗细骨料组合级配结果判定 ==== -->
   <h3 style="font-size:.9rem;font-weight:700;margin:20px 0 8px;color:var(--accent2);">
-    📊 组合级配结果 &amp; 合规判定
+    粗细骨料组合级配结果判定
     <span style="font-size:.74rem;font-weight:400;color:var(--muted);margin-left:8px;">Σ 碎石+砂 = <span id="propSum" style="font-weight:700;color:var(--accent);">100</span>%</span>
   </h3>
   <div style="overflow-x:auto;">
@@ -399,8 +399,6 @@
           <th>筛孔 (mm)</th>
           <th>英制</th>
           <th class="highlight-col">组合%</th>
-          <th>下限</th>
-          <th>上限</th>
           <th>判定</th>
         </tr>
       </thead>
@@ -705,8 +703,6 @@ function buildFormTable() {
       <td><strong>${METRIC_LABELS[i]}</strong></td>
       <td><small style="color:var(--muted)">${IMPERIAL_LABELS[i]}</small></td>
       <td class="highlight-col"><strong>${combined[i].toFixed(2)}</strong></td>
-      <td>${TWINTEC_LOWER[i]}</td>
-      <td>${TWINTEC_UPPER[i]}</td>
       <td>${badge}</td>
     `;
     if (st === 'fail') tr.style.background = '#f9f4ee';
@@ -837,7 +833,7 @@ function updateFormTableDisplay() {
                 : '<span style="color:#b85a3f;font-weight:700;">❌</span>';
     const cells = tr.querySelectorAll('td');
     cells[2].innerHTML = `<strong>${combined[i].toFixed(2)}</strong>`;
-    cells[5].innerHTML = badge;
+    cells[3].innerHTML = badge;
     tr.style.background = st === 'fail' ? '#f9f4ee' : '';
   });
 
