@@ -347,7 +347,7 @@
       <option value="C45">C45</option>
       <option value="C50">C50</option>
     </select>
-    <span style="font-size:.76rem;color:var(--muted);">每立方米材料用量。密度可编辑（依据 GB/T 14684/14685/ACI 默认值），体积 = 用量 ÷ 密度，累计体积应接近 1 m³。</span>
+    <span style="font-size:.76rem;color:var(--muted);">每立方米材料用量。密度为相对密度（水 = 1.0），体积 = 用量 ÷（密度 × 1000），累计体积应接近 1 m³。</span>
   </p>
   <table style="font-size:.76rem;table-layout:fixed;width:100%;">
     <colgroup>
@@ -357,7 +357,7 @@
       <col style="width:17%;">
       <col style="width:18%;">
     </colgroup>
-    <thead><tr><th>材料</th><th>用量 (kg)</th><th>密度 (kg/m³)</th><th>体积 (m³)</th><th>占比</th></tr></thead>
+    <thead><tr><th>材料</th><th>用量 (kg)</th><th>密度</th><th>体积 (m³)</th><th>占比</th></tr></thead>
     <tbody id="mixTable"></tbody>
     <tfoot>
       <tr style="font-weight:700;border-top:2px solid #d8d2c4;">
@@ -490,7 +490,7 @@
 <!-- ===== 自动优化级配 ===== -->
 <div class="card">
   <h2>🎯 基于当前材料自动优化级配</h2>
-  <p class="desc">基于组合过筛率理论和堆积密度模型，在当前骨料级配数据下自动搜索最优比例组合，使组合级配曲线尽可能落在 Twintec 目标范围内。</p>
+  <p class="desc">在当前骨料级配数据下自动搜索最优比例组合，使组合级配曲线尽可能落在 Twintec 目标范围内。</p>
   <div class="btn-row" style="margin-bottom:0;">
     <button class="btn primary" onclick="autoOptimize()">🎯 开始自动优化</button>
     <span style="font-size:.74rem;color:var(--muted);align-self:center;" id="autoMsg"></span>
@@ -647,19 +647,18 @@ function initMixQtys() {
   mixQtys = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 }
 
-// Material apparent densities (kg/m³) — 表观密度 / 颗粒密度
-// Ref: GB/T 14684 (砂 ≥2500), GB/T 14685 (碎石 ≥2600), GB/T 208 (水泥), ACI 211.1, BRMCA
+	// 相对密度（水 = 1.0），参照 GB/T 14684/14685/GB/T 208/ACI 211.1/BRMCA
 const DEFAULT_DENSITIES = [
-  3100,  // 0: 水泥 P·O 42.5 — GB/T 208 密度试验
-  2300,  // 1: 粉煤灰 — ASTM C618 典型范围 2200–2400
-  2850,  // 2: 矿粉 GGBS — 典型范围 2800–2900
-  2700,  // 3: 碎石① 20mm — GB/T 14685 表观密度 ≥2600，花岗岩 ~2650–2750
-  2700,  // 4: 碎石② 10mm — 同上
-  2620,  // 5: 机制砂 5mm — GB/T 14684 表观密度 ≥2500，典型 2600–2650
-  2620,  // 6: 超细砂 — 同上
-  1000,  // 7: 水 — 4°C 纯水密度
-  1050,  // 8: 减水剂 PC — 液体，典型 1050–1100（用量按 L 计，体积 = 用量/1000）
-  7850,  // 9: 钢纤维 — 钢材密度
+  3.1,     // 0: 水泥 P·O 42.5 — 相对密度 3.1
+  2.3,     // 1: 粉煤灰 — 典型范围 2.2–2.4
+  2.85,    // 2: 矿粉 GGBS — 典型范围 2.8–2.9
+  2.7,     // 3: 碎石① 20mm — 表观密度 ≥2.6，花岗岩 ~2.65–2.75
+  2.7,     // 4: 碎石② 10mm — 同上
+  2.62,    // 5: 机制砂 5mm — 表观密度 ≥2.5，典型 2.6–2.65
+  2.62,    // 6: 超细砂 — 同上
+  1.0,     // 7: 水 — 4°C 纯水，相对密度 1.0
+  1.05,    // 8: 减水剂 PC — 液体，典型 1.05–1.10
+  7.85,    // 9: 钢纤维 — 钢材，相对密度 7.85
 ];
 let densities = [...DEFAULT_DENSITIES];
 
@@ -826,8 +825,8 @@ function onDensityChange(e) {
   const idx = parseInt(e.target.dataset.idx);
   let val = parseFloat(e.target.value);
   if (isNaN(val)) val = 0;
-  val = Math.max(100, Math.min(20000, val));
-  densities[idx] = Math.round(val);
+  val = Math.max(0.1, Math.min(20, val));
+  densities[idx] = Math.round(val * 10) / 10;
   updateAll();
 }
 
@@ -1120,11 +1119,11 @@ function updateMixDesign() {
     return s + q;
   }, 0);
 
-  // Volume calculation (m³): PC (L-based) → volume = qty/1000; others → volume = qty/density
+  // Volume calculation (m³): PC (L-based) → volume = qty/1000; others → volume = qty/(density×1000)
   let totalVolume = 0;
   const volumes = mixQtys.map((qty, i) => {
     if (i === 8) return qty / 1000; // PC: L → m³ direct conversion
-    return densities[i] > 0 ? qty / densities[i] : 0;
+    return densities[i] > 0 ? qty / (densities[i] * 1000) : 0;
   });
   totalVolume = volumes.reduce((s, v) => s + v, 0);
 
