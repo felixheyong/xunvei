@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Twintec 混凝土组合骨料级配分析</title>
+<title>混凝土配合比智能分析和优化系统</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <meta name="copyright" content="HE YONG — Twintec SFRC Mix 技术整合和汉化">
 <meta name="author" content="HE YONG">
@@ -317,7 +317,7 @@
 <!-- ===== HEADER ===== -->
 <div class="header">
   <div class="container">
-    <h1>混凝土组合骨料级配分析</h1>
+    <h1>混凝土配合比智能分析和优化系统</h1>
     <p class="sub">
       基于 Twintec SFRC Mix 配合比技术 &nbsp;·&nbsp; 技术整合和汉化 HE YONG
       <span style="display:inline-block;margin-left:10px;font-size:.62rem;padding:2px 8px;border-radius:50px;border:1px solid rgba(255,255,255,.2);color:#c4bcb0;vertical-align:middle;">© 版权所有</span>
@@ -327,14 +327,56 @@
 
 <div class="container">
 
+<!-- ===== 当前混凝土配合比 ===== -->
+<div class="card" style="margin-bottom:22px;">
+  <h2>当前混凝土配合比</h2>
+  <p class="desc">
+    <span style="font-size:.74rem;">请输入商混站材料检测报告中的数值，如无则采用默认值。</span><br>
+    <label for="gradeSelect" style="font-weight:600;color:var(--text);">混凝土强度等级：</label>
+    <select id="gradeSelect" onchange="onGradeChange()" style="
+      font-family:inherit;font-size:.8rem;font-weight:600;
+      padding:5px 10px;border-radius:6px;border:1px solid #d5cfc4;
+      background:#faf8f3;color:var(--accent);cursor:pointer;
+      margin-right:12px;
+    ">
+      <option value="C20">C20</option>
+      <option value="C25">C25</option>
+      <option value="C30">C30</option>
+      <option value="C35" selected>C35</option>
+      <option value="C40">C40</option>
+      <option value="C45">C45</option>
+      <option value="C50">C50</option>
+    </select>
+    <span style="font-size:.76rem;color:var(--muted);">每立方米材料用量。密度可编辑（依据 GB/T 14684/14685/ACI 默认值），体积 = 用量 ÷ 密度，累计体积应接近 1 m³。</span>
+  </p>
+  <table style="font-size:.76rem;table-layout:fixed;width:100%;">
+    <colgroup>
+      <col style="width:34%;">
+      <col style="width:14%;">
+      <col style="width:17%;">
+      <col style="width:17%;">
+      <col style="width:18%;">
+    </colgroup>
+    <thead><tr><th>材料</th><th>用量 (kg)</th><th>密度 (kg/m³)</th><th>体积 (m³)</th><th>占比</th></tr></thead>
+    <tbody id="mixTable"></tbody>
+    <tfoot>
+      <tr style="font-weight:700;border-top:2px solid #d8d2c4;">
+        <td style="text-align:center;">合计</td>
+        <td id="mixTotal" style="text-align:center;">—</td>
+        <td style="text-align:center;">—</td>
+        <td id="mixVolume" style="text-align:center;color:var(--accent);">—</td>
+        <td style="text-align:center;">100%</td>
+      </tr>
+    </tfoot>
+  </table>
+  <p style="font-size:.72rem;color:var(--muted);margin-top:4px;" id="volumeNote"></p>
+  <p style="font-size:.7rem;color:var(--muted);margin-top:4px;" id="gradeNote"></p>
+</div>
+
 <!-- ===== 可编辑筛分表单 ===== -->
 <div class="card">
   <h2>筛分数据表单 — 依据商混站砂/石筛分报告分别输入</h2>
   <p class="desc">公制单位 (mm/µm) 为主，英制单位为辅。按商混站提供的碎石和砂筛分报告分别填入，组合级配曲线及评估结果自动更新。比例栏为各材料在总骨料中的质量占比，四项之和保持 100%。</p>
-  <div class="btn-row">
-    <button class="btn" onclick="autoOptimize()">🎯 基于当前材料自动优化级配</button>
-    <span style="font-size:.74rem;color:var(--muted);align-self:center;margin-left:8px;" id="autoMsg"></span>
-  </div>
 
   <!-- ==== 碎石筛分 ==== -->
   <h3 style="font-size:.9rem;font-weight:700;margin:16px 0 8px;color:var(--accent2);">
@@ -385,7 +427,7 @@
   <!-- ==== 分析按钮 ==== -->
   <div class="analyze-btn-wrap">
     <button class="btn primary analyze-btn" onclick="showAnalysis()">
-      🔍 开始分析级配
+      🔍 开始分析粗细骨料级配
     </button>
     <p style="font-size:.74rem;color:var(--muted);margin-top:8px;">点击分析组合级配结果，需要输入访问密码</p>
   </div>
@@ -421,7 +463,7 @@
   <div class="legend-grid">
     <div class="legend-item"><div class="legend-swatch" style="background:#b85a3f;"></div> 组合级配</div>
     <div class="legend-item"><div class="legend-swatch dashed" style="border-color:#d48865;"></div> 组合级配（内插）</div>
-    <div class="legend-item"><div class="legend-swatch" style="background:rgba(138,181,168,.14); height:16px; border-radius:4px; width:26px;"></div> Twintec 目标范围</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:rgba(72,135,105,.24); height:16px; border-radius:4px; width:26px;"></div> Twintec 目标范围</div>
     <div class="legend-item"><div class="legend-swatch dashed" style="border-color:#8a9080;"></div> Fuller n=0.45 理想曲线</div>
     <div class="legend-item"><div class="legend-swatch" style="background:#4a6880;"></div> 碎石 ①（20mm）</div>
     <div class="legend-item"><div class="legend-swatch" style="background:#4d8c70;"></div> 碎石 ②（10mm）</div>
@@ -430,53 +472,12 @@
   </div>
 </div>
 
-<!-- ===== 双栏：FM + 配合比 ===== -->
-<div class="two-col">
+<!-- ===== FM ===== -->
   <div class="card">
     <h2>细度模数 FM &amp; 砂率</h2>
     <p class="desc">FM = Σ(各筛累计筛余%) / 100，标准筛 0.15 – 4.75 mm。砂率依据 JGJ 55-2011 选取。</p>
     <div id="fmGrid"></div>
   </div>
-
-  <div class="card">
-    <h2>配合比评估</h2>
-    <p class="desc">
-      <label for="gradeSelect" style="font-weight:600;color:var(--text);">混凝土强度等级：</label>
-      <select id="gradeSelect" onchange="onGradeChange()" style="
-        font-family:inherit;font-size:.8rem;font-weight:600;
-        padding:5px 10px;border-radius:6px;border:1px solid #d5cfc4;
-        background:#faf8f3;color:var(--accent);cursor:pointer;
-        margin-right:12px;
-      ">
-        <option value="C20">C20</option>
-        <option value="C25">C25</option>
-        <option value="C30">C30</option>
-        <option value="C35" selected>C35</option>
-        <option value="C40">C40</option>
-        <option value="C45">C45</option>
-        <option value="C50">C50</option>
-      </select>
-      <span style="font-size:.76rem;color:var(--muted);">每立方米材料用量，骨料用量随比例自动换算。</span>
-    </p>
-    <table style="font-size:.78rem;table-layout:fixed;width:100%;">
-      <colgroup>
-        <col style="width:55%;">
-        <col style="width:22%;">
-        <col style="width:23%;">
-      </colgroup>
-      <thead><tr><th>材料</th><th>用量 (kg)</th><th>占比</th></tr></thead>
-      <tbody id="mixTable"></tbody>
-      <tfoot>
-        <tr style="font-weight:700;border-top:2px solid #d8d2c4;">
-          <td style="text-align:center;">容重</td>
-          <td id="mixTotal" style="text-align:center;">—</td>
-          <td style="text-align:center;">100%</td>
-        </tr>
-      </tfoot>
-    </table>
-    <p style="font-size:.7rem;color:var(--muted);margin-top:6px;" id="gradeNote"></p>
-  </div>
-</div>
 
 <!-- ===== 骨料连续级配评估 ===== -->
 <div class="card">
@@ -602,15 +603,16 @@
 <script>
 // ========== CONSTANTS ==========
 // 公制筛孔为主 (mm)，英制为辅
-const SIEVE_SIZES = [25, 19, 12.5, 9.5, 4.75, 2.36, 1.18, 0.6, 0.3, 0.15, 0.075];
-const IMPERIAL_LABELS = ['1"', '3/4"', '1/2"', '3/8"', '#4', '#8', '#16', '#30', '#50', '#100', '#200'];
-const METRIC_LABELS = ['25 mm', '19 mm', '12.5 mm', '9.5 mm', '4.75 mm', '2.36 mm', '1.18 mm', '0.6 mm', '0.3 mm', '0.15 mm', '75 µm'];
+const SIEVE_SIZES = [31.5, 26.5, 19, 16, 9.5, 4.75, 2.36, 1.18, 0.6, 0.3, 0.15, 0.075];
+const IMPERIAL_LABELS = ['1 1/4"', '1 1/16"', '3/4"', '5/8"', '3/8"', '#4', '#8', '#16', '#30', '#50', '#100', '#200'];
+const METRIC_LABELS = ['31.5 mm', '26.5 mm', '19 mm', '16 mm', '9.5 mm', '4.75 mm', '2.36 mm', '1.18 mm', '0.6 mm', '0.3 mm', '0.15 mm', '75 µm'];
 
 // Original aggregate passing data [agg0, agg1, agg2, agg3] for each sieve (all zero — manual entry)
 const ORIGINAL_DATA = [
-  [0, 0, 0, 0],  // 25 mm
+  [0, 0, 0, 0],  // 31.5 mm
+  [0, 0, 0, 0],  // 26.5 mm
   [0, 0, 0, 0],  // 19 mm
-  [0, 0, 0, 0],  // 12.5 mm
+  [0, 0, 0, 0],  // 16 mm
   [0, 0, 0, 0],  // 9.5 mm
   [0, 0, 0, 0],  // 4.75 mm
   [0, 0, 0, 0],  // 2.36 mm
@@ -622,12 +624,15 @@ const ORIGINAL_DATA = [
 ];
 const ORIGINAL_PROPS = [0, 0, 0, 0]; // 骨料1-4 比例 (清零，需手动输入)
 
-const TWINTEC_LOWER = [100, 90, 58, 46, 36, 26, 17, 11, 6, 1, 0];
-const TWINTEC_UPPER = [100, 100, 80, 70, 53, 44, 32, 21, 13, 3, 2];
+// Twintec SFRC target envelope — interpolated to JGJ 52-2006 sieve sizes
+// Original at [25,19,12.5,9.5,4.75,2.36,1.18,0.6,0.3,0.15,0.075]
+// Extended for [31.5,26.5,19,16,9.5,...] — 31.5mm is max nominal size, 100% passing
+const TWINTEC_LOWER = [100, 100, 90, 77, 46, 36, 26, 17, 11, 6, 1, 0];
+const TWINTEC_UPPER = [100, 100, 100, 92, 70, 53, 44, 32, 21, 13, 3, 2];
 
 const AGG_NAMES = ['碎石 ①（20mm）', '碎石 ②（10mm）', '砂 ①（5mm 机制砂）', '砂 ②（超细砂）'];
 const AGG_COLORS = ['#4a6880', '#4d8c70', '#c49555', '#8a7098']; // 靛青 松绿 赭色 藕荷
-const DMAX = 25;
+const DMAX = 31.5;
 
 // ========== STATE ==========
 let aggData = ORIGINAL_DATA.map(r => [...r]);
@@ -641,6 +646,22 @@ function initMixQtys() {
   // All zero — user must manually enter each quantity
   mixQtys = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 }
+
+// Material apparent densities (kg/m³) — 表观密度 / 颗粒密度
+// Ref: GB/T 14684 (砂 ≥2500), GB/T 14685 (碎石 ≥2600), GB/T 208 (水泥), ACI 211.1, BRMCA
+const DEFAULT_DENSITIES = [
+  3100,  // 0: 水泥 P·O 42.5 — GB/T 208 密度试验
+  2300,  // 1: 粉煤灰 — ASTM C618 典型范围 2200–2400
+  2850,  // 2: 矿粉 GGBS — 典型范围 2800–2900
+  2700,  // 3: 碎石① 20mm — GB/T 14685 表观密度 ≥2600，花岗岩 ~2650–2750
+  2700,  // 4: 碎石② 10mm — 同上
+  2620,  // 5: 机制砂 5mm — GB/T 14684 表观密度 ≥2500，典型 2600–2650
+  2620,  // 6: 超细砂 — 同上
+  1000,  // 7: 水 — 4°C 纯水密度
+  1050,  // 8: 减水剂 PC — 液体，典型 1050–1100（用量按 L 计，体积 = 用量/1000）
+  7850,  // 9: 钢纤维 — 钢材密度
+];
+let densities = [...DEFAULT_DENSITIES];
 
 // ========== DERIVED COMPUTATIONS ==========
 function getCombined() {
@@ -659,7 +680,7 @@ function getStatus(val, lo, hi) {
 }
 
 function calcFM(passingArr) {
-  const sieveIndices = [4, 5, 6, 7, 8, 9]; // 4.75 ~ 0.15 mm
+  const sieveIndices = [5, 6, 7, 8, 9, 10]; // 4.75 ~ 0.15 mm
   let sumRetained = 0;
   sieveIndices.forEach(i => sumRetained += (100 - passingArr[i]));
   return sumRetained / 100;
@@ -668,24 +689,24 @@ function calcFM(passingArr) {
 // ========== BUILD FORM TABLE ==========
 // ========== BUILD FORM TABLES ==========
 function buildFormTable() {
-  // Stone sieves: 25mm – 4.75mm (indices 0–4), columns aggs 0,1
-  const stoneSieves = [0,1,2,3,4]; // indices into SIEVE_SIZES
+  // Stone sieves: 31.5mm – 2.36mm (indices 0–6, JGJ 52-2006), columns aggs 0,1
+  const stoneSieves = [0,1,2,3,4,5,6]; // indices into SIEVE_SIZES
   const tbodyStone = document.querySelector('#stoneForm tbody');
   tbodyStone.innerHTML = '';
   stoneSieves.forEach(i => {
     const tr = document.createElement('tr');
-    const is25mm = (i === 0);
+    const isMaxSieve = (i === 0); // 26.5mm — 10mm stone always passes
     tr.innerHTML = `
       <td><strong>${METRIC_LABELS[i]}</strong></td>
       <td><small style="color:var(--muted)">${IMPERIAL_LABELS[i]}</small></td>
       <td><input class="num-input agg-data" data-sieve="${i}" data-agg="0" value="${aggData[i][0]}"></td>
-      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="1" value="${aggData[i][1]}" ${is25mm ? 'readonly style="background:#ede9e0;"' : ''}></td>
+      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="1" value="${aggData[i][1]}" ${isMaxSieve ? 'readonly style="background:#ede9e0;"' : ''}></td>
     `;
     tbodyStone.appendChild(tr);
   });
 
-  // Sand sieves: 4.75mm – 0.075mm (indices 4–10), columns aggs 2,3
-  const sandSieves = [4,5,6,7,8,9,10];
+  // Sand sieves: 4.75mm – 0.075mm (indices 5–11), columns aggs 2,3
+  const sandSieves = [5,6,7,8,9,10,11];
   const tbodySand = document.querySelector('#sandForm tbody');
   tbodySand.innerHTML = '';
   sandSieves.forEach(i => {
@@ -801,14 +822,23 @@ function onMixQtyChange(e) {
   updateAll();
 }
 
+function onDensityChange(e) {
+  const idx = parseInt(e.target.dataset.idx);
+  let val = parseFloat(e.target.value);
+  if (isNaN(val)) val = 0;
+  val = Math.max(100, Math.min(20000, val));
+  densities[idx] = Math.round(val);
+  updateAll();
+}
+
 // ========== UPDATE ALL ==========
 function updateAll() {
   updateFormTableDisplay();
+  updateMixDesign();
   var resultsVisible = document.getElementById('resultsSection');
   if (resultsVisible && resultsVisible.style.display !== 'none') {
     updateChart();
     updateFM();
-    updateMixDesign();
     updateCompliance();
     updateAdjustments();
   }
@@ -817,8 +847,8 @@ function updateAll() {
 function updateFormTableDisplay() {
   const combined = getCombined();
 
-  // Update stone inputs
-  [0,1,2,3,4].forEach(i => {
+  // Update stone inputs (JGJ 52-2006: 7 sieves)
+  [0,1,2,3,4,5,6].forEach(i => {
     for (let a = 0; a < 2; a++) {
       const inp = document.querySelector(`#stoneForm .agg-data[data-sieve="${i}"][data-agg="${a}"]`);
       if (inp && document.activeElement !== inp) inp.value = aggData[i][a];
@@ -826,7 +856,7 @@ function updateFormTableDisplay() {
   });
 
   // Update sand inputs
-  [4,5,6,7,8,9,10].forEach(i => {
+  [5,6,7,8,9,10,11].forEach(i => {
     for (let a = 2; a < 4; a++) {
       const inp = document.querySelector(`#sandForm .agg-data[data-sieve="${i}"][data-agg="${a}"]`);
       if (inp && document.activeElement !== inp) inp.value = aggData[i][a];
@@ -884,7 +914,7 @@ function updateChart() {
   const fineX = [], fineCombined = [], fineLower = [], fineUpper = [];
 
   for (let i = 0; i <= 200; i++) {
-    const d = 0.075 + (25 - 0.075) * (i / 200);
+    const d = 0.075 + (DMAX - 0.075) * (i / 200);
     fineX.push(d);
     fineCombined.push(interpolateCombined(d, aggData, proportions));
     for (let j = 0; j < SIEVE_SIZES.length - 1; j++) {
@@ -904,16 +934,16 @@ function updateChart() {
     {
       label: 'Twintec 上限',
       data: fineX.map((x, i) => ({ x, y: fineUpper[i] })),
-      borderColor: 'rgba(138,181,168,.22)', backgroundColor: 'transparent',
+      borderColor: 'rgba(72,135,105,.30)', backgroundColor: 'transparent',
       borderWidth: 1, pointRadius: 0, fill: false, order: 10,
     },
     {
       label: 'Twintec 下限',
       data: fineX.map((x, i) => ({ x, y: fineLower[i] })),
-      borderColor: 'rgba(138,181,168,.22)',
-      backgroundColor: 'rgba(138,181,168,.08)',
+      borderColor: 'rgba(72,135,105,.30)',
+      backgroundColor: 'rgba(72,135,105,.12)',
       borderWidth: 1, pointRadius: 0,
-      fill: { target: '-1', above: 'rgba(138,181,168,.06)' },
+      fill: { target: '-1', above: 'rgba(72,135,105,.10)' },
       order: 10,
     },
     ...[0, 1, 2, 3].map(a => ({
@@ -968,12 +998,12 @@ function updateChart() {
           x: {
             type: 'logarithmic',
             title: { display: true, text: '筛孔尺寸 (mm) — 对数坐标', font: { size: 12, weight: '600' }, color: '#2e2a25' },
-            min: 0.06, max: 30,
+            min: 0.06, max: 35,
             ticks: { callback: v => v >= 0.06 ? v : '', font: { size: 11 }, color: '#8a8278' },
             grid: {
               color: ctx => {
                 const v = ctx.tick.value;
-                return [0.075, 0.15, 0.3, 0.6, 1.18, 2.36, 4.75, 9.5, 12.5, 19, 25].includes(v)
+                return [0.075, 0.15, 0.3, 0.6, 1.18, 2.36, 4.75, 9.5, 16, 19, 26.5, 31.5].includes(v)
                   ? '#ddd7cb' : '#ebe6db';
               }
             }
@@ -1084,48 +1114,92 @@ function updateMixDesign() {
   const totalBinder = mixQtys[0] + mixQtys[1] + mixQtys[2];
   const wcm = mixQtys[7] > 0 ? (mixQtys[7] / totalBinder).toFixed(3) : '—';
 
-  // total kg: exclude liquid admixtures (index 8 has unit)
+  // total kg: exclude liquid admixtures (index 8 has unit and is measured in L)
   const totalKg = mixQtys.reduce((s, q, i) => {
     if (i === 8) return s; // PC is liquid, excluded from mass total
     return s + q;
   }, 0);
 
+  // Volume calculation (m³): PC (L-based) → volume = qty/1000; others → volume = qty/density
+  let totalVolume = 0;
+  const volumes = mixQtys.map((qty, i) => {
+    if (i === 8) return qty / 1000; // PC: L → m³ direct conversion
+    return densities[i] > 0 ? qty / densities[i] : 0;
+  });
+  totalVolume = volumes.reduce((s, v) => s + v, 0);
+
   const tbody = document.getElementById('mixTable');
 
   // Preserve focused input state before rebuilding
   const activeEl = document.activeElement;
-  const savedIdx = activeEl && activeEl.classList.contains('mix-qty') ? parseInt(activeEl.dataset.idx) : -1;
-  const savedStart = savedIdx >= 0 ? activeEl.selectionStart : 0;
-  const savedEnd   = savedIdx >= 0 ? activeEl.selectionEnd : 0;
+  const savedQtyIdx = activeEl && activeEl.classList.contains('mix-qty') ? parseInt(activeEl.dataset.idx) : -1;
+  const savedDenIdx = activeEl && activeEl.classList.contains('mix-density') ? parseInt(activeEl.dataset.idx) : -1;
+  const savedStart = (savedQtyIdx >= 0 || savedDenIdx >= 0) ? activeEl.selectionStart : 0;
+  const savedEnd   = (savedQtyIdx >= 0 || savedDenIdx >= 0) ? activeEl.selectionEnd : 0;
 
   tbody.innerHTML = mixRows.map(r => {
     const qty = mixQtys[r.idx];
     const hasUnit = !!r.unit;
-    const pct = hasUnit ? '—' : ((qty / totalKg) * 100).toFixed(1) + '%';
+    const pct = hasUnit ? '—' : (totalKg > 0 ? ((qty / totalKg) * 100).toFixed(1) + '%' : '0.0%');
     const isAgg = r.idx >= 3 && r.idx <= 6;
+    const vol = volumes[r.idx];
+    const volDisp = vol > 0 ? vol.toFixed(4) : (qty > 0 ? '<span style="color:var(--fail);">密度?</span>' : '—');
+    const den = densities[r.idx];
+    // PC (idx 8): quantity is in L, density input is hidden — volume = L / 1000 directly
+    const isPC = (r.idx === 8);
     return `
       <tr>
-        <td style="text-align:center;">${r.name}</td>
+        <td style="text-align:center;font-size:.73rem;">${r.name}</td>
         <td style="text-align:center;">
           <input class="num-input mix-qty ${isAgg ? 'wide' : ''}"
-                 data-idx="${r.idx}" value="${qty}" ${hasUnit ? 'style="width:52px;"' : ''}>
-          ${hasUnit ? ' ' + r.unit : ''}
+                 data-idx="${r.idx}" value="${qty}" style="width:${isPC ? '52px' : '58px'};">
+          ${hasUnit ? ' <small>' + r.unit + '</small>' : ''}
         </td>
+        <td style="text-align:center;">
+          ${isPC
+            ? '<span style="color:var(--muted);font-size:.7rem;">—</span>'
+            : `<input class="num-input mix-density" data-idx="${r.idx}" value="${den}" style="width:52px;font-size:.72rem;">`
+          }
+        </td>
+        <td style="text-align:center;font-variant-numeric:tabular-nums;${isAgg ? 'color:var(--accent);' : ''}">${volDisp}</td>
         <td style="text-align:center;${isAgg ? 'color:var(--accent);' : ''}">${pct}</td>
       </tr>
     `;
   }).join('');
 
   document.getElementById('mixTotal').textContent = totalKg + ' kg';
+  document.getElementById('mixVolume').textContent = totalVolume > 0 ? totalVolume.toFixed(4) + ' m³' : '—';
+
+  // Volume evaluation — 体积评估：是否接近 1 m³
+  const volumeNoteEl = document.getElementById('volumeNote');
+  if (totalVolume > 0 && totalKg > 0) {
+    const airPct = ((1 - totalVolume) * 100);
+    const airOk = totalVolume >= 0.96 && totalVolume <= 1.04;
+    const airGood = totalVolume >= 0.98 && totalVolume <= 1.02;
+    let airIcon, airHint;
+    if (airGood) { airIcon = '✅'; airHint = '体积接近 1 m³，含气量合理'; }
+    else if (airOk) { airIcon = '⚠️'; airHint = '体积偏差稍大，建议复核各材料用量或密度'; }
+    else { airIcon = '❌'; airHint = '体积偏离 1 m³ 较多，请检查用量或密度输入是否正确'; }
+    volumeNoteEl.innerHTML =
+      `📐 累计体积 <strong style="color:var(--accent);">${totalVolume.toFixed(4)} m³</strong> &nbsp;|&nbsp; 含气 / 空隙率 ≈ <strong>${airPct.toFixed(1)}%</strong>（1 m³ − 累计体积）&nbsp; ${airIcon} ${airHint}`;
+    volumeNoteEl.style.color = airOk ? 'var(--muted)' : 'var(--fail)';
+  } else {
+    volumeNoteEl.innerHTML = '';
+  }
 
   // Attach event listeners
   document.querySelectorAll('.mix-qty').forEach(inp => {
     inp.addEventListener('input', onMixQtyChange);
   });
+  document.querySelectorAll('.mix-density').forEach(inp => {
+    inp.addEventListener('input', onDensityChange);
+  });
 
   // Restore focus & cursor position if previously focused
-  if (savedIdx >= 0) {
-    const restored = document.querySelector(`.mix-qty[data-idx="${savedIdx}"]`);
+  if (savedQtyIdx >= 0 || savedDenIdx >= 0) {
+    const selClass = savedQtyIdx >= 0 ? '.mix-qty' : '.mix-density';
+    const selIdx = savedQtyIdx >= 0 ? savedQtyIdx : savedDenIdx;
+    const restored = document.querySelector(`${selClass}[data-idx="${selIdx}"]`);
     if (restored) {
       restored.focus();
       restored.setSelectionRange(savedStart, savedEnd);
