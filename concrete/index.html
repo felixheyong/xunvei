@@ -332,7 +332,8 @@
   <h2>筛分数据表单 — 依据商混站砂/石筛分报告分别输入</h2>
   <p class="desc">公制单位 (mm/µm) 为主，英制单位为辅。按商混站提供的碎石和砂筛分报告分别填入，组合级配曲线及评估结果自动更新。比例栏为各材料在总骨料中的质量占比，四项之和保持 100%。</p>
   <div class="btn-row">
-    <button class="btn primary" onclick="resetToOriginal()">↺ 恢复原始数据</button>
+    <button class="btn" onclick="autoOptimize()">🎯 基于当前材料自动优化级配</button>
+    <span style="font-size:.74rem;color:var(--muted);align-self:center;margin-left:8px;" id="autoMsg"></span>
   </div>
 
   <!-- ==== 碎石筛分 ==== -->
@@ -354,8 +355,8 @@
     </table>
   </div>
   <div style="margin:8px 0 16px; font-size:.76rem; color:var(--muted); display:flex; gap:24px; flex-wrap:wrap;">
-    <span><strong>碎石 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="0" value="39" style="width:60px;">% — 20mm 碎石</span>
-    <span><strong>碎石 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="1" value="16" style="width:60px;">% — 10mm 碎石</span>
+    <span><strong>碎石 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="0" value="0" style="width:60px;">% — 20mm 碎石</span>
+    <span><strong>碎石 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="1" value="0" style="width:60px;">% — 10mm 碎石</span>
   </div>
 
   <!-- ==== 砂筛分 ==== -->
@@ -377,8 +378,8 @@
     </table>
   </div>
   <div style="margin:8px 0 4px; font-size:.76rem; color:var(--muted); display:flex; gap:24px; flex-wrap:wrap;">
-    <span><strong>砂 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="2" value="34" style="width:60px;">% — 5mm 机制砂</span>
-    <span><strong>砂 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="3" value="11" style="width:60px;">% — 超细砂</span>
+    <span><strong>砂 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="2" value="0" style="width:60px;">% — 5mm 机制砂</span>
+    <span><strong>砂 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="3" value="0" style="width:60px;">% — 超细砂</span>
   </div>
 
   <!-- ==== 分析按钮 ==== -->
@@ -605,21 +606,21 @@ const SIEVE_SIZES = [25, 19, 12.5, 9.5, 4.75, 2.36, 1.18, 0.6, 0.3, 0.15, 0.075]
 const IMPERIAL_LABELS = ['1"', '3/4"', '1/2"', '3/8"', '#4', '#8', '#16', '#30', '#50', '#100', '#200'];
 const METRIC_LABELS = ['25 mm', '19 mm', '12.5 mm', '9.5 mm', '4.75 mm', '2.36 mm', '1.18 mm', '0.6 mm', '0.3 mm', '0.15 mm', '75 µm'];
 
-// Original aggregate passing data [agg0, agg1, agg2, agg3] for each sieve
+// Original aggregate passing data [agg0, agg1, agg2, agg3] for each sieve (all zero — manual entry)
 const ORIGINAL_DATA = [
-  [96, 100, 100, 100],  // 25 mm
-  [54, 100, 100, 100],  // 19 mm
-  [17, 95, 100, 100],   // 12.5 mm
-  [5, 37, 100, 100],    // 9.5 mm
-  [2, 4, 95, 98],       // 4.75 mm
-  [1, 1, 59, 92],       // 2.36 mm
-  [0, 0, 43, 89],       // 1.18 mm
-  [0, 0, 30, 85],       // 0.6 mm
-  [0, 0, 26, 81],       // 0.3 mm
-  [0, 0, 8, 71],        // 0.15 mm
-  [0, 0, 0, 0],         // 0.075 mm (75 µm)
+  [0, 0, 0, 0],  // 25 mm
+  [0, 0, 0, 0],  // 19 mm
+  [0, 0, 0, 0],  // 12.5 mm
+  [0, 0, 0, 0],  // 9.5 mm
+  [0, 0, 0, 0],  // 4.75 mm
+  [0, 0, 0, 0],  // 2.36 mm
+  [0, 0, 0, 0],  // 1.18 mm
+  [0, 0, 0, 0],  // 0.6 mm
+  [0, 0, 0, 0],  // 0.3 mm
+  [0, 0, 0, 0],  // 0.15 mm
+  [0, 0, 0, 0],  // 0.075 mm (75 µm)
 ];
-const ORIGINAL_PROPS = [0.39, 0.16, 0.34, 0.11]; // 骨料1-4 比例
+const ORIGINAL_PROPS = [0, 0, 0, 0]; // 骨料1-4 比例 (清零，需手动输入)
 
 const TWINTEC_LOWER = [100, 90, 58, 46, 36, 26, 17, 11, 6, 1, 0];
 const TWINTEC_UPPER = [100, 100, 80, 70, 53, 44, 32, 21, 13, 3, 2];
@@ -637,10 +638,8 @@ let concreteGrade = 'C35';
 // mixQtys: [cement, flyAsh, ggbs, agg0, agg1, agg2, agg3, water, pc, steelFiber]
 let mixQtys = [];
 function initMixQtys() {
-  const sum = proportions.reduce((a, b) => a + b, 0);
-  const totalAgg = 1853; // 标准总骨料重量基准
-  const aggKgs = proportions.map((p, i) => Math.round(totalAgg * p / sum));
-  mixQtys = [293, 35, 77, aggKgs[0], aggKgs[1], aggKgs[2], aggKgs[3], 185, 6.5, 30];
+  // All zero — user must manually enter each quantity
+  mixQtys = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 }
 
 // ========== DERIVED COMPUTATIONS ==========
@@ -1265,24 +1264,6 @@ function updateAdjustments() {
 }
 
 // ========== BUTTONS ==========
-function resetToOriginal() {
-  aggData = ORIGINAL_DATA.map(r => [...r]);
-  proportions = [...ORIGINAL_PROPS];
-  initMixQtys();
-  document.querySelectorAll('.agg-prop').forEach(inp => {
-    const a = parseInt(inp.dataset.agg);
-    inp.value = (proportions[a] * 100).toFixed(0);
-  });
-  document.getElementById('autoMsg').textContent = '';
-  updateAll();
-  // Restore all editable sieve data inputs
-  document.querySelectorAll('#stoneForm .agg-data, #sandForm .agg-data').forEach(inp => {
-    const sieve = parseInt(inp.dataset.sieve);
-    const agg = parseInt(inp.dataset.agg);
-    inp.value = aggData[sieve][agg];
-  });
-}
-
 function countViolations(props) {
   let count = 0;
   SIEVE_SIZES.forEach((_, i) => {
