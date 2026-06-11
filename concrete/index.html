@@ -349,12 +349,13 @@
     </select>
     <span style="font-size:.76rem;color:var(--muted);">每立方米材料用量。密度为相对密度（水 = 1.0），体积 = 用量 ÷（密度 × 1000），累计体积应接近 1 m³。</span>
   </p>
-  <table style="font-size:.76rem;table-layout:fixed;width:100%;">
+  <div style="overflow-x:auto;">
+  <table style="font-size:.76rem;table-layout:fixed;width:100%;min-width:520px;">
     <colgroup>
-      <col style="width:34%;">
-      <col style="width:14%;">
-      <col style="width:17%;">
-      <col style="width:17%;">
+      <col style="width:32%;">
+      <col style="width:16%;">
+      <col style="width:16%;">
+      <col style="width:18%;">
       <col style="width:18%;">
     </colgroup>
     <thead><tr><th>材料</th><th>用量 (kg)</th><th>密度</th><th>体积 (m³)</th><th>占比</th></tr></thead>
@@ -369,6 +370,7 @@
       </tr>
     </tfoot>
   </table>
+  </div>
   <p style="font-size:.72rem;color:var(--muted);margin-top:4px;" id="volumeNote"></p>
   <p style="font-size:.7rem;color:var(--muted);margin-top:4px;" id="gradeNote"></p>
 </div>
@@ -397,8 +399,8 @@
     </table>
   </div>
   <div style="margin:8px 0 16px; font-size:.76rem; color:var(--muted); display:flex; gap:24px; flex-wrap:wrap;">
-    <span><strong>碎石 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="0" value="0" style="width:60px;">% — 20mm 碎石</span>
-    <span><strong>碎石 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="1" value="0" style="width:60px;">% — 10mm 碎石</span>
+    <span><strong>碎石 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="0" value="0" style="width:60px;" inputmode="decimal">% — 20mm 碎石</span>
+    <span><strong>碎石 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="1" value="0" style="width:60px;" inputmode="decimal">% — 10mm 碎石</span>
   </div>
 
   <!-- ==== 砂筛分 ==== -->
@@ -420,8 +422,8 @@
     </table>
   </div>
   <div style="margin:8px 0 4px; font-size:.76rem; color:var(--muted); display:flex; gap:24px; flex-wrap:wrap;">
-    <span><strong>砂 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="2" value="0" style="width:60px;">% — 5mm 机制砂</span>
-    <span><strong>砂 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="3" value="0" style="width:60px;">% — 超细砂</span>
+    <span><strong>砂 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="2" value="0" style="width:60px;" inputmode="decimal">% — 5mm 机制砂</span>
+    <span><strong>砂 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="3" value="0" style="width:60px;" inputmode="decimal">% — 超细砂</span>
   </div>
 
   <!-- ==== 分析按钮 ==== -->
@@ -698,8 +700,8 @@ function buildFormTable() {
     tr.innerHTML = `
       <td><strong>${METRIC_LABELS[i]}</strong></td>
       <td><small style="color:var(--muted)">${IMPERIAL_LABELS[i]}</small></td>
-      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="0" value="${aggData[i][0]}"></td>
-      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="1" value="${aggData[i][1]}" ${isMaxSieve ? 'readonly style="background:#ede9e0;"' : ''}></td>
+      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="0" value="${aggData[i][0]}" inputmode="decimal"></td>
+      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="1" value="${aggData[i][1]}" ${isMaxSieve ? 'readonly style="background:#ede9e0;"' : ''} inputmode="decimal"></td>
     `;
     tbodyStone.appendChild(tr);
   });
@@ -713,8 +715,8 @@ function buildFormTable() {
     tr.innerHTML = `
       <td><strong>${METRIC_LABELS[i]}</strong></td>
       <td><small style="color:var(--muted)">${IMPERIAL_LABELS[i]}</small></td>
-      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="2" value="${aggData[i][2]}"></td>
-      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="3" value="${aggData[i][3]}"></td>
+      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="2" value="${aggData[i][2]}" inputmode="decimal"></td>
+      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="3" value="${aggData[i][3]}" inputmode="decimal"></td>
     `;
     tbodySand.appendChild(tr);
   });
@@ -1151,13 +1153,13 @@ function updateMixDesign() {
         <td style="text-align:center;font-size:.73rem;">${r.name}</td>
         <td style="text-align:center;">
           <input class="num-input mix-qty ${isAgg ? 'wide' : ''}"
-                 data-idx="${r.idx}" value="${qty}" style="width:${isPC ? '52px' : '58px'};">
+                 data-idx="${r.idx}" value="${qty}" style="width:${isPC ? '52px' : '58px'};" inputmode="decimal">
           ${hasUnit ? ' <small>' + r.unit + '</small>' : ''}
         </td>
         <td style="text-align:center;">
           ${isPC
             ? '<span style="color:var(--muted);font-size:.7rem;">—</span>'
-            : `<input class="num-input mix-density" data-idx="${r.idx}" value="${den}" style="width:52px;font-size:.72rem;">`
+            : `<input class="num-input mix-density" data-idx="${r.idx}" value="${den}" style="width:52px;font-size:.72rem;" inputmode="decimal">`
           }
         </td>
         <td style="text-align:center;font-variant-numeric:tabular-nums;${isAgg ? 'color:var(--accent);' : ''}">${volDisp}</td>
