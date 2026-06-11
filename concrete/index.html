@@ -331,7 +331,7 @@
 <div class="card" style="margin-bottom:22px;">
   <h2>当前混凝土配合比</h2>
   <p class="desc">
-    <span style="font-size:.74rem;">请输入商混站材料检测报告中的数值，如无则采用默认值。</span><br>
+    <span style="font-size:.74rem;">材料密度请输入商混站材料检测报告中的数值，如无则采用默认值。</span><br>
     <label for="gradeSelect" style="font-weight:600;color:var(--text);">混凝土强度等级：</label>
     <select id="gradeSelect" onchange="onGradeChange()" style="
       font-family:inherit;font-size:.8rem;font-weight:600;
@@ -391,7 +391,7 @@
         <tr>
           <th>筛孔 (mm)</th>
           <th>英制</th>
-          <th>碎石 ①<br>20mm 过筛%</th>
+          <th>碎石 ①<br>25mm 过筛%</th>
           <th>碎石 ②<br>10mm 过筛%</th>
         </tr>
       </thead>
@@ -399,7 +399,7 @@
     </table>
   </div>
   <div style="margin:8px 0 16px; font-size:.76rem; color:var(--muted); display:flex; gap:24px; flex-wrap:wrap;">
-    <span><strong>碎石 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="0" value="0" style="width:60px;" inputmode="decimal">% — 20mm 碎石</span>
+    <span><strong>碎石 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="0" value="0" style="width:60px;" inputmode="decimal">% — 25mm 碎石</span>
     <span><strong>碎石 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="1" value="0" style="width:60px;" inputmode="decimal">% — 10mm 碎石</span>
   </div>
 
@@ -414,7 +414,7 @@
         <tr>
           <th>筛孔 (mm)</th>
           <th>英制</th>
-          <th>砂 ①<br>5mm 机制砂 过筛%</th>
+          <th>砂 ①<br>机制砂/河砂 过筛%</th>
           <th>砂 ②<br>超细砂 过筛%</th>
         </tr>
       </thead>
@@ -422,7 +422,7 @@
     </table>
   </div>
   <div style="margin:8px 0 4px; font-size:.76rem; color:var(--muted); display:flex; gap:24px; flex-wrap:wrap;">
-    <span><strong>砂 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="2" value="0" style="width:60px;" inputmode="decimal">% — 5mm 机制砂</span>
+    <span><strong>砂 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="2" value="0" style="width:60px;" inputmode="decimal">% — 机制砂/河砂</span>
     <span><strong>砂 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="3" value="0" style="width:60px;" inputmode="decimal">% — 超细砂</span>
   </div>
 
@@ -467,9 +467,9 @@
     <div class="legend-item"><div class="legend-swatch dashed" style="border-color:#d48865;"></div> 组合级配（内插）</div>
     <div class="legend-item"><div class="legend-swatch" style="background:rgba(72,135,105,.24); height:16px; border-radius:4px; width:26px;"></div> Twintec 目标范围</div>
     <div class="legend-item"><div class="legend-swatch dashed" style="border-color:#8a9080;"></div> Fuller n=0.45 理想曲线</div>
-    <div class="legend-item"><div class="legend-swatch" style="background:#4a6880;"></div> 碎石 ①（20mm）</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#4a6880;"></div> 碎石 ①（25mm）</div>
     <div class="legend-item"><div class="legend-swatch" style="background:#4d8c70;"></div> 碎石 ②（10mm）</div>
-    <div class="legend-item"><div class="legend-swatch" style="background:#c49555;"></div> 砂 ①（5mm 机制砂）</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#c49555;"></div> 砂 ①（机制砂/河砂）</div>
     <div class="legend-item"><div class="legend-swatch" style="background:#8a7098;"></div> 砂 ②（超细砂）</div>
   </div>
 </div>
@@ -632,7 +632,7 @@ const ORIGINAL_PROPS = [0, 0, 0, 0]; // 骨料1-4 比例 (清零，需手动输�
 const TWINTEC_LOWER = [100, 100, 90, 77, 46, 36, 26, 17, 11, 6, 1, 0];
 const TWINTEC_UPPER = [100, 100, 100, 92, 70, 53, 44, 32, 21, 13, 3, 2];
 
-const AGG_NAMES = ['碎石 ①（20mm）', '碎石 ②（10mm）', '砂 ①（5mm 机制砂）', '砂 ②（超细砂）'];
+const AGG_NAMES = ['碎石 ①（25mm）', '碎石 ②（10mm）', '砂 ①（机制砂/河砂）', '砂 ②（超细砂）'];
 const AGG_COLORS = ['#4a6880', '#4d8c70', '#c49555', '#8a7098']; // 靛青 松绿 赭色 藕荷
 const DMAX = 31.5;
 
@@ -654,12 +654,12 @@ const DEFAULT_DENSITIES = [
   3.1,     // 0: 水泥 P·O 42.5 — 相对密度 3.1
   2.3,     // 1: 粉煤灰 — 典型范围 2.2–2.4
   2.85,    // 2: 矿粉 GGBS — 典型范围 2.8–2.9
-  2.7,     // 3: 碎石① 20mm — 表观密度 ≥2.6，花岗岩 ~2.65–2.75
+  2.7,     // 3: 碎石① 25mm — 表观密度 ≥2.6，花岗岩 ~2.65–2.75
   2.7,     // 4: 碎石② 10mm — 同上
   2.62,    // 5: 机制砂 5mm — 表观密度 ≥2.5，典型 2.6–2.65
   2.62,    // 6: 超细砂 — 同上
   1.0,     // 7: 水 — 4°C 纯水，相对密度 1.0
-  1.05,    // 8: 减水剂 PC — 液体，典型 1.05–1.10
+  1.05,    // 8: 外加剂 — 液体，典型 1.05–1.10
   7.85,    // 9: 钢纤维 — 钢材，相对密度 7.85
 ];
 let densities = [...DEFAULT_DENSITIES];
@@ -1103,12 +1103,12 @@ function updateMixDesign() {
     { id: 'cement',  name: '普通硅酸盐水泥 (P·O 42.5)', idx: 0 },
     { id: 'flyash',  name: '粉煤灰',                     idx: 1 },
     { id: 'ggbs',    name: '矿粉 (GGBS)',                 idx: 2 },
-    { id: 'agg0',    name: '碎石 ①（20mm）',              idx: 3 },
+    { id: 'agg0',    name: '碎石 ①（25mm）',              idx: 3 },
     { id: 'agg1',    name: '碎石 ②（10mm）',              idx: 4 },
-    { id: 'agg2',    name: '砂 ①（5mm 机制砂）',          idx: 5 },
+    { id: 'agg2',    name: '砂 ①（机制砂/河砂）',          idx: 5 },
     { id: 'agg3',    name: '砂 ②（超细砂）',              idx: 6 },
     { id: 'water',   name: '用水量',                      idx: 7 },
-    { id: 'pc',      name: '减水剂 (PC)',                 idx: 8, unit: 'L' },
+    { id: 'pc',      name: '外加剂',                 idx: 8, unit: 'L' },
     { id: 'steel',   name: '钢纤维',                      idx: 9 },
   ];
 
@@ -1328,7 +1328,7 @@ function updateAdjustments() {
     const highCount = suggestions.filter(s => s.type === 'high').length;
     let summary = '';
     if (lowCount > 0 && highCount > 0) {
-      summary = `<strong>综合建议：</strong>级配曲线在粗端偏低（偏粗）同时在细端偏高（偏细），说明中间粒径骨料（5mm 粗砂）比例可能偏大。建议：<strong>微调 20mm 粗骨料和超细砂比例</strong>，将超细砂比例降低 3–5%，20mm 粗骨料比例提高 3–5%，使曲线整体向 Fuller 理想线靠拢。`;
+      summary = `<strong>综合建议：</strong>级配曲线在粗端偏低（偏粗）同时在细端偏高（偏细），说明中间粒径骨料（5mm 粗砂）比例可能偏大。建议：<strong>微调 25mm 粗骨料和超细砂比例</strong>，将超细砂比例降低 3–5%，25mm 粗骨料比例提高 3–5%，使曲线整体向 Fuller 理想线靠拢。`;
     } else if (lowCount > 0) {
       summary = `<strong>综合建议：</strong>粗端整体偏粗，建议在保持细端不超标的前提下，适当减少最大粒径骨料比例，或选用 10–20mm 中间档骨料补充。`;
     } else if (highCount > 0) {
