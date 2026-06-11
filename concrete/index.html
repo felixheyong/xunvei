@@ -1513,6 +1513,13 @@ function runOptimization(initialViolations, msgEl) {
 initMixQtys();
 buildFormTable();
 
+// 点击数字输入框时自动全选，直接输入即可替换默认值
+document.addEventListener('focusin', function(e) {
+  if (e.target.classList.contains('num-input')) {
+    e.target.select();
+  }
+});
+
 // ========== PASSWORD SYSTEM ==========
 const MAX_ATTEMPTS = 3;
 
