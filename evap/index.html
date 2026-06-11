@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACI 305R / 308R — 混凝土蒸发量计算与塑性开裂风险评估</title>
+<style>
+  :root {
+    --primary: #1a5276;
+    --primary-light: #2980b9;
+    --accent: #e67e22;
+    --danger: #e74c3c;
+    --success: #27ae60;
+    --warning: #f39c12;
+    --bg: #f0f3f7;
+    --card-bg: #ffffff;
+    --text: #2c3e50;
+    --text-light: #7f8c8d;
+    --border: #dfe6e9;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #0f2840 0%, #1a5276 50%, #1a3a5c 100%);
+    color: #fff;
+    padding: 20px 32px;
+    text-align: center;
+  }
+  .header h1 { font-size: 1.4rem; letter-spacing: 0.5px; font-weight: 700; }
+  .header p { font-size: 0.82rem; opacity: 0.8; margin-top: 4px; }
+
+  /* ── Layout ── */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 800px) { .container { grid-template-columns: 1fr; } }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+  }
+  .card h2 {
+    font-size: 1rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card h2 .icon { font-size: 1.2rem; }
+
+  /* ── Form Inputs ── */
+  .form-row {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 12px;
+  }
+  .form-row label {
+    width: 140px; min-width: 140px;
+    font-size: 0.82rem; font-weight: 600; color: var(--text-light);
+  }
+  .form-row input[type="range"] {
+    flex: 1; accent-color: var(--accent);
+  }
+  .form-row .val {
+    width: 70px; text-align: right;
+    font-weight: 700; color: var(--primary); font-size: 0.88rem;
+  }
+  .unit-toggle {
+    display: flex; gap: 4px; margin-bottom: 16px;
+  }
+  .unit-toggle button {
+    flex: 1; padding: 8px; border: 2px solid var(--border); border-radius: 6px;
+    background: #fff; cursor: pointer; font-size: 0.8rem; font-weight: 600;
+    transition: all 0.2s;
+  }
+  .unit-toggle button.active {
+    border-color: var(--primary); background: var(--primary); color: #fff;
+  }
+
+  /* ── Nomograph Visual ── */
+  #nomograph-wrap {
+    position: relative; width: 100%; aspect-ratio: 1.2;
+    border: 1px solid #eee; border-radius: var(--radius);
+    background: #fafbfc; overflow: hidden;
+  }
+  #nomograph-wrap canvas { width: 100%; height: 100%; }
+
+  /* ── Results ── */
+  .result-banner {
+    border-radius: var(--radius);
+    padding: 20px 24px; margin-top: 12px;
+    text-align: center; transition: all 0.3s;
+  }
+  .risk-safe    { background: #eafaf1; border: 2px solid var(--success); }
+  .risk-caution { background: #fef9e7; border: 2px solid var(--warning); }
+  .risk-danger  { background: #fdedec; border: 2px solid var(--danger); }
+  .risk-critical { background: #f9e7e7; border: 2px solid #c0392b; }
+
+  .evap-value {
+    font-size: 2.8rem; font-weight: 800; line-height: 1.1;
+  }
+  .evap-unit { font-size: 0.9rem; opacity: 0.7; font-weight: 400; }
+
+  /* ── Gauge ── */
+  .gauge-wrap {
+    position: relative; width: 200px; height: 100px; margin: 12px auto; overflow: hidden;
+  }
+  .gauge-wrap canvas { width: 100%; height: 100%; }
+  .gauge-value {
+    text-align: center; font-size: 1.1rem; font-weight: 700; color: var(--primary);
+    margin-top: 2px; padding: 4px 0;
+  }
+
+  /* ── Multi-Method Table ── */
+  .methods-table { width: 100%; font-size: 0.8rem; border-collapse: collapse; margin-top: 8px; }
+  .methods-table th {
+    background: #f4f6f9; padding: 8px 10px; text-align: left;
+    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .methods-table td { padding: 8px 10px; border-bottom: 1px solid #eee; }
+  .methods-table .active-row { background: #eef5fb; font-weight: 600; }
+
+  /* ── Mitigation ── */
+  .mitigation-list {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;
+  }
+  .mitigation-item {
+    padding: 10px 14px; border-radius: 6px; font-size: 0.78rem;
+    display: flex; align-items: start; gap: 8px;
+    border: 1px solid #eee;
+  }
+  .mitigation-item .num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 700; flex-shrink: 0;
+  }
+
+  /* ── Threshold Reference ── */
+  .threshold-bar {
+    height: 30px; border-radius: 15px; position: relative; margin: 10px 0;
+    background: linear-gradient(to right,
+      #27ae60 0%, #27ae60 20%,
+      #f1c40f 20%, #f1c40f 38%,
+      #e67e22 38%, #e67e22 58%,
+      #e74c3c 58%, #c0392b 100%
+    );
+  }
+  .threshold-marker {
+    position: absolute; top: -6px;
+    width: 4px; height: 42px; background: #000; border-radius: 2px;
+    transition: left 0.3s;
+  }
+  .threshold-labels {
+    display: flex; justify-content: space-between; font-size: 0.65rem;
+    color: var(--text-light); margin-bottom: 4px;
+  }
+  .threshold-labels span { text-align: center; }
+
+  /* ── Presets ── */
+  .preset-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  }
+  .preset-btn {
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+    background: #fafbfc; cursor: pointer; font-size: 0.72rem;
+    text-align: left; transition: all 0.15s;
+  }
+  .preset-btn:hover { border-color: var(--primary-light); background: #eef5fb; }
+  .preset-btn .big { font-weight: 700; display: block; font-size: 0.85rem; }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center; padding: 16px; font-size: 0.7rem; color: var(--text-light);
+  }
+  .footer a { color: var(--primary-light); }
+
+  /* ── Print ── */
+  @media print {
+    body { background: #fff; }
+    .container { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🧪 ACI 305R / 308R · 混凝土表面蒸发量计算器</h1>
+  <p>基于 Menzel 公式 + Uno 简化方程 + ACI 蒸发诺模图 — 塑性收缩开裂风险评估 | 自动定位 + 实时天气</p>
+  <p style="font-size:0.78rem;opacity:0.7;margin-top:4px;">🔧 汉化整合：贺勇（Felix）</p>
+</div>
+
+<div class="container">
+
+<!-- ════════════ LEFT: INPUT PANEL ════════════ -->
+<div>
+  <div class="card">
+    <h2><span class="icon">🌡️</span>环境参数输入</h2>
+    <div class="unit-toggle">
+      <button id="btn-metric" class="active" onclick="setUnits('metric')">📐 公制 (°C, kph, kg/m²/hr)</button>
+      <button id="btn-imperial" onclick="setUnits('imperial')">📏 英制 (°F, mph, lb/ft²/hr)</button>
+    </div>
+
+    <div id="inputs-metric">
+      <div class="form-row">
+        <label>🌡️ 气温 Ta</label>
+        <input type="range" id="ta-m" min="5" max="55" value="35" step="0.5" oninput="updateVal('ta-m')">
+        <span class="val" id="val-ta-m">35 °C</span>
+      </div>
+      <div class="form-row">
+        <label>🔥 混凝土温度 Tc</label>
+        <input type="range" id="tc-m" min="5" max="55" value="32" step="0.5" oninput="updateVal('tc-m')">
+        <span class="val" id="val-tc-m">32 °C</span>
+      </div>
+      <div class="form-row">
+        <label>💧 相对湿度 RH</label>
+        <input type="range" id="rh-m" min="5" max="100" value="30" step="1" oninput="updateVal('rh-m')">
+        <span class="val" id="val-rh-m">30 %</span>
+      </div>
+      <div class="form-row">
+        <label>💨 风速 V</label>
+        <input type="range" id="v-m" min="0" max="80" value="20" step="0.5" oninput="updateVal('v-m')">
+        <span class="val" id="val-v-m">20 kph</span>
+      </div>
+      <!-- Wind mode toggle -->
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 12px;background:#f8f9fa;border-radius:6px;">
+        <span style="font-size:0.78rem;font-weight:600;color:var(--text-light);">🌬️ 风速模式</span>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.78rem;">
+          <input type="radio" name="wind-mode" value="indoor" onchange="setWindMode('indoor')">
+          🏠 室内 (V=0)
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.78rem;">
+          <input type="radio" name="wind-mode" value="outdoor" onchange="setWindMode('outdoor')" checked>
+          ☀️ 露天 (天气风速)
+        </label>
+      </div>
+      <div id="wind-note" style="font-size:0.65rem;color:#e67e22;margin-top:3px;display:none;">
+        ⚠️ 户外风速需在距离地坪板面 <b>50cm 高度</b> 处实测为准
+      </div>
+    </div>
+
+    <div id="inputs-imperial" style="display:none;">
+      <div class="form-row">
+        <label>🌡️ 气温 Ta</label>
+        <input type="range" id="ta-i" min="40" max="130" value="95" step="1" oninput="updateVal('ta-i')">
+        <span class="val" id="val-ta-i">95 °F</span>
+      </div>
+      <div class="form-row">
+        <label>🔥 混凝土温度 Tc</label>
+        <input type="range" id="tc-i" min="40" max="130" value="90" step="1" oninput="updateVal('tc-i')">
+        <span class="val" id="val-tc-i">90 °F</span>
+      </div>
+      <div class="form-row">
+        <label>💧 相对湿度 RH</label>
+        <input type="range" id="rh-i" min="5" max="100" value="30" step="1" oninput="updateVal('rh-i')">
+        <span class="val" id="val-rh-i">30 %</span>
+      </div>
+      <div class="form-row">
+        <label>💨 风速 V</label>
+        <input type="range" id="v-i" min="0" max="50" value="12" step="0.5" oninput="updateVal('v-i')">
+        <span class="val" id="val-v-i">12 mph</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 12px;background:#f8f9fa;border-radius:6px;">
+        <span style="font-size:0.78rem;font-weight:600;color:var(--text-light);">🌬️ Wind Mode</span>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.78rem;">
+          <input type="radio" name="wind-mode-i" value="indoor" onchange="setWindMode('indoor')">
+          🏠 Indoor (V=0)
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.78rem;">
+          <input type="radio" name="wind-mode-i" value="outdoor" onchange="setWindMode('outdoor')" checked>
+          ☀️ Outdoor (weather)
+        </label>
+      </div>
+    </div>
+
+    <!-- Location + Weather -->
+    <div style="margin-top:12px;background:#e8f4fd;border-radius:8px;padding:12px 14px;" id="weather-box">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:1.2rem;">📍</span>
+          <span id="location-label" style="font-size:0.8rem;font-weight:600;color:var(--primary);">点击获取按钮自动定位...</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="fetchLocationByIP()" id="btn-ip"
+            style="padding:7px 12px;border:none;border-radius:6px;background:var(--primary);color:#fff;font-size:0.73rem;cursor:pointer;font-weight:600;white-space:nowrap;">
+            🌐 IP 定位
+          </button>
+          <button onclick="fetchLocationByBrowser()" id="btn-gps"
+            style="padding:7px 12px;border:1px solid var(--primary);border-radius:6px;background:#fff;color:var(--primary);font-size:0.73rem;cursor:pointer;font-weight:600;white-space:nowrap;">
+            📡 GPS 定位
+          </button>
+        </div>
+      </div>
+      <!-- Manual city search -->
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <input type="text" id="city-search" placeholder="🔍 或输入城市名 (如: 重庆、Shanghai、Dubai...)"
+          style="flex:1;padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:0.75rem;"
+          onkeydown="if(event.key==='Enter')fetchLocationByCity()">
+        <button onclick="fetchLocationByCity()"
+          style="padding:6px 12px;border:none;border-radius:4px;background:var(--accent);color:#fff;font-size:0.73rem;cursor:pointer;font-weight:600;white-space:nowrap;">
+          搜索
+        </button>
+      </div>
+      <div id="weather-detail" style="font-size:0.72rem;color:var(--text-light);margin-top:6px;display:none;"></div>
+      <div id="location-method" style="font-size:0.65rem;color:#999;margin-top:2px;display:none;"></div>
+    </div>
+
+    <!-- Presets -->
+    <div style="margin-top:12px;">
+      <div style="font-size:0.72rem;color:var(--text-light);margin-bottom:4px;">📋 典型场景预设</div>
+      <div class="preset-grid" id="presets-metric">
+        <button class="preset-btn" onclick="setPreset('hot-arid')"><span class="big">🏜️ 干热极端</span>48°C / 38°C / 10%RH / 30kph</button>
+        <button class="preset-btn" onclick="setPreset('summer-hot')"><span class="big">☀️ 高温夏季</span>38°C / 32°C / 25%RH / 15kph</button>
+        <button class="preset-btn" onclick="setPreset('summer-humid')"><span class="big">🌊 湿热夏季</span>35°C / 30°C / 70%RH / 10kph</button>
+        <button class="preset-btn" onclick="setPreset('moderate')"><span class="big">🌿 温和气候</span>22°C / 24°C / 55%RH / 8kph</button>
+        <button class="preset-btn" onclick="setPreset('cool-windy')"><span class="big">💨 冷风天气</span>12°C / 14°C / 45%RH / 35kph</button>
+        <button class="preset-btn" onclick="setPreset('calm-cool')"><span class="big">🌥️ 阴冷微风</span>10°C / 12°C / 80%RH / 5kph</button>
+      </div>
+      <div class="preset-grid" id="presets-imperial" style="display:none;">
+        <button class="preset-btn" onclick="setPreset('hot-arid')"><span class="big">🏜️ Extreme Arid</span>118°F / 100°F / 10%RH</button>
+        <button class="preset-btn" onclick="setPreset('summer-hot')"><span class="big">☀️ Hot Summer</span>100°F / 90°F / 25%RH</button>
+        <button class="preset-btn" onclick="setPreset('summer-humid')"><span class="big">🌊 Humid Summer</span>95°F / 86°F / 70%RH</button>
+        <button class="preset-btn" onclick="setPreset('moderate')"><span class="big">🌿 Moderate</span>72°F / 75°F / 55%RH</button>
+        <button class="preset-btn" onclick="setPreset('cool-windy')"><span class="big">💨 Cool Windy</span>54°F / 57°F / 45%RH</button>
+        <button class="preset-btn" onclick="setPreset('calm-cool')"><span class="big">🌥️ Cool Calm</span>50°F / 54°F / 80%RH</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk Result -->
+  <div class="card">
+    <h2><span class="icon">⚠️</span>蒸发量 & 风险评估</h2>
+    <div id="result-area">
+      <div style="text-align:center;color:#aaa;padding:40px;">调整参数后自动计算...</div>
+    </div>
+  </div>
+
+  <!-- Mitigation (moved to left for balance) -->
+  <div class="card" id="mitigation-card">
+    <h2><span class="icon">🛡️</span>缓解措施 (ACI 305R §3.2)</h2>
+    <div id="mitigation-content">
+      <div style="color:#aaa;font-size:0.82rem;">蒸发量评估后方可推荐措施...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ RIGHT: NOMOGRAPH + DETAILS ════════════ -->
+<div>
+  <!-- Nomograph -->
+  <div class="card" style="padding-bottom:12px;">
+    <h2><span class="icon">📐</span>ACI 蒸发诺模图 (交互式)</h2>
+    <div id="nomograph-wrap" style="max-height:340px;">
+      <canvas id="nomo-canvas"></canvas>
+    </div>
+    <div style="font-size:0.7rem;color:var(--text-light);text-align:center;margin-top:2px;">
+      蓝线 = 当前参数的四步求解路径 | 基于 Menzel (1954) + ACI 305R Fig. 2.1.5
+    </div>
+  </div>
+
+  <!-- Three Methods Comparison -->
+  <div class="card">
+    <h2><span class="icon">🔬</span>三种计算方法对比</h2>
+    <table class="methods-table" id="methods-table">
+      <thead>
+        <tr><th>计算方法</th><th>蒸发量</th><th>来源</th><th>基准</th></tr>
+      </thead>
+      <tbody>
+        <tr id="row-menzel"><td>1. Menzel-Dalton (ACI 诺模图)</td><td id="td-menzel">--</td><td>ACI 305R Fig.2.1.5</td><td>Lake Hefner 1950s</td></tr>
+        <tr id="row-uno-full"><td>2. Uno-Tetens 完整公式</td><td id="td-uno-full">--</td><td>Uno, ACI Mat. J. 1998</td><td>Tetens 1930</td></tr>
+        <tr id="row-uno-simple"><td>3. Uno 简化经验公式</td><td id="td-uno-simple">--</td><td>Uno, ACI Mat. J. 1998</td><td>直接回归</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Threshold Reference -->
+  <div class="card">
+    <h2><span class="icon">📊</span>ACI 临界阈值参考</h2>
+    <div class="threshold-labels">
+      <span>安全<br>0.25</span>
+      <span>需关注<br>0.50</span>
+      <span>采取措施<br>1.00</span>
+      <span>高风险<br>1.50</span>
+      <span>临界<br>2.00</span>
+    </div>
+    <div class="threshold-bar" style="position:relative;">
+      <div class="threshold-marker" id="threshold-marker" style="left:30%;"></div>
+    </div>
+    <div style="font-size:0.72rem;color:var(--text-light);margin-top:8px;">
+      <table style="width:100%;font-size:0.7rem;">
+        <tr style="font-weight:600;"><td>混凝土类型</td><td>临界蒸发量</td><td>来源</td></tr>
+        <tr><td>普通混凝土 (传统)</td><td>1.0 kg/m²/hr</td><td>ACI 305R/308R</td></tr>
+        <tr><td>普通混凝土 (预防)</td><td>0.5 kg/m²/hr</td><td>ACI 305R/308R</td></tr>
+        <tr><td>低泌水混凝土 (现代)</td><td>0.50–0.75</td><td>ACI 308R 更新</td></tr>
+        <tr><td>路面混凝土 (FHWA)</td><td>0.3 kg/m²/hr</td><td>FHWA-HRT-05-038</td></tr>
+        <tr style="color:#e74c3c;"><td>硅灰混凝土 ☠️</td><td>0.25 kg/m²/hr</td><td>ACI 308R</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="footer">
+  基于 ACI 305R "Hot Weather Concreting" & ACI 308R "Guide to Curing Concrete" |
+  Menzel (1954) · Uno (1998) · Tetens (1930) · Lake Hefner Studies |
+  天气数据: <a href="https://open-meteo.com/" target="_blank">Open-Meteo API</a> (免费开源, 无需 API Key)
+</div>
+
+<!-- ═══════════════════════════════════════
+  🚀 部署到网络的方法 (任选一种):
+
+  【方法一 GitHub Pages — 免费, 推荐】
+  1. 访问 github.com 创建仓库 (例如: aci-evap-calc)
+  2. 将此 HTML 文件重命名为 index.html
+  3. 上传到仓库根目录
+  4. Settings → Pages → Source: main branch → Save
+  5. 几分钟后访问: https://你的用户名.github.io/aci-evap-calc/
+
+  【方法二 Netlify — 拖拽即上线, 最快】
+  1. 访问 app.netlify.com (用 GitHub 登录)
+  2. 将 index.html 直接拖入浏览器窗口
+  3. 自动生成网址 (可自定义域名)
+  4. 无需 Git, 单文件秒部署
+
+  【方法三 Vercel — 命令行部署】
+  1. npm i -g vercel
+  2. cd 到 HTML 所在目录
+  3. vercel --prod
+  4. 按提示操作, 自动分配域名
+
+  【注意事项】
+  - 浏览器定位 (Geolocation API) 需要 HTTPS 才能稳定工作
+  - 以上三个平台均免费提供 HTTPS
+  - Open-Meteo 天气 API 免费, 无需注册, 速率限制 10,000次/天
+  ═══════════════════════════════════════ -->
+
+<script>
+// ══════════════════════════════════════════════
+//  ACI 305R / 308R EVAPORATION RATE CALCULATOR
+//  Menzel + Uno Formulas | Interactive Nomograph
+// ══════════════════════════════════════════════
+
+let currentUnits = 'metric';
+
+// ── TETENS VAPOR PRESSURE ──
+function tetensMetric(T) {
+  return 0.6108 * Math.exp(17.27 * T / (T + 237.3)); // kPa
+}
+function tetensImperial(T) {
+  return 0.0885 * Math.exp(17.3 * (T - 32) / (T + 395.1)); // psi
+}
+
+// ── MENZEL FORMULA ──
+function menzelMetric(Ta, Tc, RH, V) {
+  const e_so = tetensMetric(Tc); // saturation VP at concrete temp
+  const e_sa = tetensMetric(Ta); // saturation VP at air temp
+  const r = RH / 100;
+  const e_a = r * e_sa;
+  return 0.313 * (e_so - e_a) * (0.253 + 0.06 * V); // kg/m²/hr
+}
+function menzelImperial(Ta, Tc, RH, V) {
+  const e_so = tetensImperial(Tc);
+  const e_sa = tetensImperial(Ta);
+  const r = RH / 100;
+  const e_a = r * e_sa;
+  return 0.44 * (e_so - e_a) * (0.253 + 0.096 * V); // lb/ft²/hr
+}
+
+// ── UNO FULL (TETENS) FORMULA ──
+function unoFullMetric(Ta, Tc, RH, V) {
+  const e_so = tetensMetric(Tc);
+  const e_sa = tetensMetric(Ta);
+  const r = RH / 100;
+  return 0.313 * (e_so - r * e_sa) * (0.253 + 0.06 * V);
+}
+function unoFullImperial(Ta, Tc, RH, V) {
+  const e_so = tetensImperial(Tc);
+  const e_sa = tetensImperial(Ta);
+  const r = RH / 100;
+  return 0.44 * (e_so - r * e_sa) * (0.253 + 0.096 * V);
+}
+
+// ── UNO SIMPLIFIED EMPIRICAL FORMULA ──
+function unoSimpleMetric(Ta, Tc, RH, V) {
+  // E = [5(Tc+18)^2.5 - r(Ta+18)^2.5] × (V+4) × 10⁻⁶
+  const r = RH / 100;
+  const term1 = 5 * Math.pow(Tc + 18, 2.5);
+  const term2 = r * Math.pow(Ta + 18, 2.5);
+  return (term1 - term2) * (V + 4) * 1e-6; // kg/m²/hr
+}
+function unoSimpleImperial(Ta, Tc, RH, V) {
+  // Imperial adaptation of Uno simplified
+  // E = [5((Tc-32)*5/9+18)^2.5 - r*((Ta-32)*5/9+18)^2.5] × (V*1.609+4) × 10⁻⁶ * 0.2048
+  const TcC = (Tc - 32) * 5/9;
+  const TaC = (Ta - 32) * 5/9;
+  const Vkph = V * 1.60934;
+  const E_metric = unoSimpleMetric(TaC, TcC, RH, Vkph);
+  return E_metric * 0.2048; // kg/m²/hr → lb/ft²/hr
+}
+
+// ── GET CURRENT INPUT VALUES ──
+function getInputs() {
+  if (currentUnits === 'metric') {
+    return {
+      Ta: parseFloat(document.getElementById('ta-m').value),
+      Tc: parseFloat(document.getElementById('tc-m').value),
+      RH: parseFloat(document.getElementById('rh-m').value),
+      V: parseFloat(document.getElementById('v-m').value),
+      units: 'metric'
+    };
+  } else {
+    return {
+      Ta: parseFloat(document.getElementById('ta-i').value),
+      Tc: parseFloat(document.getElementById('tc-i').value),
+      RH: parseFloat(document.getElementById('rh-i').value),
+      V: parseFloat(document.getElementById('v-i').value),
+      units: 'imperial'
+    };
+  }
+}
+
+// ── COMPUTE ALL METHODS ──
+function computeAll() {
+  const inp = getInputs();
+  let menzel, unoF, unoSimple;
+
+  if (inp.units === 'metric') {
+    menzel = menzelMetric(inp.Ta, inp.Tc, inp.RH, inp.V);
+    unoF = unoFullMetric(inp.Ta, inp.Tc, inp.RH, inp.V);
+    unoSimple = unoSimpleMetric(inp.Ta, inp.Tc, inp.RH, inp.V);
+  } else {
+    menzel = menzelImperial(inp.Ta, inp.Tc, inp.RH, inp.V);
+    unoF = unoFullImperial(inp.Ta, inp.Tc, inp.RH, inp.V);
+    unoSimple = unoSimpleImperial(inp.Ta, inp.Tc, inp.RH, inp.V);
+  }
+
+  // Average (excluding negatives)
+  const vals = [menzel, unoF, unoSimple].filter(v => !isNaN(v) && isFinite(v));
+  const avg = vals.reduce((a,b)=>a+b,0) / vals.length;
+
+  const unit = inp.units === 'metric' ? 'kg/m²/hr' : 'lb/ft²/hr';
+  return { menzel, unoF, unoSimple, avg, unit, inp };
+}
+
+// ── RISK ASSESSMENT ──
+function assessRisk(evap, units) {
+  // Convert to metric if imperial
+  let e = evap;
+  if (units === 'imperial') e = evap / 0.2048; // lb/ft²/hr → kg/m²/hr (approx)
+
+  if (e <= 0.25) return { level: 'safe', label: '✅ 安全', cls: 'risk-safe',
+    desc: '蒸发量极低，塑性收缩开裂风险可忽略。正常施工。',
+    icon: '🟢' };
+  if (e <= 0.50) return { level: 'low', label: '🟡 低风险 — 需关注', cls: 'risk-caution',
+    desc: '蒸发量较低，现代低泌水混凝土建议开始关注。对于硅灰混凝土已接近临界。',
+    icon: '🟡' };
+  if (e <= 0.75) return { level: 'caution', label: '🟠 中等风险 — 建议措施', cls: 'risk-caution',
+    desc: '对普通混凝土尚可，但对低泌水/路面混凝土已达临界。建议启动预防措施。',
+    icon: '🟠' };
+  if (e <= 1.00) return { level: 'danger', label: '🔴 高风险 — 必须采取措施', cls: 'risk-danger',
+    desc: 'ACI 305R/308R 明确规定：蒸发量 > 0.5 需预防措施，> 1.0 必须采取行动。',
+    icon: '🔴' };
+  if (e <= 1.50) return { level: 'severe', label: '⛔ 严重风险 — 立即行动', cls: 'risk-critical',
+    desc: '蒸发量远超泌水率，塑性收缩开裂几乎不可避免。必须立即采取全面缓解措施。',
+    icon: '⛔' };
+  return { level: 'critical', label: '☠️ 极度危险 — 停止浇筑', cls: 'risk-critical',
+    desc: '蒸发量远超安全限值。除非采取极端降温/加湿/挡风措施，否则不应进行混凝土浇筑。',
+    icon: '☠️' };
+}
+
+// ── MITIGATION RECOMMENDATIONS ──
+function getMitigation(riskLevel) {
+  const all = {
+    safe: [
+      '正常施工，按常规养护方案执行',
+      '保持现场条件监测，注意天气变化'
+    ],
+    low: [
+      '使用蒸发抑制剂 (Evaporation Retardant) 喷洒表面',
+      '预湿模板和基层，降低表面温度',
+      '缩短浇筑-收光-养护的时间间隔'
+    ],
+    caution: [
+      '🌬️ 设置防风屏障 (Wind Breaks) 降低表面风速',
+      '💧 使用雾化喷雾 (Fog Spray) 增加表面湿度',
+      '⏱️ 合理安排浇筑时间 — 避开正午高温时段',
+      '🧊 采用冷却措施：冰水拌合、骨料遮阳',
+      '🧴 立即喷洒养护剂 (Curing Compound) 或覆膜'
+    ],
+    danger: [
+      '🌬️ 必须设置全封闭防风屏障',
+      '💧 必须使用雾化系统或蒸发抑制剂',
+      '🧊 混凝土温度控制：冰水拌合 + 液氮冷却',
+      '⏱️ 严格安排夜间/清晨浇筑',
+      '🧴 收光后立即覆膜/湿养护，零延迟',
+      '📋 制定书面热天施工方案 (ACI 305R §4)',
+      '👷 增加施工人员，缩短各工序时间'
+    ],
+    severe: [
+      '🚫 重新评估是否具备浇筑条件',
+      '🧊 极端冷却方案：冰替代全部拌合水、液氮',
+      '🌬️ 全封闭施工棚 + 空调/加湿',
+      '⏱️ 仅允许凌晨 4:00-7:00 浇筑',
+      '📋 强制性热天施工方案审批',
+      '🏗️ 考虑推迟浇筑或改用预制构件'
+    ],
+    critical: [
+      '🚫 强烈建议推迟浇筑',
+      '🏗️ 如无法推迟，必须建造全封闭控温控湿施工棚',
+      '📋 需专家评审专项施工方案',
+      '⚠️ 承包商承担全部塑性开裂责任'
+    ]
+  };
+  return all[riskLevel] || all.danger;
+}
+
+// ── RENDER RESULTS ──
+function renderResults() {
+  const { menzel, unoF, unoSimple, avg, unit, inp } = computeAll();
+  const risk = assessRisk(avg, inp.units);
+  const displayVal = avg;
+
+  // Main result
+  document.getElementById('result-area').innerHTML = `
+    <div class="result-banner ${risk.cls}">
+      <div style="font-size:1rem;font-weight:700;margin-bottom:4px;">${risk.label}</div>
+      <div class="evap-value">${displayVal.toFixed(3)}</div>
+      <div class="evap-unit">${unit}</div>
+      <div style="margin-top:8px;font-size:0.85rem;color:var(--text-light);">
+        ${risk.desc}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:12px;justify-content:center;font-size:0.75rem;">
+        <span>气温: <b>${inp.Ta}</b>${inp.units==='metric'?'°C':'°F'}</span>
+        <span>混凝土: <b>${inp.Tc}</b>${inp.units==='metric'?'°C':'°F'}</span>
+        <span>RH: <b>${inp.RH}%</b></span>
+        <span>风速: <b>${inp.V}</b>${inp.units==='metric'?'kph':'mph'}</span>
+      </div>
+    </div>
+    <!-- Gauge -->
+    <div class="gauge-wrap">
+      <canvas id="gauge-canvas"></canvas>
+    </div>
+	    <div class="gauge-value">${displayVal.toFixed(2)} ${unit}</div>
+  `;
+
+  // Methods table
+  document.getElementById('td-menzel').textContent = menzel.toFixed(3) + ' ' + unit;
+  document.getElementById('td-uno-full').textContent = unoF.toFixed(3) + ' ' + unit;
+  document.getElementById('td-uno-simple').textContent = unoSimple.toFixed(3) + ' ' + unit;
+
+  // Highlight closest method
+  document.querySelectorAll('#methods-table tbody tr').forEach(r => r.classList.remove('active-row'));
+  const diffs = [
+    { row: 'row-menzel', diff: Math.abs(menzel - avg) },
+    { row: 'row-uno-full', diff: Math.abs(unoF - avg) },
+    { row: 'row-uno-simple', diff: Math.abs(unoSimple - avg) }
+  ];
+  diffs.sort((a,b)=>a.diff-b.diff);
+  if (diffs[0].diff < 0.001) {
+    document.getElementById(diffs[0].row).classList.add('active-row');
+  }
+
+  // Mitigation
+  const mitigations = getMitigation(risk.level);
+  document.getElementById('mitigation-content').innerHTML = `
+    <div class="mitigation-list">
+      ${mitigations.map((m,i) => `
+        <div class="mitigation-item">
+          <div class="num">${i+1}</div>
+          <div>${m}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  // Threshold marker
+  let eNorm = displayVal;
+  if (inp.units === 'imperial') eNorm = displayVal / 0.2048; // to metric for marker
+  let markerPct = Math.min(95, (eNorm / 2.5) * 100);
+  if (markerPct < 1) markerPct = 1;
+  document.getElementById('threshold-marker').style.left = markerPct + '%';
+
+  // Draw gauge + nomograph
+  setTimeout(() => {
+    drawGauge(displayVal, unit, risk);
+    drawNomograph(inp);
+  }, 50);
+}
+
+// ── DRAW GAUGE ──
+function drawGauge(value, unit, risk) {
+  const c = document.getElementById('gauge-canvas');
+  if (!c) return;
+  const w = c.parentElement.clientWidth;
+  c.width = w * 2;
+  c.height = 200;
+  const ctx = c.getContext('2d');
+  const cx = w, cy = 160, r = 130;
+
+  // Background arc
+  const segments = [
+    { start: -Math.PI, end: -0.6*Math.PI, color: '#27ae60' },
+    { start: -0.6*Math.PI, end: -0.2*Math.PI, color: '#f1c40f' },
+    { start: -0.2*Math.PI, end: 0.16*Math.PI, color: '#e67e22' },
+    { start: 0.16*Math.PI, end: 0.5*Math.PI, color: '#e74c3c' },
+    { start: 0.5*Math.PI, end: Math.PI, color: '#c0392b' },
+  ];
+
+  ctx.lineWidth = 18;
+  for (const seg of segments) {
+    ctx.strokeStyle = seg.color;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, seg.start, seg.end);
+    ctx.stroke();
+  }
+
+  // Ticks
+  ctx.fillStyle = '#555';
+  ctx.font = 'bold 14px Segoe UI';
+  ctx.textAlign = 'center';
+  const ticks = [0, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5];
+  for (const t of ticks) {
+    const angle = -Math.PI + (t / 2.5) * (2 * Math.PI);
+    const tx = cx + (r - 30) * Math.cos(angle);
+    const ty = cy + (r - 30) * Math.sin(angle);
+    ctx.fillText(t.toFixed(t===0?0:2), tx, ty);
+  }
+
+  // Needle
+  let needleVal = value;
+  if (unit === 'lb/ft²/hr') needleVal = value / 0.2048;
+  const needleAngle = -Math.PI + Math.min(1, needleVal / 2.5) * (2 * Math.PI);
+
+  ctx.strokeStyle = '#2c3e50';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + (r - 45) * Math.cos(needleAngle), cy + (r - 45) * Math.sin(needleAngle));
+  ctx.stroke();
+
+  // Center dot
+  ctx.fillStyle = '#2c3e50';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 8, 0, Math.PI*2);
+  ctx.fill();
+
+}
+
+// ── DRAW NOMOGRAPH ──
+function drawNomograph(inp) {
+  const wrap = document.getElementById('nomograph-wrap');
+  const c = document.getElementById('nomo-canvas');
+  const W = wrap.clientWidth;
+  const H = W / 1.2;
+  c.width = W * 2;
+  c.height = H * 2;
+  c.style.width = W + 'px';
+  c.style.height = H + 'px';
+  wrap.style.height = H + 'px';
+
+  const ctx = c.getContext('2d');
+  const w = W * 2, h = H * 2;
+  ctx.scale(2, 2);
+  const W1 = w / 2, H1 = h / 2;
+
+  // Clear
+  ctx.fillStyle = '#fafbfc';
+  ctx.fillRect(0, 0, W1, H1);
+
+  // Axis positions (proportional spacing)
+  const margin = 30;
+  const innerW = W1 - 2 * margin;
+  const innerH = H1 - 2 * margin;
+
+  // Four vertical axes:
+  const axX = [0.12, 0.38, 0.62, 0.88].map(f => margin + f * innerW);
+
+  // Axis labels
+  const axes = [
+    { x: axX[0], label: '气温 Ta', unit: inp.units==='metric'?'°C':'°F', min:5, max:55, val:inp.Ta, isInput:true },
+    { x: axX[1], label: '相对湿度 RH', unit:'%', min:100, max:0, val:inp.RH, isInput:true },
+    { x: axX[2], label: '混凝土温度 Tc', unit:inp.units==='metric'?'°C':'°F', min:5, max:55, val:inp.Tc, isInput:true },
+    { x: axX[3], label: '蒸发量 E', unit:inp.units==='metric'?'kg/m²/h':'lb/ft²/h', min:0.01, max:4.0, val:null, isInput:false },
+  ];
+
+  // Draw axes
+  const axisTop = margin + 10;
+  const axisBot = H1 - margin - 10;
+
+  for (const ax of axes) {
+    // Axis line
+    ctx.strokeStyle = '#bbb';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(ax.x, axisTop);
+    ctx.lineTo(ax.x, axisBot);
+    ctx.stroke();
+
+    // Label at top
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 10px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText(ax.label, ax.x, axisTop - 6);
+
+    // Unit
+    ctx.fillStyle = '#888';
+    ctx.font = '8px Segoe UI';
+    ctx.fillText(`[${ax.unit}]`, ax.x, axisTop + 12);
+
+    // Ticks and values
+    const range = ax.max - ax.min;
+    let tickCount = 8;
+    if (ax.label.includes('蒸发')) tickCount = 6;
+
+    for (let i = 0; i <= tickCount; i++) {
+      const frac = i / tickCount;
+      const y = axisTop + frac * (axisBot - axisTop);
+      const val = ax.min + frac * (ax.max - ax.min);
+
+      // Tick mark
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(ax.x - 8, y);
+      ctx.lineTo(ax.x + 8, y);
+      ctx.stroke();
+
+      // Value label
+      ctx.fillStyle = '#666';
+      ctx.font = '8px Segoe UI';
+      ctx.textAlign = ax.x > W1/2 ? 'left' : 'right';
+      const labelX = ax.x > W1/2 ? ax.x + 12 : ax.x - 12;
+      if (ax.label.includes('蒸发') || ax.label.includes('湿度')) {
+        ctx.fillText(val.toFixed(ax.max <= 4 ? 2 : 0), labelX, y + 3);
+      } else {
+        ctx.fillText(Math.round(val).toString(), labelX, y + 3);
+      }
+    }
+
+    // Current value marker
+    if (ax.val !== null) {
+      const frac = (ax.val - ax.min) / (ax.max - ax.min);
+      const y = axisTop + frac * (axisBot - axisTop);
+
+      // Red dot
+      ctx.fillStyle = '#e74c3c';
+      ctx.beginPath();
+      ctx.arc(ax.x, y, 6, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Value label
+      ctx.fillStyle = '#c0392b';
+      ctx.font = 'bold 10px Segoe UI';
+      const labelVal = ax.label.includes('蒸发') ? ax.val.toFixed(3) : Math.round(ax.val).toString();
+      ctx.textAlign = ax.x > W1/2 ? 'left' : 'right';
+      ctx.fillText(labelVal, ax.x > W1/2 ? ax.x + 14 : ax.x - 14, y + 4);
+    }
+  }
+
+  // ── Draw the 4-step solution path (blue guiding line) ──
+  const Ta = axes[0];
+  const RH = axes[1];
+  const Tc = axes[2];
+  const Evap = axes[3];
+
+  const taFrac = (Ta.val - Ta.min) / (Ta.max - Ta.min);
+  const taY = axisTop + taFrac * (axisBot - axisTop);
+  const rhFrac = (RH.val - RH.min) / (RH.max - RH.min);
+  const rhY = axisTop + rhFrac * (axisBot - axisTop);
+  const tcFrac = (Tc.val - Tc.min) / (Tc.max - Tc.min);
+  const tcY = axisTop + tcFrac * (axisBot - axisTop);
+
+  // Compute actual evaporation result to position the final point
+  const { avg, unit } = computeAll();
+  let evapVal = avg;
+  const evapFrac = Math.min(1, Math.max(0, (evapVal - Evap.min) / (Evap.max - Evap.min)));
+  const evapY = axisTop + evapFrac * (axisBot - axisTop);
+
+  // Draw 4-step connecting lines
+  ctx.strokeStyle = 'rgba(41,128,185,0.7)';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([6, 3]);
+  ctx.beginPath();
+  // Step 1: Ta axis → RH axis
+  ctx.moveTo(Ta.x, taY);
+  ctx.lineTo(RH.x, rhY);
+  // Step 2: RH axis → Tc axis
+  ctx.moveTo(RH.x, rhY);
+  ctx.lineTo(Tc.x, tcY);
+  // Step 3: Tc axis → Evap axis
+  ctx.moveTo(Tc.x, tcY);
+  ctx.lineTo(Evap.x, evapY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw the final evaporation point
+  ctx.fillStyle = '#2980b9';
+  ctx.beginPath();
+  ctx.arc(Evap.x, evapY, 9, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Evaporation value label
+  ctx.fillStyle = '#1a5276';
+  ctx.font = 'bold 11px Segoe UI';
+  ctx.textAlign = 'left';
+  ctx.fillText(evapVal.toFixed(3), Evap.x + 14, evapY + 4);
+
+  // Step numbers
+  ctx.fillStyle = '#2980b9';
+  ctx.font = 'bold 9px Segoe UI';
+  const mid12x = (Ta.x + RH.x) / 2;
+  const mid12y = (taY + rhY) / 2;
+  ctx.fillText('①', mid12x + 4, mid12y - 4);
+  const mid23x = (RH.x + Tc.x) / 2;
+  const mid23y = (rhY + tcY) / 2;
+  ctx.fillText('②', mid23x + 4, mid23y - 4);
+  const mid34x = (Tc.x + Evap.x) / 2;
+  const mid34y = (tcY + evapY) / 2;
+  ctx.fillText('③', mid34x + 4, mid34y - 4);
+
+  // Title
+  ctx.fillStyle = '#333';
+  ctx.font = 'bold 11px Segoe UI';
+  ctx.textAlign = 'center';
+  ctx.fillText('ACI 蒸发诺模图 (交互式四步求解)', W1/2, H1 - 6);
+}
+
+// ── UNIT TOGGLE ──
+function setUnits(units) {
+  currentUnits = units;
+  document.getElementById('btn-metric').classList.toggle('active', units === 'metric');
+  document.getElementById('btn-imperial').classList.toggle('active', units === 'imperial');
+  document.getElementById('inputs-metric').style.display = units === 'metric' ? '' : 'none';
+  document.getElementById('inputs-imperial').style.display = units === 'imperial' ? '' : 'none';
+  document.getElementById('presets-metric').style.display = units === 'metric' ? '' : 'none';
+  document.getElementById('presets-imperial').style.display = units === 'imperial' ? '' : 'none';
+  renderResults();
+}
+
+// ── WIND MODE ──
+let windMode = 'outdoor';
+let savedWindKph = 20;
+let savedWindMph = 12;
+
+function setWindMode(mode) {
+  windMode = mode;
+  // Sync radio buttons in both unit sections
+  document.querySelectorAll('input[name="wind-mode"][value="' + mode + '"]').forEach(r => r.checked = true);
+  document.querySelectorAll('input[name="wind-mode-i"][value="' + mode + '"]').forEach(r => r.checked = true);
+
+  const vM = document.getElementById('v-m');
+  const vI = document.getElementById('v-i');
+  const note = document.getElementById('wind-note');
+
+  if (mode === 'indoor') {
+    // Save current outdoor wind speed before zeroing
+    if (vM.value != 0) savedWindKph = parseFloat(vM.value);
+    if (vI.value != 0) savedWindMph = parseFloat(vI.value);
+    vM.value = 0;
+    vI.value = 0;
+    vM.disabled = true;
+    vI.disabled = true;
+    note.style.display = 'none';
+    document.getElementById('val-v-m').textContent = '0 kph 🏠';
+    document.getElementById('val-v-i').textContent = '0 mph 🏠';
+  } else {
+    vM.value = savedWindKph;
+    vI.value = savedWindMph;
+    vM.disabled = false;
+    vI.disabled = false;
+    note.style.display = 'block';
+    document.getElementById('val-v-m').textContent = savedWindKph + ' kph';
+    document.getElementById('val-v-i').textContent = savedWindMph + ' mph';
+  }
+  renderResults();
+}
+
+// Override weather fetch to respect indoor mode
+const originalApplyWeatherData = null; // placeholder for hook
+
+// ── UPDATE LABEL ──
+function updateVal(id) {
+  const el = document.getElementById(id);
+  const valEl = document.getElementById('val-' + id);
+  if (!valEl) return;
+  let unit = '';
+  if (id.includes('ta-')) unit = id.includes('-m') ? '°C' : '°F';
+  else if (id.includes('tc-')) unit = id.includes('-m') ? '°C' : '°F';
+  else if (id.includes('rh-')) unit = '%';
+  else if (id.includes('v-')) unit = id.includes('-m') ? 'kph' : 'mph';
+  valEl.textContent = el.value + ' ' + unit;
+  renderResults();
+}
+
+// ── PRESETS ──
+function setPreset(name) {
+  setUnits('metric');
+  const presets = {
+    'hot-arid': { ta:48, tc:38, rh:10, v:30 },
+    'summer-hot': { ta:38, tc:32, rh:25, v:15 },
+    'summer-humid': { ta:35, tc:30, rh:70, v:10 },
+    'moderate': { ta:22, tc:24, rh:55, v:8 },
+    'cool-windy': { ta:12, tc:14, rh:45, v:35 },
+    'calm-cool': { ta:10, tc:12, rh:80, v:5 },
+  };
+  const p = presets[name];
+  if (!p) return;
+  document.getElementById('ta-m').value = p.ta;
+  document.getElementById('tc-m').value = p.tc;
+  document.getElementById('rh-m').value = p.rh;
+  document.getElementById('v-m').value = p.v;
+  updateVal('ta-m');
+  updateVal('tc-m');
+  updateVal('rh-m');
+  updateVal('v-m');
+}
+
+// ── LOCATION & WEATHER FETCH (Multi-method) ──
+let currentLocationSource = null; // 'ip' | 'gps' | 'city'
+
+async function applyWeatherData(lat, lon, source, sourceDetail) {
+  const btn = document.getElementById('btn-ip');
+  const label = document.getElementById('location-label');
+  const detail = document.getElementById('weather-detail');
+  const method = document.getElementById('location-method');
+  currentLocationSource = source;
+
+  btn.textContent = '⏳ 获取天气...';
+  btn.disabled = true;
+  document.getElementById('btn-gps').disabled = true;
+
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,wind_gusts_10m&timezone=auto`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('Weather API error');
+    const data = await resp.json();
+    const current = data.current;
+
+    const airTemp = Math.round(current.temperature_2m);
+    const rh = Math.round(current.relative_humidity_2m);
+    const windKph = Math.round(current.wind_speed_10m);
+    const gustKph = current.wind_gusts_10m ? Math.round(current.wind_gusts_10m) : windKph;
+    const concreteTemp = airTemp + 3;
+    const tz = data.timezone || 'Unknown';
+
+    // Set slider values
+    setUnits('metric');
+    document.getElementById('ta-m').value = airTemp;
+    document.getElementById('tc-m').value = concreteTemp;
+    document.getElementById('rh-m').value = rh;
+    // Respect indoor/outdoor wind mode
+    if (windMode === 'outdoor') {
+      savedWindKph = Math.max(windKph, 1);
+      savedWindMph = Math.round(savedWindKph / 1.609);
+      document.getElementById('v-m').value = savedWindKph;
+      document.getElementById('v-i').value = savedWindMph;
+      document.getElementById('v-m').disabled = false;
+      document.getElementById('v-i').disabled = false;
+      document.getElementById('wind-note').style.display = 'block';
+    } else {
+      document.getElementById('v-m').value = 0;
+      document.getElementById('v-i').value = 0;
+    }
+    updateVal('ta-m'); updateVal('tc-m'); updateVal('rh-m'); updateVal('v-m');
+
+    // Update UI
+    const sourceEmoji = source === 'ip' ? '🌐' : source === 'gps' ? '📡' : '🔍';
+    const windLabel = windMode === 'indoor' ? '室内 (V=0)' : `${windKph} kph (阵风 ${gustKph} kph)`;
+    label.innerHTML = `${sourceEmoji} ${sourceDetail} (${lat}, ${lon}) · ${tz}`;
+    detail.style.display = 'block';
+    detail.innerHTML = `
+      🌡️ 气温 <b>${airTemp}°C</b> &nbsp;|&nbsp; 💧 RH <b>${rh}%</b> &nbsp;|&nbsp; 💨 风速 <b>${windLabel}</b>
+      <br><span style="opacity:0.7;">🔥 混凝土温度估算 = 气温 + 3°C = <b>${concreteTemp}°C</b>（日照加热修正）</span>
+    `;
+    method.style.display = 'block';
+    const methodNames = { ip: 'IP 地址定位', gps: '浏览器 GPS/WiFi 定位', city: '城市名称搜索 (Open-Meteo Geocoding)' };
+    method.textContent = `定位方式: ${methodNames[source]} | 坐标: ${lat}, ${lon}`;
+
+    btn.textContent = '🔄 刷新';
+    btn.disabled = false;
+    document.getElementById('btn-gps').disabled = false;
+    renderResults();
+  } catch (err) {
+    console.warn('Weather fetch error:', err);
+    label.textContent = '⚠️ 天气数据获取失败，请检查网络后重试';
+    detail.style.display = 'block';
+    detail.textContent = 'Open-Meteo API 可能暂时不可用，请手动输入参数或使用预设场景。';
+    btn.textContent = '🔁 重试';
+    btn.disabled = false;
+    document.getElementById('btn-gps').disabled = false;
+  }
+}
+
+// IP Geolocation — try multiple services for resilience (especially behind firewalls)
+async function tryIPService(url, parseFn, label) {
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(label + ' HTTP ' + resp.status);
+  const data = await resp.json();
+  return parseFn(data);
+}
+
+const IP_SERVICES = [
+  {
+    name: 'ip-api.com',
+    url: 'http://ip-api.com/json/',
+    parse: (d) => {
+      if (d.status !== 'success') throw new Error(d.message || 'ip-api error');
+      return { lat: d.lat, lon: d.lon, city: d.city || d.regionName, country: d.country || '' };
+    }
+  },
+  {
+    name: 'ipapi.co',
+    url: 'https://ipapi.co/json/',
+    parse: (d) => {
+      if (d.error) throw new Error(d.reason || 'ipapi error');
+      return { lat: d.latitude, lon: d.longitude, city: d.city || d.region, country: d.country_name || '' };
+    }
+  }
+];
+
+async function fetchLocationByIP() {
+  const label = document.getElementById('location-label');
+  const btn = document.getElementById('btn-ip');
+  label.textContent = '⏳ 正在通过 IP 定位...';
+  btn.textContent = '⏳ ...';
+  btn.disabled = true;
+
+  let lastErr = null;
+  for (const svc of IP_SERVICES) {
+    try {
+      label.textContent = `⏳ 尝试 ${svc.name} 定位...`;
+      const result = await tryIPService(svc.url, svc.parse, svc.name);
+      const sourceDetail = `${result.city}, ${result.country}`;
+      label.textContent = `✅ ${svc.name} 定位成功`;
+      await applyWeatherData(result.lat, result.lon, 'ip', sourceDetail);
+      return; // success — stop trying more services
+    } catch (err) {
+      console.warn(`IP service ${svc.name} failed:`, err.message);
+      lastErr = err;
+      // continue to next service
+    }
+  }
+
+  // All services failed
+  console.warn('All IP geolocation services failed');
+  label.textContent = '⚠️ 所有 IP 定位服务均失败，请尝试 GPS 定位或手动搜索城市';
+  btn.textContent = '🔁 重试';
+  btn.disabled = false;
+  document.getElementById('weather-detail').style.display = 'block';
+  document.getElementById('weather-detail').textContent = 'ip-api.com / ipapi.co 均不可用，请使用下方城市搜索或 GPS 定位。';
+}
+
+// Method 2: Browser Geolocation (GPS/WiFi — better on mobile)
+function fetchLocationByBrowser() {
+  const label = document.getElementById('location-label');
+  const btn = document.getElementById('btn-gps');
+  label.textContent = '⏳ 正在获取 GPS/WiFi 位置...';
+  btn.textContent = '⏳ ...';
+  btn.disabled = true;
+
+  if (!navigator.geolocation) {
+    label.textContent = '⚠️ 浏览器不支持 GPS 定位，请使用 IP 定位或手动搜索';
+    btn.textContent = '📡 不可用';
+    btn.disabled = true;
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude.toFixed(4);
+      const lon = pos.coords.longitude.toFixed(4);
+      const acc = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : '?';
+      await applyWeatherData(lat, lon, 'gps', `GPS 精度≈${acc}m`);
+    },
+    async (err) => {
+      console.warn('Browser geolocation failed:', err.message);
+      label.textContent = '⚠️ GPS 定位失败/被拒绝，自动切换 IP 定位...';
+      btn.textContent = '📡 已拒绝';
+      btn.disabled = false;
+      // Auto fallback to IP
+      await fetchLocationByIP();
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 600000 }
+  );
+}
+
+// Method 3: Manual city name search via Open-Meteo Geocoding
+async function fetchLocationByCity() {
+  const input = document.getElementById('city-search');
+  const city = input.value.trim();
+  if (!city) { input.placeholder = '请输入城市名!'; return; }
+
+  const label = document.getElementById('location-label');
+  label.textContent = `⏳ 正在搜索 "${city}"...`;
+
+  try {
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=3&language=zh&format=json`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('Geocoding failed');
+    const geoData = await resp.json();
+    if (!geoData.results || geoData.results.length === 0) {
+      label.textContent = `⚠️ 未找到 "${city}"，请尝试更具体的名称（如"重庆 渝中"）`;
+      return;
+    }
+    const best = geoData.results[0];
+    const detail = `${best.name}${best.admin1 ? ', '+best.admin1 : ''}, ${best.country || ''}`;
+    await applyWeatherData(best.latitude, best.longitude, 'city', detail);
+  } catch (err) {
+    console.warn('City search failed:', err);
+    label.textContent = '⚠️ 城市搜索失败，请检查网络';
+  }
+}
+
+// Auto-locate on page load — prefer IP (most reliable for desktop)
+window.addEventListener('load', () => {
+  setTimeout(() => { fetchLocationByIP(); }, 600);
+});
+
+// ── Add input listeners ──
+['ta-m','tc-m','rh-m','v-m','ta-i','tc-i','rh-i','v-i'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', () => updateVal(id));
+});
+
+// ── INIT ──
+window.addEventListener('resize', () => renderResults());
+updateVal('ta-m');
+renderResults();
+</script>
+
+</body>
+</html>
