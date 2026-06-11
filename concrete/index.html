@@ -378,11 +378,11 @@
 <!-- ===== 可编辑筛分表单 ===== -->
 <div class="card">
   <h2>筛分数据表单 — 依据商混站砂/石筛分报告分别输入</h2>
-  <p class="desc">公制单位 (mm/µm) 为主，英制单位为辅。按商混站提供的碎石和砂筛分报告分别填入，组合级配曲线及评估结果自动更新。比例栏为各材料在总骨料中的质量占比，四项之和保持 100%。</p>
+  <p class="desc">公制单位 (mm/µm) 为主，英制单位为辅。按商混站提供的碎石和砂筛分报告分别填入，骨料组合级配曲线及评估结果自动更新。比例栏为各材料在总骨料中的质量占比，四项之和保持 100%。</p>
 
   <!-- ==== 碎石筛分 ==== -->
   <h3 style="font-size:.9rem;font-weight:700;margin:16px 0 8px;color:var(--accent2);">
-    🪨 碎石 (Coarse Stone) 筛分报告
+    🪨 碎石 筛分报告
     <span style="font-size:.74rem;font-weight:400;color:var(--muted);margin-left:8px;">— 输入各档碎石在各筛孔的累计过筛百分率</span>
   </h3>
   <div style="overflow-x:auto;">
@@ -405,7 +405,7 @@
 
   <!-- ==== 砂筛分 ==== -->
   <h3 style="font-size:.9rem;font-weight:700;margin:16px 0 8px;color:var(--accent2);">
-    <svg style="vertical-align:-3px;margin-right:4px;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b8956a" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="3"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="2" y1="16" x2="22" y2="16"/><line x1="9" y1="2" x2="9" y2="22"/><line x1="16" y1="2" x2="16" y2="22"/><circle cx="5.5" cy="5.5" r="1.2" fill="#c4a882"/><circle cx="12.5" cy="12.5" r="0.8" fill="#c4a882"/><circle cx="19.5" cy="5.5" r="0.6" fill="#c4a882"/><circle cx="5.5" cy="19.5" r="0.5" fill="#c4a882"/><circle cx="19.5" cy="19.5" r="1" fill="#c4a882"/><circle cx="12.5" cy="5.5" r="0.7" fill="#c4a882"/></svg>砂 (Fine Sand) 筛分报告
+    <svg style="vertical-align:-3px;margin-right:4px;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b8956a" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="3"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="2" y1="16" x2="22" y2="16"/><line x1="9" y1="2" x2="9" y2="22"/><line x1="16" y1="2" x2="16" y2="22"/><circle cx="5.5" cy="5.5" r="1.2" fill="#c4a882"/><circle cx="12.5" cy="12.5" r="0.8" fill="#c4a882"/><circle cx="19.5" cy="5.5" r="0.6" fill="#c4a882"/><circle cx="5.5" cy="19.5" r="0.5" fill="#c4a882"/><circle cx="19.5" cy="19.5" r="1" fill="#c4a882"/><circle cx="12.5" cy="5.5" r="0.7" fill="#c4a882"/></svg>砂 筛分报告
     <span style="font-size:.74rem;font-weight:400;color:var(--muted);margin-left:8px;">— 输入各档砂在各筛孔的累计过筛百分率</span>
   </h3>
   <div style="overflow-x:auto;">
@@ -459,14 +459,14 @@
 
 <!-- ===== 级配曲线图 ===== -->
 <div class="card">
-  <h2>组合级配曲线（实时更新）</h2>
+  <h2>骨料组合级配曲线（实时更新）</h2>
   <p class="desc">半对数坐标：横轴为筛孔尺寸 mm（对数），纵轴为累计过筛率 %。阴影区域为 Twintec SFRC 目标范围。</p>
   <div class="chart-wrap"><canvas id="gradingChart"></canvas></div>
   <div class="legend-grid">
     <div class="legend-item"><div class="legend-swatch" style="background:#b85a3f;"></div> 组合级配</div>
     <div class="legend-item"><div class="legend-swatch dashed" style="border-color:#d48865;"></div> 组合级配（内插）</div>
     <div class="legend-item"><div class="legend-swatch" style="background:rgba(72,135,105,.24); height:16px; border-radius:4px; width:26px;"></div> Twintec 目标范围</div>
-    <div class="legend-item"><div class="legend-swatch dashed" style="border-color:#8a9080;"></div> Fuller n=0.45 理想曲线</div>
+    <div class="legend-item"><div class="legend-swatch dashed" style="border-color:#8a9080;"></div> Fuller 理想曲线</div>
     <div class="legend-item"><div class="legend-swatch" style="background:#4a6880;"></div> 碎石 ①（25mm）</div>
     <div class="legend-item"><div class="legend-swatch" style="background:#4d8c70;"></div> 碎石 ②（10mm）</div>
     <div class="legend-item"><div class="legend-swatch" style="background:#c49555;"></div> 砂 ①（机制砂/河砂）</div>
@@ -476,7 +476,7 @@
 
 <!-- ===== FM ===== -->
   <div class="card">
-    <h2>细度模数 FM &amp; 砂率</h2>
+    <h2>细度模数 &amp; 砂率</h2>
     <p class="desc">FM = Σ(各筛累计筛余%) / 100，标准筛 0.15 – 4.75 mm。砂率依据 JGJ 55-2011 选取。</p>
     <div id="fmGrid"></div>
   </div>
@@ -492,7 +492,7 @@
 <!-- ===== 自动优化级配 ===== -->
 <div class="card">
   <h2>🎯 基于当前材料自动优化级配</h2>
-  <p class="desc">在当前骨料级配数据下自动搜索最优比例组合，使组合级配曲线尽可能落在 Twintec 目标范围内。</p>
+  <p class="desc">在当前骨料级配数据下自动搜索最优比例组合，使骨料组合级配曲线尽可能落在 Twintec 目标范围内。</p>
   <div class="btn-row" style="margin-bottom:0;">
     <button class="btn primary" onclick="autoOptimize()">🎯 开始自动优化</button>
     <span style="font-size:.74rem;color:var(--muted);align-self:center;" id="autoMsg"></span>
@@ -568,7 +568,7 @@
     </div>
 
     <div class="theory-card">
-      <h4>📊 细度模数 FM</h4>
+      <h4>📊 细度模数</h4>
       <p>FM = Σ(累计筛余%) / 100，只用标准筛 0.15–4.75mm。</p>
       <span class="formula" style="font-size:.72rem;word-break:break-all;">FM = R<sub>4.75</sub> + R<sub>2.36</sub> + R<sub>1.18</sub> + R<sub>0.6</sub> + R<sub>0.3</sub> + R<sub>0.15</sub></span>
       <p>混合砂的组合 FM 为各组分的质量加权平均值。地坪推荐 FM <strong>2.5–3.2</strong>。</p>
@@ -653,7 +653,7 @@ function initMixQtys() {
 const DEFAULT_DENSITIES = [
   3.1,     // 0: 水泥 P·O 42.5 — 相对密度 3.1
   2.3,     // 1: 粉煤灰 — 典型范围 2.2–2.4
-  2.85,    // 2: 矿粉 GGBS — 典型范围 2.8–2.9
+  2.85,    // 2: 矿粉 — 典型范围 2.8–2.9
   2.7,     // 3: 碎石① 25mm — 表观密度 ≥2.6，花岗岩 ~2.65–2.75
   2.7,     // 4: 碎石② 10mm — 同上
   2.62,    // 5: 机制砂 5mm — 表观密度 ≥2.5，典型 2.6–2.65
@@ -955,7 +955,7 @@ function updateChart() {
       pointBackgroundColor: AGG_COLORS[a], tension: 0.2, order: 20,
     })),
     {
-      label: 'Fuller n=0.45',
+      label: 'Fuller',
       data: fullerData,
       borderColor: '#8a9080', backgroundColor: 'transparent',
       borderWidth: 1.5, borderDash: [4, 6], pointRadius: 0, order: 15,
@@ -1036,7 +1036,7 @@ function updateFM() {
 
   const fmInRange = combinedFM >= 2.5 && combinedFM <= 3.2;
 
-  // ===== Sand Ratio (砂率) =====
+  // ===== 砂率 =====
   const totalAgg = proportions.reduce((a, b) => a + b, 0);
   const sandRatio = totalAgg > 0 ? (sandSum / totalAgg) * 100 : 0;
 
@@ -1044,7 +1044,7 @@ function updateFM() {
   grid.innerHTML = `
     <table style="font-size:.78rem;margin-top:4px;">
       <thead>
-        <tr><th>砂种类</th><th>占比</th><th>细度模数 FM</th></tr>
+        <tr><th>砂种类</th><th>占比</th><th>细度模数</th></tr>
       </thead>
       <tbody>
         ${fms.map(f => `
@@ -1071,7 +1071,7 @@ function updateFM() {
         <col style="width:55%;"><col style="width:20%;"><col style="width:25%;">
       </colgroup>
       <thead>
-        <tr><th colspan="3" style="text-align:left;font-size:.78rem;">砂率 (Sand Ratio)</th></tr>
+        <tr><th colspan="3" style="text-align:left;font-size:.78rem;">砂率</th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1102,7 +1102,7 @@ function updateMixDesign() {
   const mixRows = [
     { id: 'cement',  name: '普通硅酸盐水泥 (P·O 42.5)', idx: 0 },
     { id: 'flyash',  name: '粉煤灰',                     idx: 1 },
-    { id: 'ggbs',    name: '矿粉 (GGBS)',                 idx: 2 },
+    { id: 'ggbs',    name: '矿粉',                 idx: 2 },
     { id: 'agg0',    name: '碎石 ①（25mm）',              idx: 3 },
     { id: 'agg1',    name: '碎石 ②（10mm）',              idx: 4 },
     { id: 'agg2',    name: '砂 ①（机制砂/河砂）',          idx: 5 },
