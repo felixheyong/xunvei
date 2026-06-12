@@ -301,7 +301,7 @@
 // ========== UI UTILITY ==========
 function $(id) { return document.getElementById(id); }
 function val(id) { return parseFloat($(id).value) || 0; }
-function round(v, n){ n = n || 2; return v == null || isNaN(v) ? '—' : Number(v).toFixed(n); }
+function round(v, n) { if (n === undefined) n = 2; return v == null || isNaN(v) ? '—' : Number(v).toFixed(n); }
 function ok() { return '<span class="result ok">✓ OK</span>'; }
 function ng() { return '<span class="result fail">✗ NG</span>'; }
 
@@ -368,7 +368,7 @@ function calculateAll() {
   const Pu_int_double = interpolatePu(aol_double, Mn, Mp, false);
   const Pu_edge_single = interpolatePu(aol_single, Mn, Mp, true);
   const Pu_edge_double = interpolatePu(aol_double, Mn, Mp, true);
-  const lt_reduce = LT * (2 * 0.9 * l) / 1000;
+  const lt_reduce = Math.min(LT * (2 * 0.9 * l) / 1000, Math.max(Fser_single, Fser_double) * 0.5);
   const Pu_edge_lt_single = Pu_edge_single + lt_reduce;
   const Pu_edge_lt_double = Pu_edge_double + lt_reduce;
 

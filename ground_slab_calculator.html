@@ -242,7 +242,7 @@
 // ========== UI UTILITY FUNCTIONS ==========
 function $(id) { return document.getElementById(id); }
 function val(id) { return parseFloat($(id).value) || 0; }
-function round(v, n){ n = n || 2; return v == null || isNaN(v) ? '—' : Number(v).toFixed(n); }
+function round(v, n) { if (n === undefined) n = 2; return v == null || isNaN(v) ? '—' : Number(v).toFixed(n); }
 function ok() { return '<span class="result ok">✓ OK</span>'; }
 function ng() { return '<span class="result fail">✗ NG</span>'; }
 
@@ -279,7 +279,7 @@ function calculateAll() {
   const K = K_MNm3 / 1000; // N/mm³ (MN/m³ → N/mm³)
 
   // --- Derived values ---
-  const fctm_fl = fctm_fl(fck); // mean flexural strength (engine)
+  const fctm_fl_val = 0.3 * Math.pow(fck, 2/3); // mean flexural strength (TR34 Eq 8.1)
   const l = calc_l(Ecm, h, nu, K); // radius of relative stiffness (mm)
 
   // Reference Pu values
@@ -321,9 +321,9 @@ function calculateAll() {
   const Pu_edge_single = interpolatePu(aol_single, Mn, Mp, true);
   const Pu_edge_double = interpolatePu(aol_double, Mn, Mp, true);
 
-  // Load transfer reduction
-  const lt_reduce_single = LT * (2 * 0.9 * l) / 1000;
-  const lt_reduce_double = lt_reduce_single;
+  // Load transfer reduction (capped at 50% of service load per TR34)
+  const lt_reduce_single = Math.min(LT * (2 * 0.9 * l) / 1000, Fser_single * 0.5);
+  const lt_reduce_double = Math.min(LT * (2 * 0.9 * l) / 1000, Fser_double * 0.5);
 
   const Pu_edge_lt_single = Pu_edge_single + lt_reduce_single;
   const Pu_edge_lt_double = Pu_edge_double + lt_reduce_double;
@@ -483,7 +483,7 @@ function calculateAll() {
     <div class="summary-item"><div class="val">${round(l, 0)}</div><div class="lbl">相对刚度半径 l<sub>点荷载</sub> (mm)</div></div>
     <div class="summary-item"><div class="val">${round(Mn+Mp, 2)}</div><div class="lbl">Mₙ+Mₚ (kN·m/m)</div></div>
     <div class="summary-item"><div class="val">${round(udl_allowable, 1)}</div><div class="lbl">容许均布荷载 (kN/m²)</div></div>
-    <div class="summary-item"><div class="val">${round(fctm_fl, 2)}</div><div class="lbl">弯拉强度 f<sub>ctm,fl</sub> (N/mm²)</div></div>
+    <div class="summary-item"><div class="val">${round(fctm_fl_val, 2)}</div><div class="lbl">弯拉强度 f<sub>ctm,fl</sub> (N/mm²)</div></div>
     <div class="summary-item"><div class="val">${round(vRd_ct, 2)}</div><div class="lbl">最小抗剪 v<sub>Rd,ct</sub> (N/mm²)</div></div>
   </div>`;
 
