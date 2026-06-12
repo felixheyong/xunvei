@@ -296,13 +296,14 @@
   </div>
 </div>
 
+<script src="engineering-tools/tr34-engine.js"></script>
 <script>
-// ========== UTILITY ==========
+// ========== UI UTILITY ==========
 function $(id) { return document.getElementById(id); }
 function val(id) { return parseFloat($(id).value) || 0; }
-function round(v, n=2) { return v == null || isNaN(v) ? '—' : Number(v).toFixed(n); }
-function ok() { return `<span class="result ok">✓ OK</span>`; }
-function ng() { return `<span class="result fail">✗ NG</span>`; }
+function round(v, n){ n = n || 2; return v == null || isNaN(v) ? '—' : Number(v).toFixed(n); }
+function ok() { return '<span class="result ok">✓ OK</span>'; }
+function ng() { return '<span class="result fail">✗ NG</span>'; }
 
 function toggleSection(id) { $(id).classList.toggle('collapsed'); }
 
@@ -311,55 +312,11 @@ function switchView(name, tabEl) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   if (tabEl) tabEl.classList.add('active');
-  // Redraw canvases when switching to them
   setTimeout(() => {
     if (name === 'plan') drawPlanView();
     if (name === 'chart') drawCapacityChart();
     if (name === 'section') drawCrossSection();
   }, 50);
-}
-
-// ========== CALCULATION ENGINE ==========
-
-function calc_l(Ecm_Nmm2, h_mm, nu, K_Nmm3) {
-  return Math.pow(Ecm_Nmm2 * Math.pow(h_mm, 3) / (12 * (1 - nu * nu) * K_Nmm3), 0.25);
-}
-
-function calc_l_udl(Ecm_Nmm2, h_mm, K_Nmm3) {
-  return Math.pow(Ecm_Nmm2 * Math.pow(h_mm, 3) / (3 * K_Nmm3), 0.25);
-}
-
-function contactRadius(b_mm, d_mm) {
-  return Math.sqrt(b_mm * d_mm / Math.PI);
-}
-
-function contactRadiusDouble(b_mm, d_mm, D_mm, l_mm) {
-  if (D_mm > 2 * 0.9 * l_mm) return contactRadius(b_mm, d_mm);
-  return Math.sqrt((2 * b_mm + D_mm) * d_mm / Math.PI);
-}
-
-function Pu_int_a0(Mn, Mp) { return 2 * Math.PI * (Mn + Mp); }
-function Pu_int_a02(Mn, Mp, a_over_l) { return 4 * Math.PI * (Mn + Mp) / (1 - a_over_l / 3); }
-function Pu_edge_a0(Mn, Mp) { return (Math.PI * (Mn + Mp) + 4 * Mp) / 2; }
-function Pu_edge_a02(Mn, Mp, a_over_l) { return (Math.PI * (Mn + Mp) + 4 * Mp) / (1 - 2 * a_over_l / 3); }
-
-function interpolatePu(a_over_l, Mn, Mp, isEdge) {
-  const pu0 = isEdge ? Pu_edge_a0(Mn, Mp) : Pu_int_a0(Mn, Mp);
-  const pu02 = isEdge ? Pu_edge_a02(Mn, Mp, 0.2) : Pu_int_a02(Mn, Mp, 0.2);
-  if (a_over_l <= 0) return pu0;
-  if (a_over_l >= 0.2) return isEdge ? Pu_edge_a02(Mn, Mp, a_over_l) : Pu_int_a02(Mn, Mp, a_over_l);
-  return pu0 + (a_over_l / 0.2) * (pu02 - pu0);
-}
-
-function shearAtFace(vmax, u0_mm, d_eff_mm) { return vmax * u0_mm * d_eff_mm / 1000; }
-function shearAtCritical(vRdc_vf, u1_mm, d_eff_mm) { return vRdc_vf * u1_mm * d_eff_mm / 1000; }
-function criticalPerimeter(b_mm, d_mm, d_eff_mm) { return 2 * (b_mm + d_mm) + 4 * Math.PI * d_eff_mm; }
-
-function criticalPerimeterDouble(b_mm, d_mm, D_mm, d_eff_mm) {
-  const u1_single = criticalPerimeter(b_mm, d_mm, d_eff_mm);
-  const u0_single = 2 * (b_mm + d_mm);
-  if (D_mm - u0_single / 2 > 4 * d_eff_mm) return 2 * u1_single;
-  return 2 * (2 * b_mm + D_mm + d_mm) + 4 * Math.PI * d_eff_mm;
 }
 
 // Global store for last computed values (used by visualization)

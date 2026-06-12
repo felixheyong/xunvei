@@ -237,122 +237,17 @@
   </div>
 </div>
 
+<script src="engineering-tools/tr34-engine.js"></script>
 <script>
-// ========== UTILITY FUNCTIONS ==========
+// ========== UI UTILITY FUNCTIONS ==========
 function $(id) { return document.getElementById(id); }
 function val(id) { return parseFloat($(id).value) || 0; }
-function round(v, n=2) { return v == null || isNaN(v) ? '—' : Number(v).toFixed(n); }
-function ok(v) { return `<span class="result ok">✓ OK</span>`; }
-function ng(v) { return `<span class="result fail">✗ NG</span>`; }
-function warn(v) { return `<span class="result warn">⚠</span>`; }
+function round(v, n){ n = n || 2; return v == null || isNaN(v) ? '—' : Number(v).toFixed(n); }
+function ok() { return '<span class="result ok">✓ OK</span>'; }
+function ng() { return '<span class="result fail">✗ NG</span>'; }
 
 function toggleSection(id) {
   $(id).classList.toggle('collapsed');
-}
-
-// ========== CORE CALCULATION FUNCTIONS ==========
-
-/** Radius of relative stiffness for point loads (Meyerhof) — returns mm */
-function calc_l(Ecm_Nmm2, h_mm, nu, K_Nmm3) {
-  const numerator = Ecm_Nmm2 * Math.pow(h_mm, 3);
-  const denominator = 12 * (1 - nu * nu) * K_Nmm3;
-  return Math.pow(numerator / denominator, 0.25);
-}
-
-/** Radius of relative stiffness for UDL (simplified Westergaard) — returns mm */
-function calc_l_udl(Ecm_Nmm2, h_mm, K_Nmm3) {
-  const numerator = Ecm_Nmm2 * Math.pow(h_mm, 3);
-  const denominator = 3 * K_Nmm3;
-  return Math.pow(numerator / denominator, 0.25);
-}
-
-/** Equivalent circular contact radius for rectangular baseplate */
-function contactRadius(b_mm, d_mm) {
-  return Math.sqrt(b_mm * d_mm / Math.PI);
-}
-
-/** Equivalent contact radius for double interacting loads */
-function contactRadiusDouble(b_mm, d_mm, D_mm, l_mm) {
-  // Check if loads interact: D <= 2 * 0.9 * l
-  if (D_mm > 2 * 0.9 * l_mm) {
-    // Independent — return single radius
-    return contactRadius(b_mm, d_mm);
-  }
-  // Interacting: equivalent rectangle (2b + D) × d
-  return Math.sqrt((2 * b_mm + D_mm) * d_mm / Math.PI);
-}
-
-/** Flexural capacity — Internal, a/l = 0 */
-function Pu_int_a0(Mn, Mp) {
-  return 2 * Math.PI * (Mn + Mp);
-}
-
-/** Flexural capacity — Internal, a/l >= 0.2 */
-function Pu_int_a02(Mn, Mp, a_over_l) {
-  return 4 * Math.PI * (Mn + Mp) / (1 - a_over_l / 3);
-}
-
-/** Flexural capacity — Edge, a/l = 0 */
-function Pu_edge_a0(Mn, Mp) {
-  return (Math.PI * (Mn + Mp) + 4 * Mp) / 2;
-}
-
-/** Flexural capacity — Edge, a/l >= 0.2 */
-function Pu_edge_a02(Mn, Mp, a_over_l) {
-  return (Math.PI * (Mn + Mp) + 4 * Mp) / (1 - 2 * a_over_l / 3);
-}
-
-/** Interpolate Pu for given a/l ratio */
-function interpolatePu(a_over_l, Mn, Mp, isEdge) {
-  const pu0 = isEdge ? Pu_edge_a0(Mn, Mp) : Pu_int_a0(Mn, Mp);
-  const pu02 = isEdge ? Pu_edge_a02(Mn, Mp, 0.2) : Pu_int_a02(Mn, Mp, 0.2);
-
-  if (a_over_l <= 0) return pu0;
-  if (a_over_l >= 0.2) {
-    return isEdge ? Pu_edge_a02(Mn, Mp, a_over_l) : Pu_int_a02(Mn, Mp, a_over_l);
-  }
-  // Linear interpolation between 0 and 0.2
-  const t = a_over_l / 0.2;
-  return pu0 + t * (pu02 - pu0);
-}
-
-/** Shear capacity at load face */
-function shearAtFace(vmax, u0_mm, d_eff_mm) {
-  return vmax * u0_mm * d_eff_mm / 1000; // kN
-}
-
-/** Shear capacity at critical perimeter (distance 2d) */
-function shearAtCritical(vRdc_vf, u1_mm, d_eff_mm) {
-  return vRdc_vf * u1_mm * d_eff_mm / 1000; // kN
-}
-
-/** Critical perimeter u1 at 2d from loaded area */
-function criticalPerimeter(b_mm, d_mm, d_eff_mm) {
-  // u1 = u0 + 4π·d_eff  (for the 4 rounded corners at radius 2d_eff)
-  return 2 * (b_mm + d_mm) + 4 * Math.PI * d_eff_mm;
-}
-
-/** Critical perimeter for double loads (simplified overlap check) */
-function criticalPerimeterDouble(b_mm, d_mm, D_mm, d_eff_mm) {
-  const u1_single = criticalPerimeter(b_mm, d_mm, d_eff_mm);
-  const u0_single = 2 * (b_mm + d_mm);
-  // Check if critical perimeters overlap
-  const minDist = D_mm - u0_single / 2; // approx distance between inner edges
-  if (minDist > 4 * d_eff_mm) {
-    // No overlap: 2 × single
-    return 2 * u1_single;
-  }
-  // Overlap: combined perimeter
-  // Approximate as perimeter around both loaded areas
-  return 2 * (2 * b_mm + D_mm + d_mm) + 4 * Math.PI * d_eff_mm;
-}
-
-/** Load transfer reduction for edge loads */
-function loadTransferReduction(Fser_kN, LT_kNm, l_mm) {
-  // LT = load transfer capacity in kN/m
-  // Effective length ≈ 2 * 0.9 * l
-  const reduction = LT_kNm * (2 * 0.9 * l_mm) / 1000; // kN
-  return Math.min(reduction, Fser_kN * 0.5); // capped at 50% of load
 }
 
 // ========== MAIN CALCULATION ==========
@@ -384,7 +279,7 @@ function calculateAll() {
   const K = K_MNm3 / 1000; // N/mm³ (MN/m³ → N/mm³)
 
   // --- Derived values ---
-  const fctm_fl = 0.3 * Math.pow(fck, 2/3); // mean flexural strength
+  const fctm_fl = fctm_fl(fck); // mean flexural strength (engine)
   const l = calc_l(Ecm, h, nu, K); // radius of relative stiffness (mm)
 
   // Reference Pu values
