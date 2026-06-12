@@ -341,13 +341,13 @@
     ">
       <option value="C20">C20</option>
       <option value="C25">C25</option>
-      <option value="C30" selected>C30</option>
-      <option value="C35">C35</option>
+      <option value="C30">C30</option>
+      <option value="C35" selected>C35</option>
       <option value="C40">C40</option>
       <option value="C45">C45</option>
       <option value="C50">C50</option>
     </select>
-    <span style="font-size:.76rem;color:var(--muted);">每立方米材料用量。密度为相对密度（水 = 1.0），体积 = 用量 ÷（密度 × 1000），累计体积应接近 1 m³。</span>
+    <span style="font-size:.76rem;color:var(--muted);">每立方米材料用量。密度为相对密度（水 = 1.0），体积 = 用量 ÷（密度 × 1000），材料体积 + 含气量 ≈ 1 m³。</span>
   </p>
   <div style="overflow-x:auto;">
   <table style="font-size:.76rem;table-layout:fixed;width:100%;min-width:520px;">
@@ -399,8 +399,8 @@
     </table>
   </div>
   <div style="margin:8px 0 16px; font-size:.76rem; color:var(--muted); display:flex; gap:24px; flex-wrap:wrap;">
-    <span><strong>碎石 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="0" value="0" style="width:60px;" inputmode="decimal" max="100" onfocus="this.select()">% — 25mm 碎石</span>
-    <span><strong>碎石 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="1" value="0" style="width:60px;" inputmode="decimal" max="100" onfocus="this.select()">% — 10mm 碎石</span>
+    <span><strong>碎石 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="0" value="0" style="width:60px;" inputmode="decimal" onfocus="this.select()">% — 25mm 碎石</span>
+    <span><strong>碎石 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="1" value="0" style="width:60px;" inputmode="decimal" onfocus="this.select()">% — 10mm 碎石</span>
   </div>
 
   <!-- ==== 砂筛分 ==== -->
@@ -422,8 +422,8 @@
     </table>
   </div>
   <div style="margin:8px 0 4px; font-size:.76rem; color:var(--muted); display:flex; gap:24px; flex-wrap:wrap;">
-    <span><strong>砂 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="2" value="0" style="width:60px;" inputmode="decimal" max="100" onfocus="this.select()">% — 机制砂/河砂</span>
-    <span><strong>砂 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="3" value="0" style="width:60px;" inputmode="decimal" max="100" onfocus="this.select()">% — 超细砂</span>
+    <span><strong>砂 ① 占比：</strong><input class="num-input prop agg-prop" data-agg="2" value="0" style="width:60px;" inputmode="decimal" onfocus="this.select()">% — 机制砂/河砂</span>
+    <span><strong>砂 ② 占比：</strong><input class="num-input prop agg-prop" data-agg="3" value="0" style="width:60px;" inputmode="decimal" onfocus="this.select()">% — 超细砂</span>
   </div>
 
   <!-- ==== 分析按钮 ==== -->
@@ -640,7 +640,8 @@ const DMAX = 31.5;
 let aggData = ORIGINAL_DATA.map(r => [...r]);
 let proportions = [...ORIGINAL_PROPS];
 let chart;
-let concreteGrade = 'C30';
+let concreteGrade = 'C35';
+let airContent = 2; // 含气量，默认 2%
 
 // mixQtys: [cement, flyAsh, ggbs, agg0, agg1, agg2, agg3, water, pc, steelFiber]
 let mixQtys = [];
@@ -700,8 +701,8 @@ function buildFormTable() {
     tr.innerHTML = `
       <td><strong>${METRIC_LABELS[i]}</strong></td>
       <td><small style="color:var(--muted)">${IMPERIAL_LABELS[i]}</small></td>
-      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="0" value="${aggData[i][0]}" inputmode="decimal" max="100" onfocus="this.select()"></td>
-      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="1" value="${aggData[i][1]}" ${isMaxSieve ? 'readonly style="background:#ede9e0;"' : ''} inputmode="decimal" max="100" onfocus="this.select()"></td>
+      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="0" value="${aggData[i][0]}" inputmode="decimal" onfocus="this.select()"></td>
+      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="1" value="${aggData[i][1]}" ${isMaxSieve ? 'readonly style="background:#ede9e0;"' : ''} inputmode="decimal" onfocus="this.select()"></td>
     `;
     tbodyStone.appendChild(tr);
   });
@@ -715,8 +716,8 @@ function buildFormTable() {
     tr.innerHTML = `
       <td><strong>${METRIC_LABELS[i]}</strong></td>
       <td><small style="color:var(--muted)">${IMPERIAL_LABELS[i]}</small></td>
-      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="2" value="${aggData[i][2]}" inputmode="decimal" max="100" onfocus="this.select()"></td>
-      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="3" value="${aggData[i][3]}" inputmode="decimal" max="100" onfocus="this.select()"></td>
+      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="2" value="${aggData[i][2]}" inputmode="decimal" onfocus="this.select()"></td>
+      <td><input class="num-input agg-data" data-sieve="${i}" data-agg="3" value="${aggData[i][3]}" inputmode="decimal" onfocus="this.select()"></td>
     `;
     tbodySand.appendChild(tr);
   });
@@ -829,6 +830,14 @@ function onDensityChange(e) {
   if (isNaN(val)) val = 0;
   val = Math.max(0.1, Math.min(20, val));
   densities[idx] = Math.round(val * 10) / 10;
+  updateAll();
+}
+
+function onAirContentChange(e) {
+  let val = parseFloat(e.target.value);
+  if (isNaN(val)) val = 2;
+  val = Math.max(0, Math.min(15, val));
+  airContent = Math.round(val * 10) / 10;
   updateAll();
 }
 
@@ -1127,7 +1136,9 @@ function updateMixDesign() {
     if (i === 8) return qty / 1000; // PC: L → m³ direct conversion
     return densities[i] > 0 ? qty / (densities[i] * 1000) : 0;
   });
-  totalVolume = volumes.reduce((s, v) => s + v, 0);
+  const materialVolume = volumes.reduce((s, v) => s + v, 0);
+  const airVol = airContent / 100; // 含气量体积 (m³)
+  totalVolume = materialVolume + airVol;
 
   const tbody = document.getElementById('mixTable');
 
@@ -1166,24 +1177,39 @@ function updateMixDesign() {
         <td style="text-align:center;${isAgg ? 'color:var(--accent);' : ''}">${pct}</td>
       </tr>
     `;
-  }).join('');
+  }).join('') + `
+    <tr style="background:#f7f4ed;">
+      <td style="text-align:center;font-size:.73rem;font-weight:600;">含气量</td>
+      <td style="text-align:center;">
+        <input class="num-input air-content-input" value="${airContent}" style="width:52px;" inputmode="decimal" onfocus="this.select()"> <small>%</small>
+      </td>
+      <td style="text-align:center;"><span style="color:var(--muted);font-size:.7rem;">—</span></td>
+      <td style="text-align:center;color:var(--accent);font-variant-numeric:tabular-nums;">${airVol.toFixed(4)}</td>
+      <td style="text-align:center;color:var(--muted);">—</td>
+    </tr>`;
 
   document.getElementById('mixTotal').textContent = totalKg + ' kg';
-  document.getElementById('mixVolume').textContent = totalVolume > 0 ? totalVolume.toFixed(4) + ' m³' : '—';
+  document.getElementById('mixVolume').innerHTML = totalVolume > 0
+    ? `${materialVolume.toFixed(4)} + ${airVol.toFixed(4)} = <strong>${totalVolume.toFixed(4)}</strong> m³`
+    : '—';
 
   // Volume evaluation — 体积评估：是否接近 1 m³
   const volumeNoteEl = document.getElementById('volumeNote');
   if (totalVolume > 0 && totalKg > 0) {
-    const airPct = ((1 - totalVolume) * 100);
-    const airOk = totalVolume >= 0.96 && totalVolume <= 1.04;
-    const airGood = totalVolume >= 0.98 && totalVolume <= 1.02;
-    let airIcon, airHint;
-    if (airGood) { airIcon = '✅'; airHint = '体积接近 1 m³，含气量合理'; }
-    else if (airOk) { airIcon = '⚠️'; airHint = '体积偏差稍大，建议复核各材料用量或密度'; }
-    else { airIcon = '❌'; airHint = '体积偏离 1 m³ 较多，请检查用量或密度输入是否正确'; }
+    const residualPct = ((1 - totalVolume) * 100); // 剩余未分配体积
+    const volOk = totalVolume >= 0.96 && totalVolume <= 1.04;
+    const volGood = totalVolume >= 0.98 && totalVolume <= 1.02;
+    let volIcon, volHint;
+    if (volGood) { volIcon = '✅'; volHint = '材料体积 + 含气量 ≈ 1 m³，配比合理'; }
+    else if (volOk) { volIcon = '⚠️'; volHint = '体积偏差稍大，建议复核各材料用量或密度'; }
+    else { volIcon = '❌'; volHint = '体积偏离 1 m³ 较多，请检查用量、密度或含气量输入是否正确'; }
     volumeNoteEl.innerHTML =
-      `📐 累计体积 <strong style="color:var(--accent);">${totalVolume.toFixed(4)} m³</strong> &nbsp;|&nbsp; 含气 / 空隙率 ≈ <strong>${airPct.toFixed(1)}%</strong>（1 m³ − 累计体积）&nbsp; ${airIcon} ${airHint}`;
-    volumeNoteEl.style.color = airOk ? 'var(--muted)' : 'var(--fail)';
+      `📐 材料体积 <strong style="color:var(--accent);">${materialVolume.toFixed(4)} m³</strong> + 含气量 <strong style="color:var(--accent);">${airVol.toFixed(4)} m³</strong>（${airContent}%）= 累计体积 <strong style="color:var(--accent);">${totalVolume.toFixed(4)} m³</strong>`;
+    if (Math.abs(residualPct) > 0.1) {
+      volumeNoteEl.innerHTML += ` &nbsp;|&nbsp; 剩余 <strong>${residualPct.toFixed(1)}%</strong>（1 m³ − 累计体积）`;
+    }
+    volumeNoteEl.innerHTML += ` &nbsp; ${volIcon} ${volHint}`;
+    volumeNoteEl.style.color = volOk ? 'var(--muted)' : 'var(--fail)';
   } else {
     volumeNoteEl.innerHTML = '';
   }
@@ -1194,6 +1220,9 @@ function updateMixDesign() {
   });
   document.querySelectorAll('.mix-density').forEach(inp => {
     inp.addEventListener('input', onDensityChange);
+  });
+  document.querySelectorAll('.air-content-input').forEach(inp => {
+    inp.addEventListener('input', onAirContentChange);
   });
 
   // Restore focus & cursor position if previously focused
@@ -1218,7 +1247,7 @@ function updateMixDesign() {
     'C50': { binder: [450,500], wc: [0.34,0.40], desc: '适用于超重载/特殊耐磨地面（Class 7–9）' },
   };
 
-  const g = gradeNotes[concreteGrade] || gradeNotes['C30'];
+  const g = gradeNotes[concreteGrade] || gradeNotes['C35'];
   const binderOk = totalBinder >= g.binder[0] && totalBinder <= g.binder[1];
   const wcOk = wcm !== '—' && parseFloat(wcm) >= parseFloat(g.wc[0]) && parseFloat(wcm) <= parseFloat(g.wc[1]);
 
