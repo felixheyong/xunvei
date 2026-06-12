@@ -297,6 +297,20 @@
     font-weight: 700;
     letter-spacing: 6px;
   }
+
+  /* ── 共享模块样式 (EC2) ── */
+  .aci-section-title {
+    font-size: .92rem; font-weight: 700; margin: 18px 0 10px;
+    color: var(--accent2); letter-spacing: .02em;
+  }
+
+  .aci-wc-chart-wrap { position: relative; width: 100%; height: 260px; margin: 10px 0 0; }
+
+  select.aci-select {
+    font-family: inherit; font-size: .78rem; font-weight: 500;
+    padding: 5px 8px; border-radius: var(--radius-sm); border: 1px solid #d5cfc4;
+    background: #faf8f3; color: var(--text); cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -519,6 +533,94 @@
 </div>
 
   </div><!-- /resultsSection -->
+
+<!-- ===== Eurocode 2 收缩与徐变 ===== -->
+<div class="card" id="ec2Card">
+  <h2>🏗️ EN 1992-1-1 (Eurocode 2) 混凝土收缩与徐变</h2>
+  <p class="desc">基于 Eurocode 2 Annex B 的收缩应变 ε<sub>cs</sub> 和徐变系数 φ 计算方法。输入水泥型号、板厚、水胶比和养护天数后，自动生成各龄期的收缩量和徐变量。</p>
+
+  <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:end; margin-bottom:16px;">
+    <div>
+      <label style="font-size:.72rem;font-weight:600;color:var(--muted);display:block;">水泥型号 (EN 197-1)</label>
+      <select class="aci-select" id="ec2Cement" onchange="updateEC2()">
+        <option value="S">S — 慢硬型 (CEM 32.5N)</option>
+        <option value="N" selected>N — 普通/早强 (CEM 32.5R, 42.5N)</option>
+        <option value="R">R — 快硬高强 (CEM 42.5R, 52.5N, 52.5R)</option>
+      </select>
+    </div>
+    <div>
+      <label style="font-size:.72rem;font-weight:600;color:var(--muted);display:block;">骨料类型 (EC2 表 3.1)</label>
+      <select class="aci-select" id="ec2Agg" onchange="updateEC2()">
+        <option value="quartzite" selected>石英岩 (基准)</option>
+        <option value="basalt">玄武岩 (高弹模)</option>
+        <option value="limestone">石灰岩 (中弹模)</option>
+        <option value="sandstone">砂岩 (低弹模)</option>
+      </select>
+    </div>
+    <div>
+      <label style="font-size:.72rem;font-weight:600;color:var(--muted);display:block;">板厚 (mm)</label>
+      <select class="aci-select" id="ec2Thickness" onchange="updateEC2()">
+        <option value="50">50 mm</option><option value="60">60 mm</option><option value="70">70 mm</option><option value="80">80 mm</option><option value="90">90 mm</option>
+        <option value="100">100 mm</option><option value="110">110 mm</option><option value="120">120 mm</option><option value="130">130 mm</option><option value="140">140 mm</option>
+        <option value="150">150 mm</option><option value="160">160 mm</option><option value="170">170 mm</option><option value="180" selected>180 mm</option><option value="190">190 mm</option>
+        <option value="200">200 mm</option><option value="210">210 mm</option><option value="220">220 mm</option><option value="230">230 mm</option><option value="240">240 mm</option>
+        <option value="250">250 mm</option><option value="260">260 mm</option><option value="270">270 mm</option><option value="280">280 mm</option><option value="290">290 mm</option>
+        <option value="300">300 mm</option><option value="310">310 mm</option><option value="320">320 mm</option><option value="330">330 mm</option><option value="340">340 mm</option>
+        <option value="350">350 mm</option>
+      </select>
+    </div>
+    <div>
+      <label style="font-size:.72rem;font-weight:600;color:var(--muted);display:block;">干燥条件</label>
+      <select class="aci-select" id="ec2Drying" onchange="updateEC2()">
+        <option value="one" selected>单面干燥 (地面板)</option>
+        <option value="two">双面干燥 (楼板)</option>
+      </select>
+    </div>
+    <div>
+      <label style="font-size:.72rem;font-weight:600;color:var(--muted);display:block;">相对湿度 RH</label>
+      <select class="aci-select" id="ec2RH" onchange="updateEC2()">
+        <option value="40">40%（干燥气候）</option>
+        <option value="50" selected>50%（温和气候）</option>
+        <option value="60">60%（室内/温带）</option>
+        <option value="70">70%（潮湿气候）</option>
+        <option value="80">80%（非常潮湿）</option>
+      </select>
+    </div>
+    <div>
+      <label style="font-size:.72rem;font-weight:600;color:var(--muted);display:block;">水胶比 (w/c)</label>
+      <select class="aci-select" id="ec2Wc" onchange="updateEC2()">
+        <option value="0.35">0.35 (≈C55)</option>
+        <option value="0.40">0.40 (≈C45)</option>
+        <option value="0.45">0.45 (≈C40)</option>
+        <option value="0.50" selected>0.50 (≈C35)</option>
+        <option value="0.55">0.55 (≈C30)</option>
+        <option value="0.60">0.60 (≈C25)</option>
+      </select>
+    </div>
+    <div>
+      <label style="font-size:.72rem;font-weight:600;color:var(--muted);display:block;">养护天数 t<sub>s</sub> (天)</label>
+      <select class="aci-select" id="ec2Ts" onchange="updateEC2()">
+        <option value="1">1 天</option>
+        <option value="3">3 天</option>
+        <option value="7" selected>7 天</option>
+        <option value="14">14 天</option>
+        <option value="28">28 天</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 收缩应变结果表 -->
+  <div id="ec2Result"></div>
+
+  <!-- 收缩 + 徐变图表 — 10年线性 -->
+  <h3 class="aci-section-title" style="margin-top:20px;">📈 收缩应变 &amp; 徐变系数 — 10年时程（线性坐标）</h3>
+  <div class="aci-wc-chart-wrap" style="height:320px;"><canvas id="ec2Chart"></canvas></div>
+
+  <!-- 收缩 + 徐变图表 — 10年对数 -->
+  <h3 class="aci-section-title" style="margin-top:20px;">📈 收缩应变 &amp; 徐变系数 — 10年时程（对数坐标）</h3>
+  <div class="aci-wc-chart-wrap" style="height:320px;"><canvas id="ec2ChartLog"></canvas></div>
+  <p style="font-size:.72rem;color:var(--muted);margin-top:6px;" id="ec2Note"></p>
+</div>
 
 <!-- ===== 堆积密度理论（已隐藏） ===== -->
 <div class="card" style="display:none">
@@ -1548,6 +1650,348 @@ document.addEventListener('focusin', function(e) {
     e.target.select();
   }
 });
+
+// 初始调用
+setTimeout(function() {
+  updateEC2();
+}, 100);
+
+// ========== Eurocode 2 收缩与徐变计算 (EN 1992-1-1 Annex B) ==========
+
+// 水胶比 → f_ck, f_cm 近似映射 (Bolomey 公式近似)
+function ec2StrengthFromWc(wc) {
+  const wcNum = parseFloat(wc);
+  // f_cm ≈ 22 × (1/wc - 0.5)  (Bolomey modified for typical cements)
+  const fcm = Math.round(22 * (1 / wcNum - 0.5));
+  const fck = Math.max(12, fcm - 8);
+  return { fck: fck, fcm: fcm };
+}
+
+// 水泥类型系数
+const EC2_CEMENT = {
+  'S': { ads1: 3, ads2: 0.13, name: 'S — 慢硬型' },
+  'N': { ads1: 4, ads2: 0.12, name: 'N — 普通/早强' },
+  'R': { ads1: 6, ads2: 0.11, name: 'R — 快硬高强' },
+};
+
+// k_h 系数表 (EN 1992-1-1 Table 3.3)
+function ec2Kh(h0) {
+  const table = [[100, 1.00], [200, 0.85], [300, 0.75], [500, 0.70]];
+  if (h0 <= 100) return 1.00;
+  if (h0 >= 500) return 0.70;
+  for (let i = 0; i < table.length - 1; i++) {
+    if (h0 >= table[i][0] && h0 <= table[i + 1][0]) {
+      const t = (h0 - table[i][0]) / (table[i + 1][0] - table[i][0]);
+      return table[i][1] + t * (table[i + 1][1] - table[i][1]);
+    }
+  }
+  return 0.75;
+}
+
+// 骨料类型修正系数 (基于 EC2 表 3.1 + fib Model Code 2010)
+// 石英岩为基准 (E ≈ 80 GPa)，弹性模量越低的骨料收缩和徐变越大
+const EC2_AGGREGATE = {
+  'quartzite': { name: '石英岩', creepFac: 1.00, shrinkFac: 1.00, eMod: 80, desc: 'E_agg ≈ 80 GPa，基准' },
+  'basalt':    { name: '玄武岩', creepFac: 0.80, shrinkFac: 0.75, eMod: 110, desc: 'E_agg ≈ 110 GPa，高弹模，徐变及收缩较小' },
+  'limestone': { name: '石灰岩', creepFac: 1.20, shrinkFac: 1.30, eMod: 55, desc: 'E_agg ≈ 55 GPa，中弹模，徐变及收缩偏大' },
+  'sandstone': { name: '砂岩',   creepFac: 1.50, shrinkFac: 1.60, eMod: 35, desc: 'E_agg ≈ 35 GPa，低弹模，徐变及收缩显著偏大' },
+};
+
+let ec2Chart = null;
+let ec2ChartLog = null;
+
+function updateEC2() {
+  const cementType = document.getElementById('ec2Cement').value;
+  const thickness = parseFloat(document.getElementById('ec2Thickness').value);
+  const drying = document.getElementById('ec2Drying').value;
+  const RH = parseFloat(document.getElementById('ec2RH').value);
+  const wc = document.getElementById('ec2Wc').value;
+  const aggType = document.getElementById('ec2Agg').value;
+  const ts = parseFloat(document.getElementById('ec2Ts').value); // age at start of drying
+
+  const cement = EC2_CEMENT[cementType];
+  const { fck, fcm } = ec2StrengthFromWc(wc);
+
+  // Notional size h₀
+  // Single-sided drying (slab on ground): h₀ = 2h
+  // Two-sided drying (suspended slab): h₀ = h
+  const h = thickness;
+  const h0 = drying === 'one' ? 2 * h : h;
+
+  const kh = ec2Kh(h0);
+
+  // ---- Drying shrinkage ε_cd ----
+  // β_RH
+  const betaRH = 1.55 * (1 - Math.pow(RH / 100, 3));
+
+  // ε_cd,0 — basic drying shrinkage (with aggregate type modifier)
+  const fcm0 = 10;
+  const agg = EC2_AGGREGATE[aggType];
+  const epsCd0base = 0.85 * ((220 + 110 * cement.ads1) * Math.exp(-cement.ads2 * fcm / fcm0)) * 1e-6 * betaRH;
+  const epsCd0 = epsCd0base * agg.shrinkFac; // 骨料类型修正
+
+  // ---- Autogenous shrinkage ε_ca ----
+  const epsCaInf = 2.5 * (fck - 10) * 1e-6;
+
+  // ---- Creep coefficient ----
+  // α1, α2, α3 (when fcm > 35)
+  const alpha1 = Math.pow(35 / fcm, 0.7);
+  const alpha2 = Math.pow(35 / fcm, 0.2);
+  const alpha3 = Math.min(1.0, Math.pow(35 / fcm, 0.5));
+
+  // φ_RH
+  let phiRH;
+  if (fcm <= 35) {
+    phiRH = 1 + (1 - RH / 100) / (0.1 * Math.pow(h0, 1 / 3));
+  } else {
+    phiRH = (1 + (1 - RH / 100) / (0.1 * Math.pow(h0, 1 / 3)) * alpha1) * alpha2;
+  }
+
+  // β(fcm)
+  const betaFcm = 16.8 / Math.sqrt(fcm);
+
+  // β(t0) — t0 = ts (age at loading ≈ age at start of drying)
+  const t0 = ts;
+  const betaT0 = 1 / (0.1 + Math.pow(t0, 0.20));
+
+  // φ₀ — notional creep coefficient (with aggregate type modifier)
+  const phi0 = phiRH * betaFcm * betaT0 * agg.creepFac;
+
+  // β_H — coefficient depending on RH and h0
+  const betaH = Math.min(
+    1500 * alpha3,
+    1.5 * (1 + Math.pow(0.012 * RH, 18)) * h0 + 250 * alpha3
+  );
+
+  // Compute table for various ages
+  const ages = [7, 14, 28, 60, 90, 180, 365, 730, 1825, 3650, 10950]; // days
+
+  const tableData = ages.map(t => {
+    // Drying shrinkage development β_ds
+    let betaDs;
+    if (t <= ts) {
+      betaDs = 0;
+    } else {
+      betaDs = (t - ts) / ((t - ts) + 0.04 * Math.pow(h0, 1.5));
+    }
+    const epsCd = betaDs * kh * epsCd0;
+
+    // Autogenous shrinkage β_as
+    const betaAs = 1 - Math.exp(-0.2 * Math.sqrt(t));
+    const epsCa = betaAs * epsCaInf;
+
+    // Total shrinkage
+    const epsCs = epsCd + epsCa;
+
+    // Creep coefficient β_c
+    let betaC;
+    if (t <= t0) {
+      betaC = 0;
+    } else {
+      betaC = Math.pow((t - t0) / (betaH + t - t0), 0.3);
+    }
+    const phi = phi0 * betaC;
+
+    return { t, epsCd, epsCa, epsCs, phi, betaDs, betaC };
+  });
+
+  // End-of-life (50 years) and theoretical final values
+  const tEnd = 18250; // 50 years
+  const tInf = 36500; // 100 years
+
+  const finalData = (t) => {
+    const betaDs = t > ts ? (t - ts) / ((t - ts) + 0.04 * Math.pow(h0, 1.5)) : 0;
+    const betaAs = 1 - Math.exp(-0.2 * Math.sqrt(t));
+    const betaC = t > t0 ? Math.pow((t - t0) / (betaH + t - t0), 0.3) : 0;
+    return {
+      epsCd: betaDs * kh * epsCd0,
+      epsCa: betaAs * epsCaInf,
+      epsCs: betaDs * kh * epsCd0 + betaAs * epsCaInf,
+      phi: phi0 * betaC,
+    };
+  };
+
+  const end50 = finalData(tEnd);
+
+  // Render result table
+  let html = `<div style="overflow-x:auto;margin-top:12px;">
+    <table style="font-size:.74rem;width:100%;">
+      <thead>
+        <tr>
+          <th>龄期 (天)</th>
+          <th>干燥收缩 ε<sub>cd</sub><br>(×10⁻⁶)</th>
+          <th>自收缩 ε<sub>ca</sub><br>(×10⁻⁶)</th>
+          <th>总收缩 ε<sub>cs</sub><br>(×10⁻⁶)</th>
+          <th>徐变系数 φ</th>
+          <th>收缩+徐变 *<br>(×10⁻⁶)</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  tableData.forEach(row => {
+    // Creep strain ≈ φ × ε_elastic
+    // For a typical slab, ε_elastic ≈ 100×10⁻⁶ (≈3 MPa / 30 GPa)
+    const epsElastic = 100e-6;
+    const epsTotal = row.epsCs + row.phi * epsElastic;
+    const cls = row.t === 365 ? ' style="background:#f7f4eb;font-weight:600;"' : '';
+
+    html += `
+      <tr${cls}>
+        <td>${row.t >= 365 ? (row.t / 365).toFixed(0) + ' 年' : row.t + ' 天'}${row.t === 365 ? ' ← 1年' : ''}</td>
+        <td>${(row.epsCd * 1e6).toFixed(0)}</td>
+        <td>${(row.epsCa * 1e6).toFixed(0)}</td>
+        <td style="color:var(--accent);font-weight:600;">${(row.epsCs * 1e6).toFixed(0)}</td>
+        <td style="color:var(--accent2);font-weight:600;">${row.phi.toFixed(3)}</td>
+        <td>${(epsTotal * 1e6).toFixed(0)}</td>
+      </tr>`;
+  });
+
+  // Final 50-year value
+  const epsElastic = 100e-6;
+  const epsTotal50 = end50.epsCs + end50.phi * epsElastic;
+  html += `
+      <tr style="font-weight:700;background:#f0ede2;border-top:2px solid #d8d2c4;">
+        <td>∞ 终值 (50年)</td>
+        <td>${(end50.epsCd * 1e6).toFixed(0)}</td>
+        <td>${(end50.epsCa * 1e6).toFixed(0)}</td>
+        <td style="color:var(--accent);">${(end50.epsCs * 1e6).toFixed(0)}</td>
+        <td style="color:var(--accent2);">${end50.phi.toFixed(3)}</td>
+        <td>${(epsTotal50 * 1e6).toFixed(0)}</td>
+      </tr>
+    </tbody></table></div>`;
+
+  // Parameters note
+  const aggNote = agg.creepFac !== 1 || agg.shrinkFac !== 1
+    ? ` &nbsp;|&nbsp; <strong>骨料：${agg.name}</strong> (徐变×${agg.creepFac.toFixed(2)}，收缩×${agg.shrinkFac.toFixed(2)})`
+    : ` &nbsp;|&nbsp; 骨料：${agg.name} (基准)`;
+  html += `<div class="callout info" style="margin-top:10px;font-size:.74rem;">
+    <strong>计算参数：</strong>
+    水泥 ${cement.name} &nbsp;|&nbsp; 骨料 ${agg.name} (E ≈ ${agg.eMod} GPa) &nbsp;|&nbsp; f<sub>ck</sub> = ${fck} MPa &nbsp;|&nbsp; f<sub>cm</sub> = ${fcm} MPa &nbsp;|&nbsp; h₀ = ${h0} mm &nbsp;|&nbsp; k<sub>h</sub> = ${kh.toFixed(2)} &nbsp;|&nbsp; RH = ${RH}% &nbsp;|&nbsp; t<sub>s</sub> = ${ts} 天 &nbsp;|&nbsp; φ₀ = ${phi0.toFixed(2)}${aggNote}
+  </div>`;
+
+  // Key findings
+  html += `<p style="font-size:.73rem;color:var(--muted);margin-top:6px;">
+    📐 <strong>关键结论：</strong>总收缩 ε<sub>cs</sub>(∞) ≈ <strong style="color:var(--accent);">${(end50.epsCs * 1e6).toFixed(0)} × 10⁻⁶</strong> (${(end50.epsCs * 100).toFixed(3)}%) &nbsp;|&nbsp;
+    徐变 φ(∞) ≈ <strong style="color:var(--accent2);">${end50.phi.toFixed(2)}</strong> &nbsp;|&nbsp;
+    干燥收缩占比 ${(end50.epsCd / end50.epsCs * 100).toFixed(0)}%，自收缩占比 ${(end50.epsCa / end50.epsCs * 100).toFixed(0)}%
+    &nbsp;|&nbsp; * 徐变应变按 σ≈3MPa / E≈30GPa 弹性应变 ≈ 100×10⁻⁶ 估算
+  </p>`;
+
+  document.getElementById('ec2Result').innerHTML = html;
+
+  // Update chart
+  updateEC2Chart(tableData, phi0, betaH, t0, epsCd0, kh, epsCaInf, h0, drying, ts);
+}
+
+function updateEC2Chart(tableData, phi0, betaH, t0, epsCd0, kh, epsCaInf, h0, drying, ts) {
+  const tsVal = parseFloat(document.getElementById('ec2Ts').value) || 7;
+  const h0Val = h0;
+
+  // Shared helper: compute curve values at time t
+  const compute = (t) => {
+    const betaDs = t > tsVal ? (t - tsVal) / ((t - tsVal) + 0.04 * Math.pow(h0Val, 1.5)) : 0;
+    const betaAs = 1 - Math.exp(-0.2 * Math.sqrt(t));
+    const betaC = t > t0 ? Math.pow((t - t0) / (betaH + t - t0), 0.3) : 0;
+    return {
+      epsCs: (betaDs * kh * epsCd0 + betaAs * epsCaInf) * 1e6,
+      epsCd: (betaDs * kh * epsCd0) * 1e6,
+      epsCa: (betaAs * epsCaInf) * 1e6,
+      phi: phi0 * betaC,
+    };
+  };
+
+  // ---- Chart 1: 10-year time history ----
+  const fineT10y = [];
+  for (let i = 0; i <= 240; i++) {
+    fineT10y.push(1 + (3650 - 1) * (i / 240));
+  }
+  const smooth10y = fineT10y.map(t => ({ t, ...compute(t) }));
+
+  const datasets10y = [
+    {
+      label: '总收缩 ε_cs',
+      data: smooth10y.map(d => ({ x: d.t, y: d.epsCs })),
+      borderColor: '#b85a3f', borderWidth: 2.5, pointRadius: 0, showLine: true, tension: 0.3, yAxisID: 'y',
+    },
+    {
+      label: '干燥收缩 ε_cd',
+      data: smooth10y.map(d => ({ x: d.t, y: d.epsCd })),
+      borderColor: '#c49555', borderWidth: 1.2, borderDash: [5, 3], pointRadius: 0, showLine: true, tension: 0.3, yAxisID: 'y',
+    },
+    {
+      label: '自收缩 ε_ca',
+      data: smooth10y.map(d => ({ x: d.t, y: d.epsCa })),
+      borderColor: '#8a7098', borderWidth: 1.2, borderDash: [3, 6], pointRadius: 0, showLine: true, tension: 0.3, yAxisID: 'y',
+    },
+    {
+      label: '徐变系数 φ（右轴）',
+      data: smooth10y.map(d => ({ x: d.t, y: d.phi })),
+      borderColor: '#4a6880', borderWidth: 2.2, pointRadius: 0, showLine: true, tension: 0.3, yAxisID: 'y1',
+    },
+  ];
+
+  const chart10yOptions = {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'nearest', intersect: false },
+    plugins: {
+      legend: { display: true, position: 'top', labels: { font: { size: 10 }, color: '#8a8278', usePointStyle: true, boxWidth: 8, padding: 14 } },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.yAxisID === 'y1' ? `${ctx.dataset.label}: φ = ${ctx.parsed.y.toFixed(2)} @ ${ctx.parsed.x > 365 ? (ctx.parsed.x/365).toFixed(0)+'年' : ctx.parsed.x.toFixed(0)+'天'}` : `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(0)} ×10⁻⁶ @ ${ctx.parsed.x > 365 ? (ctx.parsed.x/365).toFixed(0)+'年' : ctx.parsed.x.toFixed(0)+'天'}` } }
+    },
+    scales: {
+      x: { type: 'linear', title: { display: true, text: '龄期 (天)', font: { size: 11, weight: '600' }, color: '#2e2a25' }, min: 0, max: 3650, ticks: { stepSize: 365, callback: v => (v/365).toFixed(0)+'年', font: { size: 10 }, color: '#8a8278' }, grid: { color: '#e5e0d6' } },
+      y:  { type: 'linear', position: 'left',  title: { display: true, text: '收缩应变 (×10⁻⁶)', font: { size: 11, weight: '600' }, color: '#b85a3f' }, ticks: { font: { size: 10 }, color: '#8a8278' }, grid: { color: '#e5e0d6' } },
+      y1: { type: 'linear', position: 'right', title: { display: true, text: '徐变系数 φ', font: { size: 11, weight: '600' }, color: '#4a6880' }, ticks: { font: { size: 10 }, color: '#8a8278' }, grid: { drawOnChartArea: false } },
+    }
+  };
+
+  if (ec2Chart) { ec2Chart.data.datasets = datasets10y; ec2Chart.update(); }
+  else { const ctx = document.getElementById('ec2Chart').getContext('2d'); ec2Chart = new Chart(ctx, { type: 'scatter', data: { datasets: datasets10y }, options: chart10yOptions }); }
+
+  // ---- Chart 2: 10-year log-scale ----
+  const datasets10yLog = [
+    {
+      label: '总收缩 ε_cs',
+      data: smooth10y.map(d => ({ x: d.t, y: d.epsCs })),
+      borderColor: '#b85a3f', borderWidth: 2.5, pointRadius: 0, showLine: true, tension: 0.3, yAxisID: 'y',
+    },
+    {
+      label: '干燥收缩 ε_cd',
+      data: smooth10y.map(d => ({ x: d.t, y: d.epsCd })),
+      borderColor: '#c49555', borderWidth: 1.2, borderDash: [5, 3], pointRadius: 0, showLine: true, tension: 0.3, yAxisID: 'y',
+    },
+    {
+      label: '自收缩 ε_ca',
+      data: smooth10y.map(d => ({ x: d.t, y: d.epsCa })),
+      borderColor: '#8a7098', borderWidth: 1.2, borderDash: [3, 6], pointRadius: 0, showLine: true, tension: 0.3, yAxisID: 'y',
+    },
+    {
+      label: '徐变系数 φ（右轴）',
+      data: smooth10y.map(d => ({ x: d.t, y: d.phi })),
+      borderColor: '#4a6880', borderWidth: 2.2, pointRadius: 0, showLine: true, tension: 0.3, yAxisID: 'y1',
+    },
+  ];
+
+  const chartLogOptions = {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'nearest', intersect: false },
+    plugins: {
+      legend: { display: true, position: 'top', labels: { font: { size: 10 }, color: '#8a8278', usePointStyle: true, boxWidth: 8, padding: 14 } },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.yAxisID === 'y1' ? `${ctx.dataset.label}: φ = ${ctx.parsed.y.toFixed(2)} @ ${ctx.parsed.x.toFixed(1)} 天` : `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(0)} ×10⁻⁶ @ ${ctx.parsed.x.toFixed(1)} 天` } }
+    },
+    scales: {
+      x: { type: 'logarithmic', title: { display: true, text: '龄期 (天) — 对数坐标', font: { size: 11, weight: '600' }, color: '#2e2a25' }, min: 1, max: 3650, ticks: { callback: v => v >= 365 ? (v/365).toFixed(0)+'年' : v >= 1 ? v : '', font: { size: 10 }, color: '#8a8278' }, grid: { color: '#e5e0d6' } },
+      y:  { type: 'linear', position: 'left',  title: { display: true, text: '收缩应变 (×10⁻⁶)', font: { size: 11, weight: '600' }, color: '#b85a3f' }, ticks: { font: { size: 10 }, color: '#8a8278' }, grid: { color: '#e5e0d6' } },
+      y1: { type: 'linear', position: 'right', title: { display: true, text: '徐变系数 φ', font: { size: 11, weight: '600' }, color: '#4a6880' }, ticks: { font: { size: 10 }, color: '#8a8278' }, grid: { drawOnChartArea: false } },
+    }
+  };
+
+  if (ec2ChartLog) { ec2ChartLog.data.datasets = datasets10yLog; ec2ChartLog.update(); }
+  else { const ctx = document.getElementById('ec2ChartLog').getContext('2d'); ec2ChartLog = new Chart(ctx, { type: 'scatter', data: { datasets: datasets10yLog }, options: chartLogOptions }); }
+
+  // Shared note
+  document.getElementById('ec2Note').innerHTML =
+    `h₀ = ${h0} mm (${drying === 'one' ? '单面干燥，h₀ = 2h' : '双面干燥，h₀ = h'}) &nbsp;|&nbsp; 养护 ${ts} 天后开始干燥 &nbsp;|&nbsp; <strong>φ 说明：</strong>① 持续压荷载 → 徐变叠加收缩；② 约束收缩 → 徐变松弛拉应力，有利延缓开裂。`;
+}
 
 // ========== PASSWORD SYSTEM ==========
 const MAX_ATTEMPTS = 3;
