@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>地面承载板设计计算工具 | Ground Bearing Slab - TR34 (可视化版)</title>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --card-bg: #ffffff;
+    --primary: #1a5276;
+    --accent: #2980b9;
+    --ok: #27ae60;
+    --fail: #e74c3c;
+    --warn: #f39c12;
+    --border: #dce1e8;
+    --text: #2c3e50;
+    --text-light: #6b7b8d;
+    --input-bg: #f8fafc;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-lg: 0 4px 12px rgba(0,0,0,.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+
+  .header { background: linear-gradient(135deg, #1a3a4a 0%, #1a5276 50%, #1a6d96 100%); color: #fff; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-lg); }
+  .header h1 { font-size: 1.2rem; font-weight: 600; letter-spacing: -.3px; display: flex; align-items: center; gap: 10px; }
+  .header .sub { font-size: .72rem; opacity: .85; margin-top: 2px; }
+  .header .badge { background: rgba(255,255,255,.18); padding: 5px 14px; border-radius: 20px; font-size: .7rem; font-weight: 500; }
+
+  .app { display: flex; min-height: calc(100vh - 58px); }
+  .sidebar { width: 380px; min-width: 380px; background: var(--card-bg); border-right: 1px solid var(--border); overflow-y: auto; padding: 16px; box-shadow: var(--shadow); }
+  .main { flex: 1; padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; }
+
+  /* Sidebar */
+  .side-section { margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .side-section h3 { background: #f0f3f7; padding: 9px 12px; font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; color: var(--primary); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  .side-section h3 .arrow { transition: transform .2s; font-size: .65rem; }
+  .side-section.collapsed .arrow { transform: rotate(-90deg); }
+  .side-section.collapsed .sec-body { display: none; }
+  .sec-body { padding: 10px 12px; }
+  .input-row { display: flex; align-items: center; margin-bottom: 6px; gap: 6px; }
+  .input-row label { flex: 1; font-size: .73rem; color: var(--text-light); white-space: nowrap; min-width: 0; }
+  .input-row input, .input-row select { width: 100px; padding: 5px 7px; border: 1px solid var(--border); border-radius: 5px; font-size: .78rem; background: var(--input-bg); text-align: right; }
+  .input-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(41,128,185,.12); }
+  .input-row .unit { font-size: .68rem; color: var(--text-light); width: 52px; }
+  .btn { padding: 7px 15px; border-radius: 6px; font-size: .78rem; font-weight: 500; cursor: pointer; border: none; transition: all .15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #2471a3; }
+  .btn-secondary { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+  .btn-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+
+  /* Summary */
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .summary-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; text-align: center; }
+  .summary-item .val { font-size: 1.35rem; font-weight: 700; color: var(--primary); }
+  .summary-item .lbl { font-size: .68rem; color: var(--text-light); margin-top: 2px; }
+
+  .all-ok { background: #e8f8f0; color: #1e8449; padding: 10px 16px; border-radius: 8px; font-weight: 600; font-size: .82rem; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .has-fail { background: #fde8e8; color: #c0392b; padding: 10px 16px; border-radius: 8px; font-weight: 600; font-size: .82rem; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 2px; margin-bottom: 14px; flex-wrap: wrap; background: #e8ecf1; padding: 3px; border-radius: 8px; }
+  .tab { padding: 7px 16px; border-radius: 6px; font-size: .76rem; cursor: pointer; border: none; background: transparent; color: var(--text-light); transition: .15s; font-weight: 500; }
+  .tab.active { background: #fff; color: var(--primary); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .tab:hover:not(.active) { color: var(--primary); }
+
+  /* Cards */
+  .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow); }
+  .card h2 { font-size: .92rem; font-weight: 600; color: var(--primary); margin-bottom: 4px; }
+  .card .subtitle { font-size: .7rem; color: var(--text-light); margin-bottom: 12px; }
+
+  .check-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 6px; margin-bottom: 4px; background: #f8fafc; font-size: .76rem; }
+  .check-row .label { font-weight: 500; }
+  .check-row .values { text-align: right; }
+  .result { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: .7rem; font-weight: 600; margin-left: 6px; }
+  .result.ok { background: #e8f8f0; color: var(--ok); }
+  .result.fail { background: #fde8e8; color: var(--fail); }
+
+  table { width: 100%; border-collapse: collapse; font-size: .73rem; }
+  th { background: #f0f3f7; padding: 7px 8px; text-align: left; font-weight: 600; color: var(--primary); border-bottom: 2px solid var(--border); }
+  td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: #fafbfc; }
+
+  /* Canvas containers */
+  .canvas-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .canvas-card h3 { font-size: .85rem; font-weight: 600; color: var(--primary); margin-bottom: 10px; }
+  canvas { display: block; width: 100%; border: 1px solid #eee; border-radius: 6px; background: #fcfdfe; }
+  .canvas-controls { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+  .canvas-controls select, .canvas-controls label { font-size: .74rem; }
+  .canvas-controls select { padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .7rem; margin-top: 8px; color: var(--text-light); }
+  .legend span { display: flex; align-items: center; gap: 4px; }
+  .legend .swatch { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+
+  @media print { .sidebar, .header, .btn-row, .tabs, .canvas-controls { display: none !important; } .app { display: block; } .main { padding: 0; } .card, .canvas-card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; } }
+  .sidebar::-webkit-scrollbar { width: 5px; }
+  .sidebar::-webkit-scrollbar-thumb { background: #ccd; border-radius: 3px; }
+
+  .view-panel { display: none; }
+  .view-panel.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🏗️ 地面承载板设计计算工具 <span style="font-size:.75rem;font-weight:400;opacity:.8;">可视化版</span></h1>
+    <div class="sub">Ground Bearing Slab — FREEPLAN Joint-Free Design per Concrete Society TR34 (4th Ed. 2013)</div>
+  </div>
+  <span class="badge">v2.0 | TR34 | Visual</span>
+</div>
+
+<div class="app">
+  <!-- ========== SIDEBAR ========== -->
+  <div class="sidebar" id="sidebar">
+
+    <div class="side-section" id="sec-project">
+      <h3 onclick="toggleSection('sec-project')">📋 项目信息 <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>项目名称</label><input id="proj_name" value="Atlas Copco" style="width:130px;text-align:left;"></div>
+        <div class="input-row"><label>地点</label><input id="proj_place" value="Wuxi" style="width:130px;text-align:left;"></div>
+      </div>
+    </div>
+
+    <div class="side-section" id="sec-slab">
+      <h3 onclick="toggleSection('sec-slab')">🧱 混凝土板特性 <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>板厚 h</label><input id="h" value="200" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>有效厚度 d<sub>eff</sub></label><input id="d_eff" value="150" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>抗压强度 f<sub>cu</sub></label><input id="fcu" value="35" type="number"><span class="unit">N/mm²</span></div>
+        <div class="input-row"><label>圆柱体强度 f<sub>ck</sub></label><input id="fck" value="28" type="number"><span class="unit">N/mm²</span></div>
+        <div class="input-row"><label>弹性模量 E<sub>cm</sub></label><input id="Ecm" value="32" type="number"><span class="unit">kN/mm²</span></div>
+        <div class="input-row"><label>泊松比 ν</label><input id="nu" value="0.2" type="number" step="0.01"><span class="unit">—</span></div>
+        <div class="input-row"><label>负弯矩承载力 M<sub>n</sub></label><input id="Mn" value="17.21" type="number" step="0.01"><span class="unit">kN·m/m</span></div>
+        <div class="input-row"><label>正弯矩承载力 M<sub>p</sub></label><input id="Mp" value="16.44" type="number" step="0.01"><span class="unit">kN·m/m</span></div>
+        <div class="input-row"><label>板面抗剪 v<sub>max</sub></label><input id="vmax" value="4.97" type="number" step="0.01"><span class="unit">N/mm²</span></div>
+        <div class="input-row"><label>临界面抗剪 v<sub>Rd,c</sub>+v<sub>f</sub></label><input id="vRdc_vf" value="0.74" type="number" step="0.01"><span class="unit">N/mm²</span></div>
+        <div class="input-row"><label>接缝间距 L<sub>j</sub></label><input id="Lj" value="35" type="number"><span class="unit">m</span></div>
+        <div class="input-row"><label>接缝传力 LT</label><input id="LT" value="56" type="number"><span class="unit">kN/m</span></div>
+      </div>
+    </div>
+
+    <div class="side-section" id="sec-subbase">
+      <h3 onclick="toggleSection('sec-subbase')">🪨 地基特性 <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>地基反应模量 K</label><input id="K" value="97" type="number"><span class="unit">MN/m³</span></div>
+        <div class="input-row"><label>摩擦系数 μ</label><input id="mu" value="0.5" type="number" step="0.1"><span class="unit">—</span></div>
+      </div>
+    </div>
+
+    <div class="side-section" id="sec-udl">
+      <h3 onclick="toggleSection('sec-udl')">📐 均布荷载 UDL <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>均布荷载 q</label><input id="udl_q" value="80" type="number"><span class="unit">kN/m²</span></div>
+        <div class="input-row"><label>分项安全系数 γ<sub>f</sub></label><input id="udl_gf" value="1.0" type="number" step="0.01"><span class="unit">—</span></div>
+      </div>
+    </div>
+
+    <div class="side-section" id="sec-point">
+      <h3 onclick="toggleSection('sec-point')">📍 静态点荷载 <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>点荷载 P</label><input id="pt_P" value="80" type="number"><span class="unit">kN</span></div>
+        <div class="input-row"><label>底板宽度 b</label><input id="pt_b" value="100" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>底板长度 d</label><input id="pt_d" value="100" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>支腿中心距 D</label><input id="pt_D" value="300" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>距接缝距离</label><input id="pt_edgeDist" value="150" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>分项安全系数 γ<sub>f</sub></label><input id="pt_gf" value="1.2" type="number" step="0.01"><span class="unit">—</span></div>
+      </div>
+    </div>
+
+    <div class="side-section" id="sec-forklift">
+      <h3 onclick="toggleSection('sec-forklift')">🏭 叉车荷载 <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>轮荷载 Q</label><input id="fl_Q" value="40" type="number"><span class="unit">kN</span></div>
+        <div class="input-row"><label>接触压力 p</label><input id="fl_p" value="5.0" type="number" step="0.01"><span class="unit">N/mm²</span></div>
+        <div class="input-row"><label>轮间距 D</label><input id="fl_D" value="1200" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>分项安全系数 γ<sub>f</sub></label><input id="fl_gf" value="1.6" type="number" step="0.01"><span class="unit">—</span></div>
+      </div>
+    </div>
+
+    <div class="side-section" id="sec-heavy">
+      <h3 onclick="toggleSection('sec-heavy')">🚛 重载叉车 <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>轮荷载 Q</label><input id="hv_Q" value="167" type="number"><span class="unit">kN</span></div>
+        <div class="input-row"><label>接触压力 p</label><input id="hv_p" value="2.0" type="number" step="0.01"><span class="unit">N/mm²</span></div>
+        <div class="input-row"><label>轮间距 D</label><input id="hv_D" value="1874" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>分项安全系数 γ<sub>f</sub></label><input id="hv_gf" value="1.6" type="number" step="0.01"><span class="unit">—</span></div>
+      </div>
+    </div>
+
+    <div class="side-section collapsed" id="sec-dowel">
+      <h3 onclick="toggleSection('sec-dowel')">🔩 接缝传力 (传力杆) <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>钢板宽度 W</label><input id="dw_W" value="150" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>钢板长度 L</label><input id="dw_L" value="135" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>嵌入深度 Emb</label><input id="dw_Emb" value="45" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>钢板厚度 T</label><input id="dw_T" value="6" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>钢板间距 S</label><input id="dw_S" value="500" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>设计强度 ds</label><input id="dw_ds" value="275" type="number"><span class="unit">N/mm²</span></div>
+        <div class="input-row"><label>接缝张开 X</label><input id="dw_X" value="20" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>荷载偏心距 e</label><input id="dw_e" value="10" type="number"><span class="unit">mm</span></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="calculateAll()">🔄 全部计算</button>
+      <button class="btn btn-secondary" onclick="resetAll()">↺ 恢复默认</button>
+      <button class="btn btn-secondary" onclick="window.print()">🖨️ 打印</button>
+    </div>
+  </div>
+
+  <!-- ========== MAIN ========== -->
+  <div class="main" id="main">
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchView('report', this)">📋 计算报告</button>
+      <button class="tab" onclick="switchView('plan', this)">📐 平面视图</button>
+      <button class="tab" onclick="switchView('chart', this)">📊 承载力对比</button>
+      <button class="tab" onclick="switchView('section', this)">🏗️ 截面示意</button>
+    </div>
+
+    <!-- View: Report -->
+    <div class="view-panel active" id="view-report">
+      <div id="results-container">
+        <div style="text-align:center;padding:60px 20px;color:var(--text-light);">
+          <div style="font-size:3rem;margin-bottom:12px;">📊</div>
+          <h2>地面承载板设计计算</h2>
+          <p>请在左侧输入参数后点击 <strong>"全部计算"</strong> 开始分析</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- View: Plan View -->
+    <div class="view-panel" id="view-plan">
+      <div class="canvas-card">
+        <h3>📐 荷载平面布置图</h3>
+        <div class="canvas-controls">
+          <label>荷载类型:</label>
+          <select id="planLoadType" onchange="drawPlanView()">
+            <option value="point">静态点荷载 (80kN)</option>
+            <option value="forklift">叉车荷载 (40kN)</option>
+            <option value="heavy">重载叉车 (167kN)</option>
+          </select>
+          <label>位置:</label>
+          <select id="planPosition" onchange="drawPlanView()">
+            <option value="internal">板内部</option>
+            <option value="edge">板边缘</option>
+          </select>
+          <label>支腿数:</label>
+          <select id="planLegs" onchange="drawPlanView()">
+            <option value="single">单腿</option>
+            <option value="double">双腿</option>
+          </select>
+        </div>
+        <canvas id="planCanvas" width="720" height="460"></canvas>
+        <div class="legend">
+          <span><span class="swatch" style="background:#e74c3c;"></span> 底板/轮印</span>
+          <span><span class="swatch" style="background:rgba(41,128,185,.25);border:2px solid #2980b9;"></span> 等效接触圆 (a)</span>
+          <span><span class="swatch" style="background:transparent;border:2px dashed #f39c12;"></span> 临界剪切周长 (u₁)</span>
+          <span><span class="swatch" style="background:transparent;border:1px dashed #95a5a6;"></span> 荷载面周长 (u₀)</span>
+          <span><span class="swatch" style="background:#e8f8f0;border:1px solid #27ae60;"></span> 相对刚度半径 (l)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- View: Capacity Chart -->
+    <div class="view-panel" id="view-chart">
+      <div class="canvas-card">
+        <h3>📊 承载力 vs 需求 — 各工况对比</h3>
+        <canvas id="chartCanvas" width="720" height="480"></canvas>
+        <div class="legend">
+          <span><span class="swatch" style="background:#2980b9;"></span> 设计荷载 (需求)</span>
+          <span><span class="swatch" style="background:#27ae60;"></span> 承载力 (内部)</span>
+          <span><span class="swatch" style="background:#f39c12;"></span> 承载力 (边缘含LT)</span>
+          <span><span class="swatch" style="background:#95a5a6;"></span> 安全裕度</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- View: Cross Section -->
+    <div class="view-panel" id="view-section">
+      <div class="canvas-card">
+        <h3>🏗️ 混凝土板截面示意</h3>
+        <canvas id="sectionCanvas" width="720" height="400"></canvas>
+        <div class="legend">
+          <span><span class="swatch" style="background:#bdc3c7;"></span> 混凝土板</span>
+          <span><span class="swatch" style="background:#d4a574;"></span> 地基 / 底基层</span>
+          <span><span class="swatch" style="background:#e74c3c;"></span> 荷载 P</span>
+          <span><span class="swatch" style="background:rgba(41,128,185,.3);"></span> 相对刚度半径 l</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ========== UTILITY ==========
+function $(id) { return document.getElementById(id); }
+function val(id) { return parseFloat($(id).value) || 0; }
+function round(v, n=2) { return v == null || isNaN(v) ? '—' : Number(v).toFixed(n); }
+function ok() { return `<span class="result ok">✓ OK</span>`; }
+function ng() { return `<span class="result fail">✗ NG</span>`; }
+
+function toggleSection(id) { $(id).classList.toggle('collapsed'); }
+
+function switchView(name, tabEl) {
+  document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  if (tabEl) tabEl.classList.add('active');
+  // Redraw canvases when switching to them
+  setTimeout(() => {
+    if (name === 'plan') drawPlanView();
+    if (name === 'chart') drawCapacityChart();
+    if (name === 'section') drawCrossSection();
+  }, 50);
+}
+
+// ========== CALCULATION ENGINE ==========
+
+function calc_l(Ecm_Nmm2, h_mm, nu, K_Nmm3) {
+  return Math.pow(Ecm_Nmm2 * Math.pow(h_mm, 3) / (12 * (1 - nu * nu) * K_Nmm3), 0.25);
+}
+
+function calc_l_udl(Ecm_Nmm2, h_mm, K_Nmm3) {
+  return Math.pow(Ecm_Nmm2 * Math.pow(h_mm, 3) / (3 * K_Nmm3), 0.25);
+}
+
+function contactRadius(b_mm, d_mm) {
+  return Math.sqrt(b_mm * d_mm / Math.PI);
+}
+
+function contactRadiusDouble(b_mm, d_mm, D_mm, l_mm) {
+  if (D_mm > 2 * 0.9 * l_mm) return contactRadius(b_mm, d_mm);
+  return Math.sqrt((2 * b_mm + D_mm) * d_mm / Math.PI);
+}
+
+function Pu_int_a0(Mn, Mp) { return 2 * Math.PI * (Mn + Mp); }
+function Pu_int_a02(Mn, Mp, a_over_l) { return 4 * Math.PI * (Mn + Mp) / (1 - a_over_l / 3); }
+function Pu_edge_a0(Mn, Mp) { return (Math.PI * (Mn + Mp) + 4 * Mp) / 2; }
+function Pu_edge_a02(Mn, Mp, a_over_l) { return (Math.PI * (Mn + Mp) + 4 * Mp) / (1 - 2 * a_over_l / 3); }
+
+function interpolatePu(a_over_l, Mn, Mp, isEdge) {
+  const pu0 = isEdge ? Pu_edge_a0(Mn, Mp) : Pu_int_a0(Mn, Mp);
+  const pu02 = isEdge ? Pu_edge_a02(Mn, Mp, 0.2) : Pu_int_a02(Mn, Mp, 0.2);
+  if (a_over_l <= 0) return pu0;
+  if (a_over_l >= 0.2) return isEdge ? Pu_edge_a02(Mn, Mp, a_over_l) : Pu_int_a02(Mn, Mp, a_over_l);
+  return pu0 + (a_over_l / 0.2) * (pu02 - pu0);
+}
+
+function shearAtFace(vmax, u0_mm, d_eff_mm) { return vmax * u0_mm * d_eff_mm / 1000; }
+function shearAtCritical(vRdc_vf, u1_mm, d_eff_mm) { return vRdc_vf * u1_mm * d_eff_mm / 1000; }
+function criticalPerimeter(b_mm, d_mm, d_eff_mm) { return 2 * (b_mm + d_mm) + 4 * Math.PI * d_eff_mm; }
+
+function criticalPerimeterDouble(b_mm, d_mm, D_mm, d_eff_mm) {
+  const u1_single = criticalPerimeter(b_mm, d_mm, d_eff_mm);
+  const u0_single = 2 * (b_mm + d_mm);
+  if (D_mm - u0_single / 2 > 4 * d_eff_mm) return 2 * u1_single;
+  return 2 * (2 * b_mm + D_mm + d_mm) + 4 * Math.PI * d_eff_mm;
+}
+
+// Global store for last computed values (used by visualization)
+let lastCalc = {};
+
+function calculateAll() {
+  const projName = $('proj_name').value || 'Project';
+  const projPlace = $('proj_place').value || 'Site';
+
+  const h = val('h');
+  const d_eff = val('d_eff');
+  const fck = val('fck');
+  const Ecm_kNmm2 = val('Ecm');
+  const nu = val('nu');
+  const Mn = val('Mn');
+  const Mp = val('Mp');
+  const vmax = val('vmax');
+  const vRdc_vf = val('vRdc_vf');
+  const LT = val('LT');
+  const K_MNm3 = val('K');
+  const mu = val('mu');
+
+  const Ecm = Ecm_kNmm2 * 1000;
+  const K = K_MNm3 / 1000;
+
+  const fctm_fl = 0.3 * Math.pow(fck, 2/3);
+  const l = calc_l(Ecm, h, nu, K);
+  const l_udl = calc_l_udl(Ecm, h, K);
+  const l_m = l / 1000;
+  const l_udl_m = l_udl / 1000;
+
+  // UDL
+  const udl_q = val('udl_q');
+  const udl_gf = val('udl_gf');
+  const udl_allowable = Mn / (0.168 * l_udl_m * l_udl_m);
+  const udl_factored = udl_q * udl_gf;
+  const udl_pass = udl_factored <= udl_allowable;
+
+  // Point Load
+  const pt_P = val('pt_P'); const pt_b = val('pt_b'); const pt_d = val('pt_d');
+  const pt_D = val('pt_D'); const pt_edgeDist = val('pt_edgeDist'); const pt_gf = val('pt_gf');
+  const Fser_single = pt_P * pt_gf;
+  const Fser_double = 2 * pt_P * pt_gf;
+  const a_single = contactRadius(pt_b, pt_d);
+  const a_double = contactRadiusDouble(pt_b, pt_d, pt_D, l);
+  const aol_single = a_single / l;
+  const aol_double = a_double / l;
+  const Pu_int_single = interpolatePu(aol_single, Mn, Mp, false);
+  const Pu_int_double = interpolatePu(aol_double, Mn, Mp, false);
+  const Pu_edge_single = interpolatePu(aol_single, Mn, Mp, true);
+  const Pu_edge_double = interpolatePu(aol_double, Mn, Mp, true);
+  const lt_reduce = LT * (2 * 0.9 * l) / 1000;
+  const Pu_edge_lt_single = Pu_edge_single + lt_reduce;
+  const Pu_edge_lt_double = Pu_edge_double + lt_reduce;
+
+  const u0_single = 2 * (pt_b + pt_d);
+  const u0_double = pt_D <= 2 * 0.9 * l ? 2 * (2 * pt_b + pt_D + pt_d) : 2 * u0_single;
+  const u1_single = criticalPerimeter(pt_b, pt_d, d_eff);
+  const u1_double = criticalPerimeterDouble(pt_b, pt_d, pt_D, d_eff);
+  const Pp_max_single = shearAtFace(vmax, u0_single, d_eff);
+  const Pp_max_double = shearAtFace(vmax, u0_double, d_eff);
+  const Pp_single = shearAtCritical(vRdc_vf, u1_single, d_eff);
+  const Pp_double = shearAtCritical(vRdc_vf, u1_double, d_eff);
+
+  const ptFlexIntSingle = Fser_single <= Pu_int_single;
+  const ptFlexIntDouble = Fser_double <= Pu_int_double;
+  const ptFlexEdgeSingle = Fser_single <= Pu_edge_lt_single;
+  const ptFlexEdgeDouble = Fser_double <= Pu_edge_lt_double;
+  const ptNeedLT_single = Fser_single > Pu_edge_single;
+  const ptNeedLT_double = Fser_double > Pu_edge_double;
+
+  const defl_central_single = (Fser_single / (K_MNm3 * l_m * l_m)) * 0.002;
+  const defl_central_double = (Fser_double / (K_MNm3 * l_m * l_m)) * 0.002;
+  const defl_edge_single = defl_central_single * 4;
+  const defl_edge_double = defl_central_double * 4;
+
+  // Forklift 40kN
+  const fl_Q = val('fl_Q'); const fl_p = val('fl_p'); const fl_D = val('fl_D'); const fl_gf = val('fl_gf');
+  const fl_contactArea = fl_Q * 1000 / fl_p;
+  const fl_b = Math.sqrt(fl_contactArea);
+  const fl_d = fl_b;
+  const fl_Fser_single = fl_Q * fl_gf;
+  const fl_Fser_double = 2 * fl_Q * fl_gf;
+  const fl_a_single = contactRadius(fl_b, fl_d);
+  const fl_a_double = contactRadiusDouble(fl_b, fl_d, fl_D, l);
+  const fl_aol_single = fl_a_single / l;
+  const fl_aol_double = fl_a_double / l;
+  const fl_Pu_int_single = interpolatePu(fl_aol_single, Mn, Mp, false);
+  const fl_Pu_int_double = interpolatePu(fl_aol_double, Mn, Mp, false);
+  const fl_Pu_edge_single = interpolatePu(fl_aol_single, Mn, Mp, true);
+  const fl_Pu_edge_double = interpolatePu(fl_aol_double, Mn, Mp, true);
+  const fl_Pu_edge_lt_single = fl_Pu_edge_single + lt_reduce;
+  const fl_Pu_edge_lt_double = fl_Pu_edge_double + lt_reduce;
+
+  const fl_u0_single = 2 * (fl_b + fl_d);
+  const fl_u0_double = fl_D <= 2 * 0.9 * l ? 2 * (2 * fl_b + fl_D + fl_d) : 2 * fl_u0_single;
+  const fl_u1_single = criticalPerimeter(fl_b, fl_d, d_eff);
+  const fl_u1_double = criticalPerimeterDouble(fl_b, fl_d, fl_D, d_eff);
+  const fl_Pp_max_single = shearAtFace(vmax, fl_u0_single, d_eff);
+  const fl_Pp_max_double = shearAtFace(vmax, fl_u0_double, d_eff);
+  const fl_Pp_single = shearAtCritical(vRdc_vf, fl_u1_single, d_eff);
+  const fl_Pp_double = shearAtCritical(vRdc_vf, fl_u1_double, d_eff);
+
+  // Heavy Forklift
+  const hv_Q = val('hv_Q'); const hv_p = val('hv_p'); const hv_D = val('hv_D'); const hv_gf = val('hv_gf');
+  const hv_contactArea = hv_Q * 1000 / hv_p;
+  const hv_b = Math.sqrt(hv_contactArea);
+  const hv_d = hv_b;
+  const hv_Fser_single = hv_Q * hv_gf;
+  const hv_Fser_double = 2 * hv_Q * hv_gf;
+  const hv_a_single = contactRadius(hv_b, hv_d);
+  const hv_independent = hv_D > 2 * 0.9 * l;
+  const hv_a_double = hv_independent ? hv_a_single : contactRadiusDouble(hv_b, hv_d, hv_D, l);
+  const hv_aol_single = hv_a_single / l;
+  const hv_aol_double = hv_a_double / l;
+  const hv_Pu_int_single = interpolatePu(hv_aol_single, Mn, Mp, false);
+  const hv_Pu_int_double = interpolatePu(hv_aol_double, Mn, Mp, false);
+  const hv_Pu_edge_single = interpolatePu(hv_aol_single, Mn, Mp, true);
+  const hv_Pu_edge_double = interpolatePu(hv_aol_double, Mn, Mp, true);
+  const hv_Pu_edge_lt_single = hv_Pu_edge_single + lt_reduce;
+  const hv_Pu_edge_lt_double = hv_Pu_edge_double + lt_reduce;
+
+  const hv_u0_single = 2 * (hv_b + hv_d);
+  const hv_u0_double = hv_independent ? 2 * hv_u0_single : 2 * (2 * hv_b + hv_D + hv_d);
+  const hv_u1_single = criticalPerimeter(hv_b, hv_d, d_eff);
+  const hv_u1_double = criticalPerimeterDouble(hv_b, hv_d, hv_D, d_eff);
+  const hv_Pp_max_single = shearAtFace(vmax, hv_u0_single, d_eff);
+  const hv_Pp_max_double = shearAtFace(vmax, hv_u0_double, d_eff);
+  const hv_Pp_single = shearAtCritical(vRdc_vf, hv_u1_single, d_eff);
+  const hv_Pp_double = shearAtCritical(vRdc_vf, hv_u1_double, d_eff);
+
+  // Dowel
+  const dw_W = val('dw_W'); const dw_L = val('dw_L'); const dw_Emb = val('dw_Emb');
+  const dw_T = val('dw_T'); const dw_S = val('dw_S'); const dw_ds = val('dw_ds');
+  const dw_e = val('dw_e');
+  const fcd = fck / 1.5;
+  const k3 = 3;
+  const vRd_ct = 0.52;
+  const d2 = h / 2;
+  const Wcrit = dw_W;
+  const Abear = Wcrit * dw_L;
+  const Wp_max = dw_W;
+  const Scrit1 = Wp_max + 4 * d2;
+  const U1_dowel = 2 * dw_Emb + dw_W + 2 * Math.PI * d2;
+  const Psh = 0.6 * dw_ds * dw_T * dw_W * 0.9 / 1000;
+  const b1 = 2 * dw_e * k3 * fcd * dw_W;
+  const c1 = 2 * k3 * fcd * dw_W * dw_W * dw_T * dw_T * dw_ds;
+  const Pmax = 0.5 * (Math.sqrt(b1 * b1 + c1) - b1) / 1000;
+  const Pburst_unreinf = U1_dowel * d2 * vRd_ct / 1000;
+  const P_critical = Math.min(Psh, Pmax, Pburst_unreinf);
+  const ULS_transfer_per_m = P_critical / (dw_S / 1000);
+
+  // Store for visualization
+  lastCalc = {
+    projName, projPlace, h, d_eff, fck, Ecm_kNmm2, nu, Mn, Mp, vmax, vRdc_vf, LT, K_MNm3, mu,
+    l, l_udl, l_m, l_udl_m, udl_allowable, udl_factored, udl_pass, fctm_fl, vRd_ct,
+    pt_P, pt_b, pt_d, pt_D, pt_edgeDist, pt_gf, Fser_single, Fser_double,
+    a_single, a_double, aol_single, aol_double,
+    Pu_int_single, Pu_int_double, Pu_edge_single, Pu_edge_double,
+    Pu_edge_lt_single, Pu_edge_lt_double, lt_reduce,
+    u0_single, u0_double, u1_single, u1_double,
+    Pp_max_single, Pp_max_double, Pp_single, Pp_double,
+    ptFlexIntSingle, ptFlexIntDouble, ptFlexEdgeSingle, ptFlexEdgeDouble,
+    ptNeedLT_single, ptNeedLT_double,
+    defl_central_single, defl_central_double, defl_edge_single, defl_edge_double,
+    fl_Q, fl_p, fl_D, fl_gf, fl_contactArea, fl_b, fl_d,
+    fl_Fser_single, fl_Fser_double, fl_a_single, fl_a_double, fl_aol_single, fl_aol_double,
+    fl_Pu_int_single, fl_Pu_int_double, fl_Pu_edge_single, fl_Pu_edge_double,
+    fl_Pu_edge_lt_single, fl_Pu_edge_lt_double,
+    fl_u0_single, fl_u0_double, fl_u1_single, fl_u1_double,
+    fl_Pp_max_single, fl_Pp_max_double, fl_Pp_single, fl_Pp_double,
+    hv_Q, hv_p, hv_D, hv_gf, hv_contactArea, hv_b, hv_d, hv_independent,
+    hv_Fser_single, hv_Fser_double, hv_a_single, hv_a_double, hv_aol_single, hv_aol_double,
+    hv_Pu_int_single, hv_Pu_int_double, hv_Pu_edge_single, hv_Pu_edge_double,
+    hv_Pu_edge_lt_single, hv_Pu_edge_lt_double,
+    hv_u0_single, hv_u0_double, hv_u1_single, hv_u1_double,
+    hv_Pp_max_single, hv_Pp_max_double, hv_Pp_single, hv_Pp_double,
+    dw_W, dw_L, dw_Emb, dw_T, dw_S, dw_ds, dw_e, Wcrit, Abear, Scrit1, U1_dowel,
+    Psh, Pmax, Pburst_unreinf, P_critical, ULS_transfer_per_m
+  };
+
+  // --- Build Report HTML ---
+  let allPass = udl_pass;
+  let html = '';
+
+  html += `<div class="summary-grid">
+    <div class="summary-item"><div class="val">${round(l_udl, 0)}</div><div class="lbl">相对刚度半径 l<sub>UDL</sub> (mm)</div></div>
+    <div class="summary-item"><div class="val">${round(l, 0)}</div><div class="lbl">相对刚度半径 l<sub>点荷载</sub> (mm)</div></div>
+    <div class="summary-item"><div class="val">${round(Mn+Mp, 2)}</div><div class="lbl">Mₙ+Mₚ (kN·m/m)</div></div>
+    <div class="summary-item"><div class="val">${round(udl_allowable, 1)}</div><div class="lbl">容许均布荷载 (kN/m²)</div></div>
+    <div class="summary-item"><div class="val">${round(fctm_fl, 2)}</div><div class="lbl">弯拉强度 (N/mm²)</div></div>
+    <div class="summary-item"><div class="val">${round(vRd_ct, 2)}</div><div class="lbl">最小抗剪 (N/mm²)</div></div>
+  </div>`;
+
+  // UDL
+  html += `<div class="card"><h2>📐 均布荷载 (UDL) 验算</h2><div class="subtitle">项目: ${projName} | ${projPlace}</div>
+    <table>
+      <tr><th>参数</th><th>符号</th><th>数值</th><th>单位</th></tr>
+      <tr><td>板厚</td><td>h</td><td>${h}</td><td>mm</td></tr>
+      <tr><td>弹性模量</td><td>E<sub>cm</sub></td><td>${Ecm_kNmm2}</td><td>kN/mm²</td></tr>
+      <tr><td>地基反应模量</td><td>K</td><td>${K_MNm3}</td><td>MN/m³</td></tr>
+      <tr><td>相对刚度半径</td><td>l<sub>UDL</sub></td><td>${round(l_udl, 1)}</td><td>mm</td></tr>
+      <tr><td>设计均布荷载</td><td>q × γ<sub>f</sub></td><td>${round(udl_factored, 1)}</td><td>kN/m²</td></tr>
+      <tr style="font-weight:600;"><td>容许均布荷载</td><td>w = M<sub>n</sub>/(0.168·l²)</td><td>${round(udl_allowable, 1)}</td><td>kN/m²</td></tr>
+    </table>
+    <div class="check-row" style="margin-top:8px;"><span class="label">均布荷载验算</span><span class="values">${round(udl_factored,1)} ≤ ${round(udl_allowable,1)} kN/m² ${udl_pass ? ok() : ng()}</span></div>
+  </div>`;
+
+  // Point Load
+  html += `<div class="card"><h2>📍 静态点荷载验算</h2><div class="subtitle">项目: ${projName} | ${projPlace}</div>
+    <table>
+      <tr><th>参数</th><th>符号</th><th>单腿</th><th>双腿</th><th>单位</th></tr>
+      <tr><td>荷载设计值</td><td>F<sub>ser</sub></td><td>${round(Fser_single,1)}</td><td>${round(Fser_double,1)}</td><td>kN</td></tr>
+      <tr><td>接触半径</td><td>a</td><td>${round(a_single,1)}</td><td>${round(a_double,1)}</td><td>mm</td></tr>
+      <tr><td>a/l</td><td>—</td><td>${round(aol_single,3)}</td><td>${round(aol_double,3)}</td><td>—</td></tr>
+      <tr><td>P<sub>u</sub> 内部</td><td>—</td><td>${round(Pu_int_single,1)}</td><td>${round(Pu_int_double,1)}</td><td>kN</td></tr>
+      <tr><td>P<sub>u</sub> 边缘</td><td>—</td><td>${round(Pu_edge_single,1)}</td><td>${round(Pu_edge_double,1)}</td><td>kN</td></tr>
+      <tr><td>P<sub>u</sub> 边缘+LT</td><td>—</td><td>${round(Pu_edge_lt_single,1)}</td><td>${round(Pu_edge_lt_double,1)}</td><td>kN</td></tr>
+    </table>
+    <h3 style="margin-top:12px;font-size:.8rem;color:var(--primary);">抗弯验算</h3>
+    <div class="check-row"><span class="label">单腿-内部</span><span class="values">${round(Fser_single,1)} ≤ ${round(Pu_int_single,1)} kN ${ptFlexIntSingle ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">双腿-内部</span><span class="values">${round(Fser_double,1)} ≤ ${round(Pu_int_double,1)} kN ${ptFlexIntDouble ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">单腿-边缘${ptNeedLT_single?' (需传力)':''}</span><span class="values">${round(Fser_single,1)} ≤ ${round(Pu_edge_lt_single,1)} kN ${ptFlexEdgeSingle ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">双腿-边缘${ptNeedLT_double?' (需传力)':''}</span><span class="values">${round(Fser_double,1)} ≤ ${round(Pu_edge_lt_double,1)} kN ${ptFlexEdgeDouble ? ok() : ng()}</span></div>
+  </div>`;
+
+  allPass = allPass && ptFlexIntSingle && ptFlexIntDouble && ptFlexEdgeSingle && ptFlexEdgeDouble;
+
+  // Forklift
+  html += `<div class="card"><h2>🏭 叉车荷载验算 (Q=${fl_Q} kN, p=${fl_p} N/mm²)</h2>
+    <div class="subtitle">接触面积: ${round(fl_contactArea, 0)} mm² | 等效方形: ${round(fl_b, 1)}×${round(fl_d, 1)} mm</div>
+    <table>
+      <tr><th>参数</th><th>单轮</th><th>双轮</th><th>单位</th></tr>
+      <tr><td>F<sub>ser</sub></td><td>${round(fl_Fser_single,1)}</td><td>${round(fl_Fser_double,1)}</td><td>kN</td></tr>
+      <tr><td>P<sub>u</sub> 内部</td><td>${round(fl_Pu_int_single,1)}</td><td>${round(fl_Pu_int_double,1)}</td><td>kN</td></tr>
+      <tr><td>P<sub>u</sub> 边缘+LT</td><td>${round(fl_Pu_edge_lt_single,1)}</td><td>${round(fl_Pu_edge_lt_double,1)}</td><td>kN</td></tr>
+    </table>
+    <h3 style="margin-top:10px;font-size:.8rem;color:var(--primary);">抗弯验算</h3>
+    <div class="check-row"><span>单轮-内部</span><span>${round(fl_Fser_single,1)} ≤ ${round(fl_Pu_int_single,1)} ${fl_Fser_single<=fl_Pu_int_single?ok():ng()}</span></div>
+    <div class="check-row"><span>双轮-内部</span><span>${round(fl_Fser_double,1)} ≤ ${round(fl_Pu_int_double,1)} ${fl_Fser_double<=fl_Pu_int_double?ok():ng()}</span></div>
+    <div class="check-row"><span>单轮-边缘</span><span>${round(fl_Fser_single,1)} ≤ ${round(fl_Pu_edge_lt_single,1)} ${fl_Fser_single<=fl_Pu_edge_lt_single?ok():ng()}</span></div>
+    <div class="check-row"><span>双轮-边缘</span><span>${round(fl_Fser_double,1)} ≤ ${round(fl_Pu_edge_lt_double,1)} ${fl_Fser_double<=fl_Pu_edge_lt_double?ok():ng()}</span></div>
+  </div>`;
+
+  // Heavy Forklift
+  html += `<div class="card"><h2>🚛 重载叉车验算 (Q=${hv_Q} kN, p=${hv_p} N/mm²)</h2>
+    <div class="subtitle">接触面积: ${round(hv_contactArea, 0)} mm² ${hv_independent ? '| ⚠ 双轮独立作用' : ''}</div>
+    <table>
+      <tr><th>参数</th><th>单轮</th><th>双轮</th><th>单位</th></tr>
+      <tr><td>F<sub>ser</sub></td><td>${round(hv_Fser_single,1)}</td><td>${round(hv_Fser_double,1)}</td><td>kN</td></tr>
+      <tr><td>P<sub>u</sub> 内部</td><td>${round(hv_Pu_int_single,1)}</td><td>${round(hv_Pu_int_double,1)}</td><td>kN</td></tr>
+      <tr><td>P<sub>u</sub> 边缘+LT</td><td>${round(hv_Pu_edge_lt_single,1)}</td><td>${round(hv_Pu_edge_lt_double,1)}</td><td>kN</td></tr>
+    </table>
+    <h3 style="margin-top:10px;font-size:.8rem;color:var(--primary);">抗弯验算</h3>
+    <div class="check-row"><span>单轮-内部</span><span>${round(hv_Fser_single,1)} ≤ ${round(hv_Pu_int_single,1)} ${hv_Fser_single<=hv_Pu_int_single?ok():ng()}</span></div>
+    <div class="check-row"><span>双轮-内部</span><span>${round(hv_Fser_double,1)} ≤ ${round(hv_Pu_int_double,1)} ${hv_Fser_double<=hv_Pu_int_double?ok():ng()}</span></div>
+    <div class="check-row"><span>单轮-边缘</span><span>${round(hv_Fser_single,1)} ≤ ${round(hv_Pu_edge_lt_single,1)} ${hv_Fser_single<=hv_Pu_edge_lt_single?ok():ng()}</span></div>
+    <div class="check-row"><span>双轮-边缘</span><span>${round(hv_Fser_double,1)} ≤ ${round(hv_Pu_edge_lt_double,1)} ${hv_Fser_double<=hv_Pu_edge_lt_double?ok():ng()}</span></div>
+  </div>`;
+
+  // Dowel
+  html += `<div class="card"><h2>🔩 接缝传力验算</h2>
+    <div class="subtitle">钢板 ${dw_W}×${dw_L}×${dw_T}mm, 间距 ${dw_S}mm</div>
+    <table>
+      <tr><th>参数</th><th>数值</th><th>单位</th></tr>
+      <tr><td>剪切承载力 P<sub>sh</sub></td><td>${round(Psh,1)}</td><td>kN</td></tr>
+      <tr><td>承压承载力 P<sub>max</sub></td><td>${round(Pmax,1)}</td><td>kN</td></tr>
+      <tr><td>冲切承载力 P<sub>burst</sub></td><td>${round(Pburst_unreinf,1)}</td><td>kN</td></tr>
+      <tr style="font-weight:700;background:#f0f7ff;"><td>控制值 P<sub>crit</sub></td><td>${round(P_critical,1)}</td><td>kN</td></tr>
+      <tr style="font-weight:700;background:#e8f0fe;"><td>ULS 传力 (每米)</td><td>${round(ULS_transfer_per_m,1)}</td><td>kN/m</td></tr>
+    </table>
+  </div>`;
+
+  const overallStatus = allPass
+    ? `<div class="all-ok">✅ 所有验算项通过 — 设计满足 TR34 要求</div>`
+    : `<div class="has-fail">⚠️ 存在不满足项，请检查参数或调整设计</div>`;
+
+  $('results-container').innerHTML = overallStatus + html;
+  $('results-container').scrollIntoView({ behavior: 'smooth' });
+
+  // Auto-draw visualizations
+  drawPlanView();
+  drawCapacityChart();
+  drawCrossSection();
+}
+
+function resetAll() {
+  const defaults = {
+    h: 200, d_eff: 150, fcu: 35, fck: 28, Ecm: 32, nu: 0.2,
+    Mn: 17.21, Mp: 16.44, vmax: 4.97, vRdc_vf: 0.74, Lj: 35, LT: 56,
+    K: 97, mu: 0.5,
+    udl_q: 80, udl_gf: 1.0,
+    pt_P: 80, pt_b: 100, pt_d: 100, pt_D: 300, pt_edgeDist: 150, pt_gf: 1.2,
+    fl_Q: 40, fl_p: 5.0, fl_D: 1200, fl_gf: 1.6,
+    hv_Q: 167, hv_p: 2.0, hv_D: 1874, hv_gf: 1.6,
+    dw_W: 150, dw_L: 135, dw_Emb: 45, dw_T: 6, dw_S: 500, dw_ds: 275, dw_X: 20, dw_e: 10
+  };
+  Object.entries(defaults).forEach(([id, v]) => { if ($(id)) $(id).value = v; });
+  calculateAll();
+}
+
+// ========== VISUALIZATION: PLAN VIEW ==========
+
+function drawPlanView() {
+  const canvas = document.getElementById('planCanvas');
+  if (!canvas || !lastCalc.l) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const c = lastCalc;
+  const loadType = document.getElementById('planLoadType')?.value || 'point';
+  const position = document.getElementById('planPosition')?.value || 'internal';
+  const legs = document.getElementById('planLegs')?.value || 'single';
+
+  // Pick data
+  let b_mm, d_mm, D_mm, a_mm, a_double_mm, Fser, FserD, l_mm = c.l,
+      Pu_int, Pu_intD, Pu_edge, Pu_edgeD, u0, u0D, u1, u1D, label, wheelType, d_eff = c.d_eff;
+  if (loadType === 'point') {
+    b_mm = c.pt_b; d_mm = c.pt_d; D_mm = c.pt_D;
+    a_mm = c.a_single; a_double_mm = c.a_double;
+    Fser = c.Fser_single; FserD = c.Fser_double;
+    Pu_int = c.Pu_int_single; Pu_intD = c.Pu_int_double;
+    Pu_edge = c.Pu_edge_single; Pu_edgeD = c.Pu_edge_double;
+    u0 = c.u0_single; u0D = c.u0_double;
+    u1 = c.u1_single; u1D = c.u1_double;
+    label = `静态点荷载 P=${c.pt_P}kN  ${c.pt_b}×${c.pt_d}mm`;
+    wheelType = 'baseplate';
+  } else if (loadType === 'forklift') {
+    b_mm = c.fl_b; d_mm = c.fl_d; D_mm = c.fl_D;
+    a_mm = c.fl_a_single; a_double_mm = c.fl_a_double;
+    Fser = c.fl_Fser_single; FserD = c.fl_Fser_double;
+    Pu_int = c.fl_Pu_int_single; Pu_intD = c.fl_Pu_int_double;
+    Pu_edge = c.fl_Pu_edge_single; Pu_edgeD = c.fl_Pu_edge_double;
+    u0 = c.fl_u0_single; u0D = c.fl_u0_double;
+    u1 = c.fl_u1_single; u1D = c.fl_u1_double;
+    label = `叉车荷载 Q=${c.fl_Q}kN  p=${c.fl_p}N/mm²`;
+    wheelType = 'wheel';
+  } else {
+    b_mm = c.hv_b; d_mm = c.hv_d; D_mm = c.hv_D;
+    a_mm = c.hv_a_single; a_double_mm = c.hv_a_double;
+    Fser = c.hv_Fser_single; FserD = c.hv_Fser_double;
+    Pu_int = c.hv_Pu_int_single; Pu_intD = c.hv_Pu_int_double;
+    Pu_edge = c.hv_Pu_edge_single; Pu_edgeD = c.hv_Pu_edge_double;
+    u0 = c.hv_u0_single; u0D = c.hv_u0_double;
+    u1 = c.hv_u1_single; u1D = c.hv_u1_double;
+    label = `重载叉车 Q=${c.hv_Q}kN  p=${c.hv_p}N/mm²`;
+    wheelType = 'wheel';
+  }
+
+  const isDouble = legs === 'double';
+  const isEdge = position === 'edge';
+
+  // Scale: fit ~2*l or 2*D into view
+  const margin = 50;
+  const viewSize = Math.max(isDouble ? D_mm + b_mm * 2 + a_double_mm * 1.5 : l_mm * 2.5, l_mm * 2, 400);
+  const scale = Math.min((W - 2 * margin) / viewSize, (H - 2 * margin) / viewSize);
+
+  const cx = isEdge ? W * 0.3 : W / 2;
+  const cy = H / 2 + 20;
+
+  function tx(mm) { return mm * scale; }
+
+  // Draw slab background
+  ctx.fillStyle = '#f0f4f0';
+  ctx.fillRect(margin, margin, W - 2 * margin, H - 2 * margin);
+  ctx.strokeStyle = '#ccc';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(margin, margin, W - 2 * margin, H - 2 * margin);
+  ctx.fillStyle = '#999';
+  ctx.font = '11px "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('混凝土板 Concrete Slab', W/2, margin + 16);
+
+  // Draw joint line if edge
+  if (isEdge) {
+    const jx = cx - tx(l_mm * 0.15);
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(jx, margin + 10);
+    ctx.lineTo(jx, H - margin - 10);
+    ctx.stroke();
+    ctx.fillStyle = '#2c3e50';
+    ctx.font = 'bold 11px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('接缝', jx, margin + 28);
+    ctx.fillText('Joint', jx, margin + 42);
+  }
+
+  // Draw radius of relative stiffness
+  ctx.setLineDash([6, 4]);
+  ctx.strokeStyle = '#27ae60';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, tx(l_mm), 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // l label
+  ctx.fillStyle = '#27ae60';
+  ctx.font = '10px "Segoe UI", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(`l = ${round(l_mm, 0)} mm (相对刚度半径)`, cx + tx(l_mm) + 4, cy);
+
+  if (isDouble) {
+    // Double loads
+    const halfD = D_mm / 2;
+    const x1 = cx - tx(halfD);
+    const x2 = cx + tx(halfD);
+    drawLoadFootprint(ctx, x1, cy, b_mm, d_mm, a_mm, u0 / (isDouble ? 2 : 1), u1 / (isDouble ? 2 : 1), scale, wheelType);
+    drawLoadFootprint(ctx, x2, cy, b_mm, d_mm, a_mm, u0 / (isDouble ? 2 : 1), u1 / (isDouble ? 2 : 1), scale, wheelType);
+
+    // Interaction zone
+    const interacting = D_mm <= 2 * 0.9 * l_mm;
+    if (interacting) {
+      ctx.setLineDash([3, 5]);
+      ctx.strokeStyle = '#e67e22';
+      ctx.lineWidth = 1;
+      const intW = 2 * b_mm + D_mm;
+      ctx.strokeRect(cx - tx(intW / 2), cy - tx(d_mm / 2), tx(intW), tx(d_mm));
+      ctx.fillStyle = '#e67e22';
+      ctx.font = '9px "Segoe UI", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('交互区', cx, cy - tx(d_mm / 2) - 10);
+      ctx.setLineDash([]);
+    }
+
+    // Labels
+    ctx.fillStyle = '#555';
+    ctx.font = 'bold 10px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`D = ${D_mm} mm`, cx, cy + tx(Math.max(d_mm, a_mm)) + 22);
+    ctx.fillText(interacting ? '(双腿交互作用)' : '(双腿独立作用)', cx, cy + tx(Math.max(d_mm, a_mm)) + 36);
+  } else {
+    drawLoadFootprint(ctx, cx, cy, b_mm, d_mm, a_mm, u0, u1, scale, wheelType);
+  }
+
+  // Title and info
+  const Pu_show = isEdge ? (isDouble ? Pu_edgeD : Pu_edge) : (isDouble ? Pu_intD : Pu_int);
+  const Fser_show = isDouble ? FserD : Fser;
+  const pass = Fser_show <= Pu_show;
+
+  ctx.fillStyle = '#1a5276';
+  ctx.font = 'bold 13px "Segoe UI", sans-serif';
+  ctx.textAlign = 'left';
+  const titleText = `${label}  |  ${isDouble ? '双腿' : '单腿'}  |  ${isEdge ? '边缘' : '板内部'}  |  ${pass ? '✓ OK' : '✗ NG'}`;
+  ctx.fillText(titleText, margin, margin - 10);
+
+  // Scale bar
+  const scaleBarY = H - margin + 20;
+  const scaleBarLen = 200;
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(W - margin - scaleBarLen, scaleBarY);
+  ctx.lineTo(W - margin, scaleBarY);
+  ctx.stroke();
+  ctx.fillStyle = '#333';
+  ctx.font = '10px "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(`${round(scaleBarLen / scale, 0)} mm`, W - margin - scaleBarLen / 2, scaleBarY - 6);
+}
+
+function drawLoadFootprint(ctx, cx, cy, b, d, a, u0, u1, scale, type) {
+  // Baseplate / contact rectangle
+  ctx.fillStyle = type === 'baseplate' ? 'rgba(231, 76, 60, 0.4)' : 'rgba(230, 126, 34, 0.4)';
+  ctx.strokeStyle = '#c0392b';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([]);
+  ctx.strokeRect(cx - scale * b / 2, cy - scale * d / 2, scale * b, scale * d);
+  ctx.fillRect(cx - scale * b / 2, cy - scale * d / 2, scale * b, scale * d);
+
+  // Label
+  ctx.fillStyle = '#c0392b';
+  ctx.font = '9px "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(`${round(b,0)}×${round(d,0)}`, cx, cy + 3);
+  ctx.fillText(type === 'baseplate' ? '底板' : '轮印', cx, cy + 14);
+
+  // Equivalent contact circle
+  ctx.fillStyle = 'rgba(41, 128, 185, 0.12)';
+  ctx.strokeStyle = '#2980b9';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.arc(cx, cy, scale * a, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#2980b9';
+  ctx.font = '9px "Segoe UI", sans-serif';
+  ctx.fillText(`a=${round(a,0)}`, cx, cy - scale * a - 5);
+
+  // Critical shear perimeter u1
+  const r_u1 = u1 / (2 * Math.PI);
+  ctx.setLineDash([5, 3]);
+  ctx.strokeStyle = '#f39c12';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, scale * r_u1, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = '#f39c12';
+  ctx.font = '9px "Segoe UI", sans-serif';
+  ctx.fillText(`u₁ (临界周长)`, cx + scale * r_u1 + 3, cy);
+  ctx.setLineDash([]);
+
+  // Load face perimeter u0
+  const r_u0 = u0 / (2 * Math.PI);
+  ctx.setLineDash([2, 3]);
+  ctx.strokeStyle = '#95a5a6';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, cy, scale * r_u0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// ========== VISUALIZATION: CAPACITY CHART ==========
+
+function drawCapacityChart() {
+  const canvas = document.getElementById('chartCanvas');
+  if (!canvas || !lastCalc.l) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const c = lastCalc;
+  const margin = { top: 40, right: 30, bottom: 80, left: 70 };
+  const plotW = W - margin.left - margin.right;
+  const plotH = H - margin.top - margin.bottom;
+
+  // Data groups
+  const groups = [
+    { label: '点荷载\n单腿内部', demand: c.Fser_single, capInt: c.Pu_int_single, capEdge: c.Pu_edge_lt_single },
+    { label: '点荷载\n双腿内部', demand: c.Fser_double, capInt: c.Pu_int_double, capEdge: c.Pu_edge_lt_double },
+    { label: '叉车40kN\n单轮内部', demand: c.fl_Fser_single, capInt: c.fl_Pu_int_single, capEdge: c.fl_Pu_edge_lt_single },
+    { label: '叉车40kN\n双轮内部', demand: c.fl_Fser_double, capInt: c.fl_Pu_int_double, capEdge: c.fl_Pu_edge_lt_double },
+    { label: '重叉167kN\n单轮内部', demand: c.hv_Fser_single, capInt: c.hv_Pu_int_single, capEdge: c.hv_Pu_edge_lt_single },
+    { label: '重叉167kN\n双轮内部', demand: c.hv_Fser_double, capInt: c.hv_Pu_int_double, capEdge: c.hv_Pu_edge_lt_double },
+  ];
+
+  const maxVal = Math.max(...groups.flatMap(g => [g.demand, g.capInt, g.capEdge])) * 1.2;
+  const n = groups.length;
+  const barGroupWidth = plotW / n * 0.75;
+  const barWidth = barGroupWidth / 3;
+  const gap = plotW / n * 0.25;
+
+  function x(i) { return margin.left + i * plotW / n + plotW / n / 2 - barGroupWidth / 2; }
+  function y(val) { return margin.top + plotH - (val / maxVal * plotH); }
+
+  // Grid
+  ctx.strokeStyle = '#e0e4e8';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 5; i++) {
+    const gy = margin.top + plotH * i / 5;
+    ctx.beginPath(); ctx.moveTo(margin.left, gy); ctx.lineTo(W - margin.right, gy); ctx.stroke();
+    ctx.fillStyle = '#888';
+    ctx.font = '10px "Segoe UI", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(round(maxVal * (1 - i / 5), 0), margin.left - 6, gy + 3);
+  }
+
+  // Y axis
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(margin.left, margin.top); ctx.lineTo(margin.left, margin.top + plotH); ctx.stroke();
+  ctx.fillStyle = '#555';
+  ctx.font = '11px "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.save();
+  ctx.translate(14, margin.top + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('荷载 / 承载力 (kN)', 0, 0);
+  ctx.restore();
+
+  // Bars
+  for (let i = 0; i < n; i++) {
+    const g = groups[i];
+    const bx = x(i);
+
+    // Demand bar
+    const demandH = g.demand / maxVal * plotH;
+    ctx.fillStyle = '#2980b9';
+    ctx.fillRect(bx, y(g.demand), barWidth, demandH);
+    // Demand value
+    ctx.fillStyle = '#1a5276';
+    ctx.font = 'bold 9px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(round(g.demand, 0), bx + barWidth / 2, y(g.demand) - 4);
+
+    // Capacity Internal bar
+    const capIntH = g.capInt / maxVal * plotH;
+    ctx.fillStyle = '#27ae60';
+    ctx.fillRect(bx + barWidth, y(g.capInt), barWidth, capIntH);
+    ctx.fillStyle = '#1e8449';
+    ctx.fillText(round(g.capInt, 0), bx + barWidth * 1.5, y(g.capInt) - 4);
+
+    // Capacity Edge bar
+    const capEdgeH = g.capEdge / maxVal * plotH;
+    ctx.fillStyle = '#f39c12';
+    ctx.fillRect(bx + barWidth * 2, y(g.capEdge), barWidth, capEdgeH);
+    ctx.fillStyle = '#d68910';
+    ctx.fillText(round(g.capEdge, 0), bx + barWidth * 2.5, y(g.capEdge) - 4);
+
+    // Pass/fail indicator
+    const pass = g.demand <= g.capInt;
+    ctx.fillStyle = pass ? '#27ae60' : '#e74c3c';
+    ctx.font = 'bold 18px "Segoe UI", sans-serif';
+    ctx.fillText(pass ? '✓' : '✗', bx + barGroupWidth / 2, y(Math.max(g.demand, g.capInt)) - 16);
+
+    // X label
+    ctx.fillStyle = '#444';
+    ctx.font = '10px "Segoe UI", sans-serif';
+    const lines = g.label.split('\n');
+    lines.forEach((ln, li) => {
+      ctx.fillText(ln, bx + barGroupWidth / 2, margin.top + plotH + 16 + li * 13);
+    });
+  }
+
+  // Legend
+  const ly = H - 12;
+  [
+    { color: '#2980b9', text: '设计荷载' },
+    { color: '#27ae60', text: '承载力(内部)' },
+    { color: '#f39c12', text: '承载力(边缘+LT)' }
+  ].forEach((item, i) => {
+    const lx = margin.left + i * 130;
+    ctx.fillStyle = item.color;
+    ctx.fillRect(lx, ly - 6, 12, 12);
+    ctx.fillStyle = '#444';
+    ctx.font = '10px "Segoe UI", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(item.text, lx + 16, ly + 3);
+  });
+}
+
+// ========== VISUALIZATION: CROSS SECTION ==========
+
+function drawCrossSection() {
+  const canvas = document.getElementById('sectionCanvas');
+  if (!canvas || !lastCalc.h) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const c = lastCalc;
+  const margin = { top: 30, right: 40, bottom: 30, left: 50 };
+
+  // Scale: h (200mm default) should take up about 40% of height
+  const slabTargetH = H * 0.35;
+  const scale = slabTargetH / c.h;
+  const hPx = c.h * scale;
+  const dEffPx = c.d_eff * scale;
+  const subbaseH = 50;
+
+  const slabTop = margin.top + 40;
+  const slabBot = slabTop + hPx;
+  const subbaseTop = slabBot;
+  const subbaseBot = subbaseTop + subbaseH;
+  const slabW = W - margin.left - margin.right;
+  const slabLeft = margin.left + 30;
+  const slabRight = slabLeft + slabW;
+
+  // Subbase
+  const subGrad = ctx.createLinearGradient(0, subbaseTop, 0, subbaseBot);
+  subGrad.addColorStop(0, '#d4a574');
+  subGrad.addColorStop(1, '#c4956a');
+  ctx.fillStyle = subGrad;
+  ctx.fillRect(slabLeft, subbaseTop, slabW, subbaseH);
+  // Subbase pattern
+  ctx.fillStyle = 'rgba(0,0,0,.05)';
+  for (let x = slabLeft; x < slabRight; x += 12) {
+    for (let y = subbaseTop; y < subbaseBot; y += 8) {
+      ctx.fillRect(x + (Math.floor(y / 8) % 2) * 6, y, 3, 2);
+    }
+  }
+  ctx.strokeStyle = '#a08060';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(slabLeft, subbaseTop, slabW, subbaseH);
+
+  // Soil below
+  ctx.fillStyle = '#8b7355';
+  ctx.fillRect(slabLeft, subbaseBot, slabW, 15);
+  ctx.fillStyle = '#6b5340';
+  for (let x = slabLeft; x < slabRight; x += 5) {
+    ctx.fillRect(x, subbaseBot + 2, 1, 1);
+  }
+
+  // Concrete slab
+  const slabGrad = ctx.createLinearGradient(0, slabTop, 0, slabBot);
+  slabGrad.addColorStop(0, '#d5d9dd');
+  slabGrad.addColorStop(0.3, '#c0c5ca');
+  slabGrad.addColorStop(0.7, '#b0b5ba');
+  slabGrad.addColorStop(1, '#a0a5aa');
+  ctx.fillStyle = slabGrad;
+  ctx.fillRect(slabLeft, slabTop, slabW, hPx);
+  ctx.strokeStyle = '#889';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(slabLeft, slabTop, slabW, hPx);
+
+  // Slab label
+  ctx.fillStyle = '#444';
+  ctx.font = 'bold 14px "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('混凝土板 Concrete Slab', slabLeft + slabW / 2, slabTop + hPx / 2 + 5);
+
+  // Dimension: h
+  const dimX = slabRight + 20;
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(dimX, slabTop);
+  ctx.lineTo(dimX + 10, slabTop);
+  ctx.moveTo(dimX, slabBot);
+  ctx.lineTo(dimX + 10, slabBot);
+  ctx.moveTo(dimX + 5, slabTop);
+  ctx.lineTo(dimX + 5, slabBot);
+  ctx.stroke();
+  // Arrows
+  drawArrow(ctx, dimX + 5, slabTop, dimX + 5, slabTop + 8, 4);
+  drawArrow(ctx, dimX + 5, slabBot, dimX + 5, slabBot - 8, 4);
+  ctx.fillStyle = '#333';
+  ctx.font = 'bold 11px "Segoe UI", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(`h = ${c.h} mm`, dimX + 12, slabTop + hPx / 2 + 4);
+
+  // Dimension: d_eff
+  const dEffX = slabLeft - 25;
+  ctx.beginPath();
+  ctx.moveTo(dEffX, slabTop);
+  ctx.lineTo(dEffX - 8, slabTop);
+  ctx.moveTo(dEffX, slabTop + dEffPx);
+  ctx.lineTo(dEffX - 8, slabTop + dEffPx);
+  ctx.moveTo(dEffX - 4, slabTop);
+  ctx.lineTo(dEffX - 4, slabTop + dEffPx);
+  ctx.stroke();
+  drawArrow(ctx, dEffX - 4, slabTop, dEffX - 4, slabTop + 6, 4);
+  drawArrow(ctx, dEffX - 4, slabTop + dEffPx, dEffX - 4, slabTop + dEffPx - 6, 4);
+  ctx.fillStyle = '#333';
+  ctx.font = 'bold 10px "Segoe UI", sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(`d_eff = ${c.d_eff} mm`, dEffX - 10, slabTop + dEffPx / 2 + 4);
+
+  // Reinforcement line
+  ctx.setLineDash([2, 2]);
+  ctx.strokeStyle = '#c0392b';
+  ctx.lineWidth = 1;
+  const rebarY = slabTop + dEffPx;
+  ctx.beginPath();
+  ctx.moveTo(slabLeft + 20, rebarY);
+  ctx.lineTo(slabRight - 20, rebarY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#c0392b';
+  ctx.font = '9px "Segoe UI", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('钢筋重心 (approx.)', slabLeft + 22, rebarY - 4);
+
+  // Load arrows
+  const loadX = slabLeft + slabW * 0.45;
+  const loadTop = slabTop - 30;
+  ctx.fillStyle = '#e74c3c';
+  ctx.font = 'bold 11px "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('P (荷载)', loadX, loadTop - 8);
+
+  for (let i = 0; i < 3; i++) {
+    const ax = loadX + (i - 1) * 18;
+    ctx.strokeStyle = '#e74c3c';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(ax, loadTop);
+    ctx.lineTo(ax, slabTop);
+    ctx.stroke();
+    drawArrow(ctx, ax, loadTop + 18, ax, slabTop, 5);
+  }
+
+  // Baseplate
+  const bpW = 60;
+  ctx.fillStyle = '#e74c3c';
+  ctx.fillRect(loadX - bpW / 2, slabTop - 8, bpW, 8);
+  ctx.strokeStyle = '#c0392b';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(loadX - bpW / 2, slabTop - 8, bpW, 8);
+  ctx.fillStyle = '#fff';
+  ctx.font = '8px "Segoe UI", sans-serif';
+  ctx.fillText('底板', loadX, slabTop - 1);
+
+  // Radius of relative stiffness indicator
+  const lCenterX = loadX;
+  const lCenterY = slabTop + hPx / 2;
+  const lRadiusPx = c.l * scale * 0.6;
+  ctx.setLineDash([5, 3]);
+  ctx.strokeStyle = 'rgba(41, 128, 185, 0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(lCenterX, lCenterY, Math.min(lRadiusPx, slabW * 0.35), -0.6, 0.6);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#2980b9';
+  ctx.font = '10px "Segoe UI", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(`l ≈ ${round(c.l, 0)} mm`, lCenterX + Math.min(lRadiusPx, slabW * 0.35) + 5, lCenterY + 4);
+  ctx.fillText('(相对刚度半径)', lCenterX + Math.min(lRadiusPx, slabW * 0.35) + 5, lCenterY + 17);
+
+  // Subbase label
+  ctx.fillStyle = '#8b6914';
+  ctx.font = '11px "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('底基层 Sub-base / 地基 K', slabLeft + slabW / 2, subbaseTop + subbaseH / 2 + 4);
+  ctx.fillText(`K = ${c.K_MNm3} MN/m³`, slabLeft + slabW / 2, subbaseTop + subbaseH / 2 + 18);
+
+  // Ground line
+  ctx.fillStyle = '#555';
+  ctx.font = '10px "Segoe UI", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('天然地基 Natural Ground', slabLeft + 4, subbaseBot + 12);
+}
+
+function drawArrow(ctx, fromX, fromY, toX, toY, size) {
+  const angle = Math.atan2(toY - fromY, toX - fromX);
+  ctx.beginPath();
+  ctx.moveTo(toX, toY);
+  ctx.lineTo(toX - size * Math.cos(angle - 0.5), toY - size * Math.sin(angle - 0.5));
+  ctx.moveTo(toX, toY);
+  ctx.lineTo(toX - size * Math.cos(angle + 0.5), toY - size * Math.sin(angle + 0.5));
+  ctx.stroke();
+}
+
+// ========== INIT ==========
+document.addEventListener('DOMContentLoaded', function() {
+  calculateAll();
+});
+</script>
+</body>
+</html>

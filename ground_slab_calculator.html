@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>地面承载板设计计算工具 | Ground Bearing Slab - TR34</title>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --card-bg: #ffffff;
+    --primary: #1a5276;
+    --accent: #2980b9;
+    --ok: #27ae60;
+    --fail: #e74c3c;
+    --warn: #f39c12;
+    --border: #dce1e8;
+    --text: #2c3e50;
+    --text-light: #6b7b8d;
+    --input-bg: #f8fafc;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-lg: 0 4px 12px rgba(0,0,0,.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+
+  /* Header */
+  .header { background: var(--primary); color: #fff; padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-lg); }
+  .header h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -.3px; }
+  .header .sub { font-size: .78rem; opacity: .8; }
+  .header .badge { background: rgba(255,255,255,.15); padding: 5px 12px; border-radius: 20px; font-size: .72rem; }
+
+  /* Layout */
+  .app { display: flex; min-height: calc(100vh - 60px); }
+  .sidebar { width: 380px; min-width: 380px; background: var(--card-bg); border-right: 1px solid var(--border); overflow-y: auto; padding: 20px; box-shadow: var(--shadow); }
+  .main { flex: 1; padding: 24px 28px; overflow-y: auto; }
+
+  /* Sidebar sections */
+  .side-section { margin-bottom: 18px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .side-section h3 { background: #f0f3f7; padding: 10px 14px; font-size: .82rem; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--primary); cursor: pointer; display: flex; justify-content: space-between; }
+  .side-section h3 .arrow { transition: transform .2s; }
+  .side-section.collapsed .arrow { transform: rotate(-90deg); }
+  .side-section.collapsed .sec-body { display: none; }
+  .sec-body { padding: 12px 14px; }
+
+  /* Input groups */
+  .input-row { display: flex; align-items: center; margin-bottom: 8px; gap: 8px; }
+  .input-row label { flex: 1; font-size: .78rem; color: var(--text-light); white-space: nowrap; }
+  .input-row input, .input-row select { width: 110px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 5px; font-size: .82rem; background: var(--input-bg); text-align: right; }
+  .input-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(41,128,185,.12); }
+  .input-row .unit { font-size: .7rem; color: var(--text-light); width: 55px; }
+
+  /* Buttons */
+  .btn { padding: 8px 18px; border-radius: 6px; font-size: .82rem; font-weight: 500; cursor: pointer; border: none; transition: all .15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #2471a3; }
+  .btn-secondary { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+  .btn-row { display: flex; gap: 8px; margin-top: 12px; }
+
+  /* Cards */
+  .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+  .card h2 { font-size: 1rem; font-weight: 600; color: var(--primary); margin-bottom: 6px; }
+  .card .subtitle { font-size: .74rem; color: var(--text-light); margin-bottom: 14px; }
+
+  /* Summary grid */
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .summary-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; text-align: center; }
+  .summary-item .val { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+  .summary-item .lbl { font-size: .72rem; color: var(--text-light); margin-top: 2px; }
+
+  /* Check result */
+  .check-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 6px; margin-bottom: 6px; background: #f8fafc; }
+  .check-row .label { font-size: .82rem; font-weight: 500; }
+  .check-row .values { font-size: .78rem; text-align: right; }
+  .check-row .result { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: .72rem; font-weight: 600; margin-left: 8px; }
+  .result.ok { background: #e8f8f0; color: var(--ok); }
+  .result.fail { background: #fde8e8; color: var(--fail); }
+  .result.warn { background: #fef5e7; color: var(--warn); }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+  th { background: #f0f3f7; padding: 8px 10px; text-align: left; font-weight: 600; color: var(--primary); border-bottom: 2px solid var(--border); }
+  td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: #fafbfc; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 2px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab { padding: 8px 16px; border-radius: 6px 6px 0 0; font-size: .8rem; cursor: pointer; border: 1px solid transparent; background: transparent; color: var(--text-light); transition: .15s; }
+  .tab.active { background: var(--card-bg); border-color: var(--border) var(--border) #fff var(--border); color: var(--primary); font-weight: 600; }
+  .tab:hover:not(.active) { color: var(--primary); }
+
+  /* Print */
+  @media print {
+    .sidebar, .header, .btn-row, .tabs { display: none !important; }
+    .app { display: block; }
+    .main { padding: 0; }
+    .card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+  }
+
+  /* Scrollbar */
+  .sidebar::-webkit-scrollbar { width: 5px; }
+  .sidebar::-webkit-scrollbar-thumb { background: #ccd; border-radius: 3px; }
+
+  .all-ok { background: #e8f8f0; color: #1e8449; padding: 10px 16px; border-radius: 8px; font-weight: 600; font-size: .85rem; margin-bottom: 16px; }
+  .has-fail { background: #fde8e8; color: #c0392b; padding: 10px 16px; border-radius: 8px; font-weight: 600; font-size: .85rem; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🏗️ 地面承载板设计计算工具</h1>
+    <div class="sub">Ground Bearing Slab — FREEPLAN Joint-Free Design per Concrete Society TR34 (4th Ed. 2013)</div>
+  </div>
+  <span class="badge">v1.0 | TR34</span>
+</div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+
+    <!-- Project Info -->
+    <div class="side-section" id="sec-project">
+      <h3 onclick="toggleSection('sec-project')">📋 项目信息 <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>项目名称</label><input id="proj_name" value="Atlas Copco" style="width:140px;text-align:left;"></div>
+        <div class="input-row"><label>地点</label><input id="proj_place" value="Wuxi" style="width:140px;text-align:left;"></div>
+      </div>
+    </div>
+
+    <!-- Slab Properties -->
+    <div class="side-section" id="sec-slab">
+      <h3 onclick="toggleSection('sec-slab')">🧱 混凝土板特性 <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>板厚 h</label><input id="h" value="200" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>有效厚度 d<sub>eff</sub></label><input id="d_eff" value="150" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>抗压强度 f<sub>cu</sub> (立方体)</label><input id="fcu" value="35" type="number"><span class="unit">N/mm²</span></div>
+        <div class="input-row"><label>圆柱体强度 f<sub>ck</sub></label><input id="fck" value="28" type="number"><span class="unit">N/mm²</span></div>
+        <div class="input-row"><label>弹性模量 E<sub>cm</sub></label><input id="Ecm" value="32" type="number"><span class="unit">kN/mm²</span></div>
+        <div class="input-row"><label>泊松比 ν</label><input id="nu" value="0.2" type="number" step="0.01"><span class="unit">—</span></div>
+        <div class="input-row"><label>钢纤维抗拉强度</label><input id="steel_ts" value="1650" type="number"><span class="unit">MPa</span></div>
+        <div class="input-row"><label>钢筋用量 (顶部)</label><input id="reinf_top" value="0" type="number"><span class="unit">mm²/m</span></div>
+        <div class="input-row"><label>钢筋用量 (底部)</label><input id="reinf_bot" value="0" type="number"><span class="unit">mm²/m</span></div>
+        <div class="input-row"><label>负弯矩承载力 M<sub>n</sub></label><input id="Mn" value="17.21" type="number" step="0.01"><span class="unit">kN·m/m</span></div>
+        <div class="input-row"><label>正弯矩承载力 M<sub>p</sub></label><input id="Mp" value="16.44" type="number" step="0.01"><span class="unit">kN·m/m</span></div>
+        <div class="input-row"><label>板面抗剪强度 v<sub>max</sub></label><input id="vmax" value="4.97" type="number" step="0.01"><span class="unit">N/mm²</span></div>
+        <div class="input-row"><label>临界面抗剪 v<sub>Rd,c</sub>+v<sub>f</sub></label><input id="vRdc_vf" value="0.74" type="number" step="0.01"><span class="unit">N/mm²</span></div>
+        <div class="input-row"><label>接缝间距 L<sub>j</sub></label><input id="Lj" value="35" type="number"><span class="unit">m</span></div>
+        <div class="input-row"><label>接缝传力 LT</label><input id="LT" value="56" type="number"><span class="unit">kN/m</span></div>
+      </div>
+    </div>
+
+    <!-- Subbase -->
+    <div class="side-section" id="sec-subbase">
+      <h3 onclick="toggleSection('sec-subbase')">🪨 地基特性 <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>地基反应模量 K</label><input id="K" value="97" type="number"><span class="unit">MN/m³</span></div>
+        <div class="input-row"><label>摩擦系数 μ</label><input id="mu" value="0.5" type="number" step="0.1"><span class="unit">—</span></div>
+      </div>
+    </div>
+
+    <!-- Load: UDL -->
+    <div class="side-section" id="sec-udl">
+      <h3 onclick="toggleSection('sec-udl')">📐 均布荷载 UDL <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>均布荷载 q</label><input id="udl_q" value="80" type="number"><span class="unit">kN/m²</span></div>
+        <div class="input-row"><label>分项安全系数 γ<sub>f</sub></label><input id="udl_gf" value="1.0" type="number" step="0.01"><span class="unit">—</span></div>
+      </div>
+    </div>
+
+    <!-- Load: Static Point -->
+    <div class="side-section" id="sec-point">
+      <h3 onclick="toggleSection('sec-point')">📍 静态点荷载 <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>点荷载 P</label><input id="pt_P" value="80" type="number"><span class="unit">kN</span></div>
+        <div class="input-row"><label>底板宽度 b</label><input id="pt_b" value="100" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>底板长度 d</label><input id="pt_d" value="100" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>支腿中心距 D</label><input id="pt_D" value="300" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>距接缝距离</label><input id="pt_edgeDist" value="150" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>分项安全系数 γ<sub>f</sub></label><input id="pt_gf" value="1.2" type="number" step="0.01"><span class="unit">—</span></div>
+      </div>
+    </div>
+
+    <!-- Load: Forklift -->
+    <div class="side-section" id="sec-forklift">
+      <h3 onclick="toggleSection('sec-forklift')">🏭 叉车荷载 <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>轮荷载 Q</label><input id="fl_Q" value="40" type="number"><span class="unit">kN</span></div>
+        <div class="input-row"><label>接触压力 p</label><input id="fl_p" value="5.0" type="number" step="0.01"><span class="unit">N/mm²</span></div>
+        <div class="input-row"><label>轮间距 D</label><input id="fl_D" value="1200" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>分项安全系数 γ<sub>f</sub></label><input id="fl_gf" value="1.6" type="number" step="0.01"><span class="unit">—</span></div>
+      </div>
+    </div>
+
+    <!-- Load: Heavy Forklift -->
+    <div class="side-section" id="sec-heavy">
+      <h3 onclick="toggleSection('sec-heavy')">🚛 重载叉车 <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>轮荷载 Q</label><input id="hv_Q" value="167" type="number"><span class="unit">kN</span></div>
+        <div class="input-row"><label>接触压力 p</label><input id="hv_p" value="2.0" type="number" step="0.01"><span class="unit">N/mm²</span></div>
+        <div class="input-row"><label>轮间距 D</label><input id="hv_D" value="1874" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>分项安全系数 γ<sub>f</sub></label><input id="hv_gf" value="1.6" type="number" step="0.01"><span class="unit">—</span></div>
+      </div>
+    </div>
+
+    <!-- Dowel / Joint -->
+    <div class="side-section collapsed" id="sec-dowel">
+      <h3 onclick="toggleSection('sec-dowel')">🔩 接缝传力 (传力杆) <span class="arrow">▼</span></h3>
+      <div class="sec-body">
+        <div class="input-row"><label>钢板宽度 W</label><input id="dw_W" value="150" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>钢板长度 L</label><input id="dw_L" value="135" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>嵌入深度 Emb</label><input id="dw_Emb" value="45" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>钢板厚度 T</label><input id="dw_T" value="6" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>钢板间距 S</label><input id="dw_S" value="500" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>设计强度 ds</label><input id="dw_ds" value="275" type="number"><span class="unit">N/mm²</span></div>
+        <div class="input-row"><label>长期接缝张开 X</label><input id="dw_X" value="20" type="number"><span class="unit">mm</span></div>
+        <div class="input-row"><label>荷载偏心距 e</label><input id="dw_e" value="10" type="number"><span class="unit">mm</span></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="calculateAll()">🔄 全部计算</button>
+      <button class="btn btn-secondary" onclick="resetAll()">↺ 恢复默认</button>
+      <button class="btn btn-secondary" onclick="window.print()">🖨️ 打印报告</button>
+    </div>
+  </div>
+
+  <!-- MAIN RESULTS -->
+  <div class="main" id="main">
+    <div id="results-container">
+      <div style="text-align:center;padding:80px 20px;color:var(--text-light);">
+        <div style="font-size:3rem;margin-bottom:16px;">📊</div>
+        <h2>地面承载板设计计算</h2>
+        <p>请在左侧输入参数后点击 <strong>"全部计算"</strong> 开始分析</p>
+        <p style="font-size:.78rem;">依据 Concrete Society TR34 (4th Edition, 2013)</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== UTILITY FUNCTIONS ==========
+function $(id) { return document.getElementById(id); }
+function val(id) { return parseFloat($(id).value) || 0; }
+function round(v, n=2) { return v == null || isNaN(v) ? '—' : Number(v).toFixed(n); }
+function ok(v) { return `<span class="result ok">✓ OK</span>`; }
+function ng(v) { return `<span class="result fail">✗ NG</span>`; }
+function warn(v) { return `<span class="result warn">⚠</span>`; }
+
+function toggleSection(id) {
+  $(id).classList.toggle('collapsed');
+}
+
+// ========== CORE CALCULATION FUNCTIONS ==========
+
+/** Radius of relative stiffness for point loads (Meyerhof) — returns mm */
+function calc_l(Ecm_Nmm2, h_mm, nu, K_Nmm3) {
+  const numerator = Ecm_Nmm2 * Math.pow(h_mm, 3);
+  const denominator = 12 * (1 - nu * nu) * K_Nmm3;
+  return Math.pow(numerator / denominator, 0.25);
+}
+
+/** Radius of relative stiffness for UDL (simplified Westergaard) — returns mm */
+function calc_l_udl(Ecm_Nmm2, h_mm, K_Nmm3) {
+  const numerator = Ecm_Nmm2 * Math.pow(h_mm, 3);
+  const denominator = 3 * K_Nmm3;
+  return Math.pow(numerator / denominator, 0.25);
+}
+
+/** Equivalent circular contact radius for rectangular baseplate */
+function contactRadius(b_mm, d_mm) {
+  return Math.sqrt(b_mm * d_mm / Math.PI);
+}
+
+/** Equivalent contact radius for double interacting loads */
+function contactRadiusDouble(b_mm, d_mm, D_mm, l_mm) {
+  // Check if loads interact: D <= 2 * 0.9 * l
+  if (D_mm > 2 * 0.9 * l_mm) {
+    // Independent — return single radius
+    return contactRadius(b_mm, d_mm);
+  }
+  // Interacting: equivalent rectangle (2b + D) × d
+  return Math.sqrt((2 * b_mm + D_mm) * d_mm / Math.PI);
+}
+
+/** Flexural capacity — Internal, a/l = 0 */
+function Pu_int_a0(Mn, Mp) {
+  return 2 * Math.PI * (Mn + Mp);
+}
+
+/** Flexural capacity — Internal, a/l >= 0.2 */
+function Pu_int_a02(Mn, Mp, a_over_l) {
+  return 4 * Math.PI * (Mn + Mp) / (1 - a_over_l / 3);
+}
+
+/** Flexural capacity — Edge, a/l = 0 */
+function Pu_edge_a0(Mn, Mp) {
+  return (Math.PI * (Mn + Mp) + 4 * Mp) / 2;
+}
+
+/** Flexural capacity — Edge, a/l >= 0.2 */
+function Pu_edge_a02(Mn, Mp, a_over_l) {
+  return (Math.PI * (Mn + Mp) + 4 * Mp) / (1 - 2 * a_over_l / 3);
+}
+
+/** Interpolate Pu for given a/l ratio */
+function interpolatePu(a_over_l, Mn, Mp, isEdge) {
+  const pu0 = isEdge ? Pu_edge_a0(Mn, Mp) : Pu_int_a0(Mn, Mp);
+  const pu02 = isEdge ? Pu_edge_a02(Mn, Mp, 0.2) : Pu_int_a02(Mn, Mp, 0.2);
+
+  if (a_over_l <= 0) return pu0;
+  if (a_over_l >= 0.2) {
+    return isEdge ? Pu_edge_a02(Mn, Mp, a_over_l) : Pu_int_a02(Mn, Mp, a_over_l);
+  }
+  // Linear interpolation between 0 and 0.2
+  const t = a_over_l / 0.2;
+  return pu0 + t * (pu02 - pu0);
+}
+
+/** Shear capacity at load face */
+function shearAtFace(vmax, u0_mm, d_eff_mm) {
+  return vmax * u0_mm * d_eff_mm / 1000; // kN
+}
+
+/** Shear capacity at critical perimeter (distance 2d) */
+function shearAtCritical(vRdc_vf, u1_mm, d_eff_mm) {
+  return vRdc_vf * u1_mm * d_eff_mm / 1000; // kN
+}
+
+/** Critical perimeter u1 at 2d from loaded area */
+function criticalPerimeter(b_mm, d_mm, d_eff_mm) {
+  // u1 = u0 + 4π·d_eff  (for the 4 rounded corners at radius 2d_eff)
+  return 2 * (b_mm + d_mm) + 4 * Math.PI * d_eff_mm;
+}
+
+/** Critical perimeter for double loads (simplified overlap check) */
+function criticalPerimeterDouble(b_mm, d_mm, D_mm, d_eff_mm) {
+  const u1_single = criticalPerimeter(b_mm, d_mm, d_eff_mm);
+  const u0_single = 2 * (b_mm + d_mm);
+  // Check if critical perimeters overlap
+  const minDist = D_mm - u0_single / 2; // approx distance between inner edges
+  if (minDist > 4 * d_eff_mm) {
+    // No overlap: 2 × single
+    return 2 * u1_single;
+  }
+  // Overlap: combined perimeter
+  // Approximate as perimeter around both loaded areas
+  return 2 * (2 * b_mm + D_mm + d_mm) + 4 * Math.PI * d_eff_mm;
+}
+
+/** Load transfer reduction for edge loads */
+function loadTransferReduction(Fser_kN, LT_kNm, l_mm) {
+  // LT = load transfer capacity in kN/m
+  // Effective length ≈ 2 * 0.9 * l
+  const reduction = LT_kNm * (2 * 0.9 * l_mm) / 1000; // kN
+  return Math.min(reduction, Fser_kN * 0.5); // capped at 50% of load
+}
+
+// ========== MAIN CALCULATION ==========
+function calculateAll() {
+  // --- Read inputs ---
+  const projName = $('proj_name').value || 'Project';
+  const projPlace = $('proj_place').value || 'Site';
+
+  // Slab
+  const h = val('h');
+  const d_eff = val('d_eff');
+  const fcu = val('fcu');
+  const fck = val('fck');
+  const Ecm_kNmm2 = val('Ecm');
+  const nu = val('nu');
+  const Mn = val('Mn');
+  const Mp = val('Mp');
+  const vmax = val('vmax');
+  const vRdc_vf = val('vRdc_vf');
+  const Lj = val('Lj');
+  const LT = val('LT');
+
+  // Subbase
+  const K_MNm3 = val('K');
+  const mu = val('mu');
+
+  // Unit conversions
+  const Ecm = Ecm_kNmm2 * 1000; // N/mm²
+  const K = K_MNm3 / 1000; // N/mm³ (MN/m³ → N/mm³)
+
+  // --- Derived values ---
+  const fctm_fl = 0.3 * Math.pow(fck, 2/3); // mean flexural strength
+  const l = calc_l(Ecm, h, nu, K); // radius of relative stiffness (mm)
+
+  // Reference Pu values
+  const Pu_int_ref_a0 = Pu_int_a0(Mn, Mp);
+  const Pu_int_ref_a02 = Pu_int_a02(Mn, Mp, 0.2);
+  const Pu_edge_ref_a0 = Pu_edge_a0(Mn, Mp);
+  const Pu_edge_ref_a02 = Pu_edge_a02(Mn, Mp, 0.2);
+
+  const l_m = l / 1000; // point-load radius in meters
+
+  // --- Load Case 1: UDL ---
+  // UDL uses a different radius of relative stiffness: l_udl = ∜(E·h³/(3·K))
+  const l_udl = calc_l_udl(Ecm, h, K); // mm
+  const l_udl_m = l_udl / 1000; // meters
+  const udl_q = val('udl_q');
+  const udl_gf = val('udl_gf');
+  // allowable UDL: w = Mn / (0.168 × l_udl²)  where l_udl is in meters
+  const udl_allowable = Mn / (0.168 * l_udl_m * l_udl_m);
+  const udl_factored = udl_q * udl_gf;
+  const udl_pass = udl_factored <= udl_allowable;
+
+  // --- Load Case 2: Static Point Load ---
+  const pt_P = val('pt_P');
+  const pt_b = val('pt_b');
+  const pt_d = val('pt_d');
+  const pt_D = val('pt_D');
+  const pt_edgeDist = val('pt_edgeDist');
+  const pt_gf = val('pt_gf');
+
+  const Fser_single = pt_P * pt_gf;
+  const Fser_double = 2 * pt_P * pt_gf;
+  const a_single = contactRadius(pt_b, pt_d);
+  const a_double = contactRadiusDouble(pt_b, pt_d, pt_D, l);
+  const aol_single = a_single / l;
+  const aol_double = a_double / l;
+
+  const Pu_int_single = interpolatePu(aol_single, Mn, Mp, false);
+  const Pu_int_double = interpolatePu(aol_double, Mn, Mp, false);
+  const Pu_edge_single = interpolatePu(aol_single, Mn, Mp, true);
+  const Pu_edge_double = interpolatePu(aol_double, Mn, Mp, true);
+
+  // Load transfer reduction
+  const lt_reduce_single = LT * (2 * 0.9 * l) / 1000;
+  const lt_reduce_double = lt_reduce_single;
+
+  const Pu_edge_lt_single = Pu_edge_single + lt_reduce_single;
+  const Pu_edge_lt_double = Pu_edge_double + lt_reduce_double;
+
+  // Shear checks
+  const u0_single = 2 * (pt_b + pt_d);
+  const u0_double = pt_D <= 2 * 0.9 * l ? 2 * (2 * pt_b + pt_D + pt_d) : 2 * u0_single;
+  const u1_single = criticalPerimeter(pt_b, pt_d, d_eff);
+  const u1_double = criticalPerimeterDouble(pt_b, pt_d, pt_D, d_eff);
+
+  const Pp_max_single = shearAtFace(vmax, u0_single, d_eff);
+  const Pp_max_double = shearAtFace(vmax, u0_double, d_eff);
+  const Pp_single = shearAtCritical(vRdc_vf, u1_single, d_eff);
+  const Pp_double = shearAtCritical(vRdc_vf, u1_double, d_eff);
+
+  // Edge shear (reduced perimeter)
+  const u0_edge_single = pt_b + 2 * pt_d; // simplified edge perimeter
+  const u0_edge_double = pt_D <= 2 * 0.9 * l ? (pt_b + 2 * pt_d + pt_b + pt_D + pt_d) : 2 * u0_edge_single;
+  const u1_edge_single = pt_b + 2 * pt_d + 2 * Math.PI * d_eff;
+  const u1_edge_double = criticalPerimeterDouble(pt_b, pt_d, pt_D, d_eff) / 2 + (pt_b + 2 * pt_d + 2 * Math.PI * d_eff);
+
+  const Pp_max_edge_single = shearAtFace(vmax, u0_edge_single, d_eff);
+  const Pp_max_edge_double = shearAtFace(vmax, u0_edge_double, d_eff);
+  const Pp_edge_single = shearAtCritical(vRdc_vf, u1_edge_single, d_eff);
+  const Pp_edge_double = shearAtCritical(vRdc_vf, u1_edge_double, d_eff);
+
+  // Check results for point load
+  const ptFlexIntSingle = Fser_single <= Pu_int_single;
+  const ptFlexIntDouble = Fser_double <= Pu_int_double;
+  const ptFlexEdgeSingle = Fser_single <= Pu_edge_lt_single;
+  const ptFlexEdgeDouble = Fser_double <= Pu_edge_lt_double;
+  const ptShearIntSingle = Fser_single <= Math.min(Pp_max_single, Pp_single);
+  const ptShearIntDouble = Fser_double <= Math.min(Pp_max_double, Pp_double);
+  const ptShearEdgeSingle = Fser_single <= Math.min(Pp_max_edge_single, Pp_edge_single);
+  const ptNeedLT_single = Fser_single > Pu_edge_single;
+  const ptNeedLT_double = Fser_double > Pu_edge_double;
+
+  // Deflections (approximate)
+  const defl_central_single = (Fser_single / (K_MNm3 * l_m * l_m)) * 0.002;
+  const defl_central_double = (Fser_double / (K_MNm3 * l_m * l_m)) * 0.002;
+  const defl_edge_single = defl_central_single * 4;
+  const defl_edge_double = defl_central_double * 4;
+
+  // --- Load Case 3: Forklift 40kN ---
+  const fl_Q = val('fl_Q');
+  const fl_p = val('fl_p');
+  const fl_D = val('fl_D');
+  const fl_gf = val('fl_gf');
+  const fl_contactArea = fl_Q * 1000 / fl_p; // mm² (Q in kN, p in N/mm²)
+  const fl_b = Math.sqrt(fl_contactArea); // assume square contact
+  const fl_d = fl_b;
+
+  const fl_Fser_single = fl_Q * fl_gf;
+  const fl_Fser_double = 2 * fl_Q * fl_gf;
+  const fl_a_single = contactRadius(fl_b, fl_d);
+  const fl_a_double = contactRadiusDouble(fl_b, fl_d, fl_D, l);
+  const fl_aol_single = fl_a_single / l;
+  const fl_aol_double = fl_a_double / l;
+
+  const fl_Pu_int_single = interpolatePu(fl_aol_single, Mn, Mp, false);
+  const fl_Pu_int_double = interpolatePu(fl_aol_double, Mn, Mp, false);
+  const fl_Pu_edge_single = interpolatePu(fl_aol_single, Mn, Mp, true);
+  const fl_Pu_edge_double = interpolatePu(fl_aol_double, Mn, Mp, true);
+  const fl_Pu_edge_lt_single = fl_Pu_edge_single + lt_reduce_single;
+  const fl_Pu_edge_lt_double = fl_Pu_edge_double + lt_reduce_double;
+
+  const fl_u0_single = 2 * (fl_b + fl_d);
+  const fl_u0_double = fl_D <= 2 * 0.9 * l ? 2 * (2 * fl_b + fl_D + fl_d) : 2 * fl_u0_single;
+  const fl_u1_single = criticalPerimeter(fl_b, fl_d, d_eff);
+  const fl_u1_double = criticalPerimeterDouble(fl_b, fl_d, fl_D, d_eff);
+
+  const fl_Pp_max_single = shearAtFace(vmax, fl_u0_single, d_eff);
+  const fl_Pp_max_double = shearAtFace(vmax, fl_u0_double, d_eff);
+  const fl_Pp_single = shearAtCritical(vRdc_vf, fl_u1_single, d_eff);
+  const fl_Pp_double = shearAtCritical(vRdc_vf, fl_u1_double, d_eff);
+
+  // --- Load Case 4: Heavy Forklift 167kN ---
+  const hv_Q = val('hv_Q');
+  const hv_p = val('hv_p');
+  const hv_D = val('hv_D');
+  const hv_gf = val('hv_gf');
+  const hv_contactArea = hv_Q * 1000 / hv_p;
+  const hv_b = Math.sqrt(hv_contactArea);
+  const hv_d = hv_b;
+
+  const hv_Fser_single = hv_Q * hv_gf;
+  const hv_Fser_double = 2 * hv_Q * hv_gf;
+  const hv_a_single = contactRadius(hv_b, hv_d);
+  const hv_independent = hv_D > 2 * 0.9 * l;
+  const hv_a_double = hv_independent ? hv_a_single : contactRadiusDouble(hv_b, hv_d, hv_D, l);
+  const hv_aol_single = hv_a_single / l;
+  const hv_aol_double = hv_a_double / l;
+
+  const hv_Pu_int_single = interpolatePu(hv_aol_single, Mn, Mp, false);
+  const hv_Pu_int_double = interpolatePu(hv_aol_double, Mn, Mp, false);
+  const hv_Pu_edge_single = interpolatePu(hv_aol_single, Mn, Mp, true);
+  const hv_Pu_edge_double = interpolatePu(hv_aol_double, Mn, Mp, true);
+  const hv_Pu_edge_lt_single = hv_Pu_edge_single + lt_reduce_single;
+  const hv_Pu_edge_lt_double = hv_Pu_edge_double + lt_reduce_double;
+
+  const hv_u0_single = 2 * (hv_b + hv_d);
+  const hv_u0_double = hv_independent ? 2 * hv_u0_single : 2 * (2 * hv_b + hv_D + hv_d);
+  const hv_u1_single = criticalPerimeter(hv_b, hv_d, d_eff);
+  const hv_u1_double = criticalPerimeterDouble(hv_b, hv_d, hv_D, d_eff);
+
+  const hv_Pp_max_single = shearAtFace(vmax, hv_u0_single, d_eff);
+  const hv_Pp_max_double = shearAtFace(vmax, hv_u0_double, d_eff);
+  const hv_Pp_single = shearAtCritical(vRdc_vf, hv_u1_single, d_eff);
+  const hv_Pp_double = shearAtCritical(vRdc_vf, hv_u1_double, d_eff);
+
+  // --- Dowel / Joint Load Transfer ---
+  const dw_W = val('dw_W');
+  const dw_L = val('dw_L');
+  const dw_Emb = val('dw_Emb');
+  const dw_T = val('dw_T');
+  const dw_S = val('dw_S');
+  const dw_ds = val('dw_ds');
+  const dw_X = val('dw_X');
+  const dw_e = val('dw_e');
+
+  // Concrete properties
+  const fcd = fck / 1.5; // design compressive strength (EC2)
+  const k3 = 3; // confined concrete factor
+  const vRd_ct = 0.52; // N/mm² (minimum shear strength)
+  const k1 = 2.0; // shear factor
+  const d2 = h / 2; // depth to plate (0.5h)
+
+  // Critical plate width
+  const Wcrit = dw_W;
+  const Abear = Wcrit * dw_L; // bearing area
+
+  // Critical spacing — no perimeter overlap
+  const Wp_max = dw_W; // max plate width at face of joint
+  const Scrit1 = Wp_max + 4 * d2;
+
+  // Critical perimeter (embedded side)
+  const U1_dowel = 2 * dw_Emb + dw_W + 2 * Math.PI * d2;
+
+  // ULS load transfer per dowel
+  const Psh = 0.6 * dw_ds * dw_T * dw_W * 0.9 / 1000; // kN (shear of plate)
+  const b1 = 2 * dw_e * k3 * fcd * dw_W;
+  const c1 = 2 * k3 * fcd * dw_W * dw_W * dw_T * dw_T * dw_ds;
+  const Pmax = 0.5 * (Math.sqrt(b1 * b1 + c1) - b1) / 1000; // kN (bearing)
+  const Pburst_unreinf = U1_dowel * d2 * vRd_ct / 1000; // kN (bursting)
+
+  const P_critical = Math.min(Psh, Pmax, Pburst_unreinf);
+  const ULS_transfer_per_m = P_critical / (dw_S / 1000); // kN/m
+
+  // --- Build results HTML ---
+  let allPass = udl_pass;
+
+  let html = '';
+
+  // Summary cards
+  html += `<div class="summary-grid">
+    <div class="summary-item"><div class="val">${round(l_udl, 0)}</div><div class="lbl">相对刚度半径 l<sub>UDL</sub> (mm)</div></div>
+    <div class="summary-item"><div class="val">${round(l, 0)}</div><div class="lbl">相对刚度半径 l<sub>点荷载</sub> (mm)</div></div>
+    <div class="summary-item"><div class="val">${round(Mn+Mp, 2)}</div><div class="lbl">Mₙ+Mₚ (kN·m/m)</div></div>
+    <div class="summary-item"><div class="val">${round(udl_allowable, 1)}</div><div class="lbl">容许均布荷载 (kN/m²)</div></div>
+    <div class="summary-item"><div class="val">${round(fctm_fl, 2)}</div><div class="lbl">弯拉强度 f<sub>ctm,fl</sub> (N/mm²)</div></div>
+    <div class="summary-item"><div class="val">${round(vRd_ct, 2)}</div><div class="lbl">最小抗剪 v<sub>Rd,ct</sub> (N/mm²)</div></div>
+  </div>`;
+
+  // ============ UDL CHECK ============
+  html += `<div class="card">
+    <h2>📐 均布荷载 (UDL) 验算</h2>
+    <div class="subtitle">项目: ${projName} | 地点: ${projPlace}</div>
+    <table>
+      <tr><th>参数</th><th>符号</th><th>数值</th><th>单位</th></tr>
+      <tr><td>板厚</td><td>h</td><td>${h}</td><td>mm</td></tr>
+      <tr><td>弹性模量</td><td>E<sub>cm</sub></td><td>${Ecm_kNmm2}</td><td>kN/mm²</td></tr>
+      <tr><td>地基反应模量</td><td>K</td><td>${K_MNm3}</td><td>MN/m³</td></tr>
+      <tr><td>相对刚度半径 (UDL)</td><td>l<sub>UDL</sub> = ∜(E·h³/(3·K))</td><td>${round(l_udl, 1)}</td><td>mm</td></tr>
+      <tr><td>设计均布荷载</td><td>q × γ<sub>f</sub></td><td>${round(udl_factored, 1)}</td><td>kN/m²</td></tr>
+      <tr style="font-weight:600;"><td>容许均布荷载</td><td>w = M<sub>n</sub>/(0.168·l²)</td><td>${round(udl_allowable, 1)}</td><td>kN/m²</td></tr>
+    </table>
+    <div class="check-row" style="margin-top:10px;">
+      <span class="label">均布荷载验算</span>
+      <span class="values">${round(udl_factored,1)} ≤ ${round(udl_allowable,1)} kN/m² ${udl_pass ? ok() : ng()}</span>
+    </div>
+    ${udl_factored > 50 ? `<div style="margin-top:8px;padding:8px 12px;background:#fef5e7;border-radius:6px;font-size:.78rem;">⚠ 永久均布荷载超过50 kN/m²，强烈建议咨询岩土工程师评估地基长期固结风险。</div>` : ''}
+  </div>`;
+
+  // ============ STATIC POINT LOAD ============
+  html += `<div class="card">
+    <h2>📍 静态点荷载验算</h2>
+    <div class="subtitle">项目: ${projName} | 地点: ${projPlace}</div>
+    <table>
+      <tr><th>参数</th><th>符号</th><th>单腿</th><th>双腿</th><th>单位</th></tr>
+      <tr><td>荷载设计值</td><td>F<sub>ser</sub></td><td>${round(Fser_single,1)}</td><td>${round(Fser_double,1)}</td><td>kN</td></tr>
+      <tr><td>接触半径</td><td>a</td><td>${round(a_single,1)}</td><td>${round(a_double,1)}</td><td>mm</td></tr>
+      <tr><td>a/l 比值</td><td>a/l</td><td>${round(aol_single,3)}</td><td>${round(aol_double,3)}</td><td>—</td></tr>
+      <tr><td>极限内荷载 P<sub>u</sub>(a/l)</td><td>内部</td><td>${round(Pu_int_single,1)}</td><td>${round(Pu_int_double,1)}</td><td>kN</td></tr>
+      <tr><td>极限边荷载 P<sub>u</sub>(a/l)</td><td>边缘</td><td>${round(Pu_edge_single,1)}</td><td>${round(Pu_edge_double,1)}</td><td>kN</td></tr>
+      <tr><td>含传力 P<sub>u</sub>(边缘)</td><td>边缘+LT</td><td>${round(Pu_edge_lt_single,1)}</td><td>${round(Pu_edge_lt_double,1)}</td><td>kN</td></tr>
+      <tr><td>荷载面周长 u<sub>0</sub></td><td>—</td><td>${round(u0_single,1)}</td><td>${round(u0_double,1)}</td><td>mm</td></tr>
+      <tr><td>临界周长 u<sub>1</sub></td><td>—</td><td>${round(u1_single,1)}</td><td>${round(u1_double,1)}</td><td>mm</td></tr>
+      <tr><td>面抗剪 P<sub>p,max</sub></td><td>内部</td><td>${round(Pp_max_single,1)}</td><td>${round(Pp_max_double,1)}</td><td>kN</td></tr>
+      <tr><td>临界抗剪 P<sub>p</sub></td><td>内部</td><td>${round(Pp_single,1)}</td><td>${round(Pp_double,1)}</td><td>kN</td></tr>
+    </table>
+
+    <h3 style="margin-top:16px;font-size:.85rem;color:var(--primary);">抗弯验算</h3>
+    <div class="check-row"><span class="label">单腿 - 内部</span><span class="values">${round(Fser_single,1)} ≤ ${round(Pu_int_single,1)} kN ${ptFlexIntSingle ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">双腿 - 内部</span><span class="values">${round(Fser_double,1)} ≤ ${round(Pu_int_double,1)} kN ${ptFlexIntDouble ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">单腿 - 边缘 ${ptNeedLT_single ? '(需要传力)' : ''}</span><span class="values">${round(Fser_single,1)} ≤ ${round(Pu_edge_lt_single,1)} kN ${ptFlexEdgeSingle ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">双腿 - 边缘 ${ptNeedLT_double ? '(需要传力)' : ''}</span><span class="values">${round(Fser_double,1)} ≤ ${round(Pu_edge_lt_double,1)} kN ${ptFlexEdgeDouble ? ok() : ng()}</span></div>
+
+    <h3 style="margin-top:12px;font-size:.85rem;color:var(--primary);">抗剪验算</h3>
+    <div class="check-row"><span class="label">单腿 - 内部 (面)</span><span class="values">${round(Fser_single,1)} ≤ ${round(Pp_max_single,1)} kN ${Fser_single <= Pp_max_single ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">单腿 - 内部 (临界)</span><span class="values">${round(Fser_single,1)} ≤ ${round(Pp_single,1)} kN ${Fser_single <= Pp_single ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">双腿 - 内部 (面)</span><span class="values">${round(Fser_double,1)} ≤ ${round(Pp_max_double,1)} kN ${Fser_double <= Pp_max_double ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">双腿 - 内部 (临界)</span><span class="values">${round(Fser_double,1)} ≤ ${round(Pp_double,1)} kN ${Fser_double <= Pp_double ? ok() : ng()}</span></div>
+
+    <h3 style="margin-top:12px;font-size:.85rem;color:var(--primary);">挠度估算</h3>
+    <table>
+      <tr><th>荷载位置</th><th>单腿 (mm)</th><th>双腿 (mm)</th></tr>
+      <tr><td>板中</td><td>${round(defl_central_single, 2)}</td><td>${round(defl_central_double, 2)}</td></tr>
+      <tr><td>自由边</td><td>${round(defl_edge_single, 2)}</td><td>${round(defl_edge_double, 2)}</td></tr>
+    </table>
+  </div>`;
+
+  // Check all pass
+  allPass = allPass && ptFlexIntSingle && ptFlexIntDouble && ptFlexEdgeSingle && ptFlexEdgeDouble;
+
+  // ============ FORKLIFT 40kN ============
+  html += `<div class="card">
+    <h2>🏭 叉车荷载验算 (Q=${fl_Q} kN, p=${fl_p} N/mm²)</h2>
+    <div class="subtitle">项目: ${projName} | 接触面积: ${round(fl_contactArea, 0)} mm² | 等效方形: ${round(fl_b, 1)}×${round(fl_d, 1)} mm</div>
+    <table>
+      <tr><th>参数</th><th>符号</th><th>单轮</th><th>双轮</th><th>单位</th></tr>
+      <tr><td>荷载设计值</td><td>F<sub>ser</sub></td><td>${round(fl_Fser_single,1)}</td><td>${round(fl_Fser_double,1)}</td><td>kN</td></tr>
+      <tr><td>接触半径</td><td>a</td><td>${round(fl_a_single,1)}</td><td>${round(fl_a_double,1)}</td><td>mm</td></tr>
+      <tr><td>a/l 比值</td><td>a/l</td><td>${round(fl_aol_single,3)}</td><td>${round(fl_aol_double,3)}</td><td>—</td></tr>
+      <tr><td>极限内荷载 P<sub>u</sub></td><td>内部</td><td>${round(fl_Pu_int_single,1)}</td><td>${round(fl_Pu_int_double,1)}</td><td>kN</td></tr>
+      <tr><td>极限边荷载 P<sub>u</sub></td><td>边缘</td><td>${round(fl_Pu_edge_single,1)}</td><td>${round(fl_Pu_edge_double,1)}</td><td>kN</td></tr>
+      <tr><td>含传力 P<sub>u</sub>(边缘)</td><td>边缘+LT</td><td>${round(fl_Pu_edge_lt_single,1)}</td><td>${round(fl_Pu_edge_lt_double,1)}</td><td>kN</td></tr>
+      <tr><td>荷载面周长 u<sub>0</sub></td><td>—</td><td>${round(fl_u0_single,1)}</td><td>${round(fl_u0_double,1)}</td><td>mm</td></tr>
+      <tr><td>临界周长 u<sub>1</sub></td><td>—</td><td>${round(fl_u1_single,1)}</td><td>${round(fl_u1_double,1)}</td><td>mm</td></tr>
+      <tr><td>面抗剪 P<sub>p,max</sub></td><td>—</td><td>${round(fl_Pp_max_single,1)}</td><td>${round(fl_Pp_max_double,1)}</td><td>kN</td></tr>
+      <tr><td>临界抗剪 P<sub>p</sub></td><td>—</td><td>${round(fl_Pp_single,1)}</td><td>${round(fl_Pp_double,1)}</td><td>kN</td></tr>
+    </table>
+
+    <h3 style="margin-top:16px;font-size:.85rem;color:var(--primary);">抗弯验算</h3>
+    <div class="check-row"><span class="label">单轮 - 内部</span><span class="values">${round(fl_Fser_single,1)} ≤ ${round(fl_Pu_int_single,1)} kN ${fl_Fser_single <= fl_Pu_int_single ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">双轮 - 内部</span><span class="values">${round(fl_Fser_double,1)} ≤ ${round(fl_Pu_int_double,1)} kN ${fl_Fser_double <= fl_Pu_int_double ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">单轮 - 边缘 (含LT)</span><span class="values">${round(fl_Fser_single,1)} ≤ ${round(fl_Pu_edge_lt_single,1)} kN ${fl_Fser_single <= fl_Pu_edge_lt_single ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">双轮 - 边缘 (含LT)</span><span class="values">${round(fl_Fser_double,1)} ≤ ${round(fl_Pu_edge_lt_double,1)} kN ${fl_Fser_double <= fl_Pu_edge_lt_double ? ok() : ng()}</span></div>
+
+    <h3 style="margin-top:12px;font-size:.85rem;color:var(--primary);">抗剪验算</h3>
+    <div class="check-row"><span class="label">单轮 - 内部 (面)</span><span class="values">${round(fl_Fser_single,1)} ≤ ${round(fl_Pp_max_single,1)} kN ${fl_Fser_single <= fl_Pp_max_single ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">单轮 - 内部 (临界)</span><span class="values">${round(fl_Fser_single,1)} ≤ ${round(fl_Pp_single,1)} kN ${fl_Fser_single <= fl_Pp_single ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">双轮 - 内部 (面)</span><span class="values">${round(fl_Fser_double,1)} ≤ ${round(fl_Pp_max_double,1)} kN ${fl_Fser_double <= fl_Pp_max_double ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">双轮 - 内部 (临界)</span><span class="values">${round(fl_Fser_double,1)} ≤ ${round(fl_Pp_double,1)} kN ${fl_Fser_double <= fl_Pp_double ? ok() : ng()}</span></div>
+  </div>`;
+
+  // ============ HEAVY FORKLIFT ============
+  html += `<div class="card">
+    <h2>🚛 重载叉车验算 (Q=${hv_Q} kN, p=${hv_p} N/mm²)</h2>
+    <div class="subtitle">项目: ${projName} | 接触面积: ${round(hv_contactArea, 0)} mm² | 等效方形: ${round(hv_b, 1)}×${round(hv_d, 1)} mm ${hv_independent ? '| ⚠ 轮距 > 2×0.9×l，双轮独立作用' : ''}</div>
+    <table>
+      <tr><th>参数</th><th>符号</th><th>单轮</th><th>双轮</th><th>单位</th></tr>
+      <tr><td>荷载设计值</td><td>F<sub>ser</sub></td><td>${round(hv_Fser_single,1)}</td><td>${round(hv_Fser_double,1)}</td><td>kN</td></tr>
+      <tr><td>接触半径</td><td>a</td><td>${round(hv_a_single,1)}</td><td>${round(hv_a_double,1)}</td><td>mm</td></tr>
+      <tr><td>a/l 比值</td><td>a/l</td><td>${round(hv_aol_single,3)}</td><td>${round(hv_aol_double,3)}</td><td>—</td></tr>
+      <tr><td>极限内荷载 P<sub>u</sub></td><td>内部</td><td>${round(hv_Pu_int_single,1)}</td><td>${round(hv_Pu_int_double,1)}</td><td>kN</td></tr>
+      <tr><td>极限边荷载 P<sub>u</sub></td><td>边缘</td><td>${round(hv_Pu_edge_single,1)}</td><td>${round(hv_Pu_edge_double,1)}</td><td>kN</td></tr>
+      <tr><td>含传力 P<sub>u</sub>(边缘)</td><td>边缘+LT</td><td>${round(hv_Pu_edge_lt_single,1)}</td><td>${round(hv_Pu_edge_lt_double,1)}</td><td>kN</td></tr>
+      <tr><td>荷载面周长 u<sub>0</sub></td><td>—</td><td>${round(hv_u0_single,1)}</td><td>${round(hv_u0_double,1)}</td><td>mm</td></tr>
+      <tr><td>临界周长 u<sub>1</sub></td><td>—</td><td>${round(hv_u1_single,1)}</td><td>${round(hv_u1_double,1)}</td><td>mm</td></tr>
+      <tr><td>面抗剪 P<sub>p,max</sub></td><td>—</td><td>${round(hv_Pp_max_single,1)}</td><td>${round(hv_Pp_max_double,1)}</td><td>kN</td></tr>
+      <tr><td>临界抗剪 P<sub>p</sub></td><td>—</td><td>${round(hv_Pp_single,1)}</td><td>${round(hv_Pp_double,1)}</td><td>kN</td></tr>
+    </table>
+
+    <h3 style="margin-top:16px;font-size:.85rem;color:var(--primary);">抗弯验算</h3>
+    <div class="check-row"><span class="label">单轮 - 内部</span><span class="values">${round(hv_Fser_single,1)} ≤ ${round(hv_Pu_int_single,1)} kN ${hv_Fser_single <= hv_Pu_int_single ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">双轮 - 内部</span><span class="values">${round(hv_Fser_double,1)} ≤ ${round(hv_Pu_int_double,1)} kN ${hv_Fser_double <= hv_Pu_int_double ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">单轮 - 边缘 (含LT)</span><span class="values">${round(hv_Fser_single,1)} ≤ ${round(hv_Pu_edge_lt_single,1)} kN ${hv_Fser_single <= hv_Pu_edge_lt_single ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">双轮 - 边缘 (含LT)</span><span class="values">${round(hv_Fser_double,1)} ≤ ${round(hv_Pu_edge_lt_double,1)} kN ${hv_Fser_double <= hv_Pu_edge_lt_double ? ok() : ng()}</span></div>
+
+    <h3 style="margin-top:12px;font-size:.85rem;color:var(--primary);">抗剪验算</h3>
+    <div class="check-row"><span class="label">单轮 - 内部 (面)</span><span class="values">${round(hv_Fser_single,1)} ≤ ${round(hv_Pp_max_single,1)} kN ${hv_Fser_single <= hv_Pp_max_single ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">单轮 - 内部 (临界)</span><span class="values">${round(hv_Fser_single,1)} ≤ ${round(hv_Pp_single,1)} kN ${hv_Fser_single <= hv_Pp_single ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">双轮 - 内部 (面)</span><span class="values">${round(hv_Fser_double,1)} ≤ ${round(hv_Pp_max_double,1)} kN ${hv_Fser_double <= hv_Pp_max_double ? ok() : ng()}</span></div>
+    <div class="check-row"><span class="label">双轮 - 内部 (临界)</span><span class="values">${round(hv_Fser_double,1)} ≤ ${round(hv_Pp_double,1)} kN ${hv_Fser_double <= hv_Pp_double ? ok() : ng()}</span></div>
+  </div>`;
+
+  // ============ DOWEL / JOINT LOAD TRANSFER ============
+  html += `<div class="card">
+    <h2>🔩 接缝传力验算 (传力杆/钢板)</h2>
+    <div class="subtitle">项目: ${projName} | 钢板 ${dw_W}×${dw_L}×${dw_T}mm, 间距 ${dw_S}mm</div>
+    <table>
+      <tr><th>参数</th><th>符号</th><th>数值</th><th>单位</th></tr>
+      <tr><td>钢板宽度</td><td>W</td><td>${dw_W}</td><td>mm</td></tr>
+      <tr><td>钢板长度</td><td>L</td><td>${dw_L}</td><td>mm</td></tr>
+      <tr><td>嵌入深度</td><td>Emb</td><td>${dw_Emb}</td><td>mm</td></tr>
+      <tr><td>钢板厚度</td><td>T</td><td>${dw_T}</td><td>mm</td></tr>
+      <tr><td>钢板间距</td><td>S</td><td>${dw_S}</td><td>mm</td></tr>
+      <tr><td>临界宽度</td><td>W<sub>crit</sub></td><td>${Wcrit}</td><td>mm</td></tr>
+      <tr><td>承压面积</td><td>A<sub>bear</sub></td><td>${Abear}</td><td>mm²</td></tr>
+      <tr><td>临界间距 (无重叠)</td><td>S<sub>crit1</sub></td><td>${Scrit1}</td><td>mm</td></tr>
+      <tr><td>临界周长 (嵌入侧)</td><td>U<sub>1</sub></td><td>${round(U1_dowel,1)}</td><td>mm</td></tr>
+      <tr style="font-weight:600;"><td>剪切承载力 (钢板)</td><td>P<sub>sh</sub></td><td>${round(Psh,1)}</td><td>kN</td></tr>
+      <tr style="font-weight:600;"><td>承压承载力</td><td>P<sub>max</sub></td><td>${round(Pmax,1)}</td><td>kN</td></tr>
+      <tr style="font-weight:600;"><td>冲切承载力 (无筋)</td><td>P<sub>burst</sub></td><td>${round(Pburst_unreinf,1)}</td><td>kN</td></tr>
+      <tr style="font-weight:700;background:#f0f7ff;"><td>控制值 (每根传力杆)</td><td>P<sub>crit</sub></td><td>${round(P_critical,1)}</td><td>kN</td></tr>
+      <tr style="font-weight:700;background:#e8f0fe;"><td>ULS 传力 (每米)</td><td>—</td><td>${round(ULS_transfer_per_m,1)}</td><td>kN/m</td></tr>
+    </table>
+    <div style="margin-top:10px;font-size:.78rem;color:var(--text-light);">
+      控制模式: ${P_critical === Psh ? '钢板剪切' : P_critical === Pmax ? '混凝土承压' : '混凝土冲切（无筋）'}
+    </div>
+  </div>`;
+
+  // ============ Overall status ============
+  const overallStatus = allPass ?
+    `<div class="all-ok">✅ 所有验算项通过 — 设计满足 TR34 要求</div>` :
+    `<div class="has-fail">⚠️ 存在不满足项，请检查参数或调整设计</div>`;
+
+  html = overallStatus + html;
+
+  $('results-container').innerHTML = html;
+
+  // Scroll to top of results
+  $('results-container').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetAll() {
+  // Reset to PDF defaults
+  $('h').value = 200;
+  $('d_eff').value = 150;
+  $('fcu').value = 35;
+  $('fck').value = 28;
+  $('Ecm').value = 32;
+  $('nu').value = 0.2;
+  $('Mn').value = 17.21;
+  $('Mp').value = 16.44;
+  $('vmax').value = 4.97;
+  $('vRdc_vf').value = 0.74;
+  $('Lj').value = 35;
+  $('LT').value = 56;
+  $('K').value = 97;
+  $('mu').value = 0.5;
+  $('udl_q').value = 80;
+  $('udl_gf').value = 1.0;
+  $('pt_P').value = 80;
+  $('pt_b').value = 100;
+  $('pt_d').value = 100;
+  $('pt_D').value = 300;
+  $('pt_edgeDist').value = 150;
+  $('pt_gf').value = 1.2;
+  $('fl_Q').value = 40;
+  $('fl_p').value = 5.0;
+  $('fl_D').value = 1200;
+  $('fl_gf').value = 1.6;
+  $('hv_Q').value = 167;
+  $('hv_p').value = 2.0;
+  $('hv_D').value = 1874;
+  $('hv_gf').value = 1.6;
+
+  calculateAll();
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', function() {
+  calculateAll();
+});
+</script>
+</body>
+</html>
