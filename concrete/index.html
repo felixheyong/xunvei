@@ -355,8 +355,8 @@
     ">
       <option value="C20">C20</option>
       <option value="C25">C25</option>
-      <option value="C30">C30</option>
-      <option value="C35" selected>C35</option>
+      <option value="C30" selected>C30</option>
+      <option value="C35">C35</option>
       <option value="C40">C40</option>
       <option value="C45">C45</option>
       <option value="C50">C50</option>
@@ -742,7 +742,7 @@ const DMAX = 31.5;
 let aggData = ORIGINAL_DATA.map(r => [...r]);
 let proportions = [...ORIGINAL_PROPS];
 let chart;
-let concreteGrade = 'C35';
+let concreteGrade = 'C30';
 let airContent = 2; // 含气量，默认 2%
 
 // mixQtys: [cement, flyAsh, ggbs, agg0, agg1, agg2, agg3, water, pc, steelFiber]
@@ -1283,7 +1283,7 @@ function updateMixDesign() {
     <tr style="background:#f7f4ed;">
       <td style="text-align:center;font-size:.73rem;font-weight:600;">含气量</td>
       <td style="text-align:center;">
-        <input class="num-input air-content-input" value="${airContent}" style="width:52px;" inputmode="decimal" onfocus="this.select()"> <small>%</small>
+        <input class="num-input air-content-input" value="${airContent}" style="width:52px;" step="0.5" inputmode="decimal" onfocus="this.select()"> <small>%</small>
       </td>
       <td style="text-align:center;"><span style="color:var(--muted);font-size:.7rem;">—</span></td>
       <td style="text-align:center;color:var(--accent);font-variant-numeric:tabular-nums;">${airVol.toFixed(4)}</td>
@@ -1649,6 +1649,23 @@ document.addEventListener('focusin', function(e) {
   if (e.target.classList.contains('num-input')) {
     e.target.select();
   }
+});
+
+// 方向键在输入框间跳转（↓→下一格，↑←上一格）
+document.addEventListener('keydown', function(e) {
+  if (!e.target.classList.contains('num-input')) return;
+  if (!['ArrowDown','ArrowUp','ArrowRight','ArrowLeft'].includes(e.key)) return;
+  e.preventDefault();
+  const all = Array.from(document.querySelectorAll('.num-input'));
+  const idx = all.indexOf(e.target);
+  if (idx < 0) return;
+  let next;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+    next = all[idx + 1];
+  } else {
+    next = all[idx - 1];
+  }
+  if (next) { next.focus(); next.select(); }
 });
 
 // 初始调用
