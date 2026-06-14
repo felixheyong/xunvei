@@ -283,6 +283,11 @@
     border-top: 1px solid var(--border);
   }
 
+	  /* ── 禁用打印 ── */
+	  @media print {
+	    body { display: none; }
+	  }
+
   /* ── 水印 ── */
   .watermark-layer {
     position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden;
@@ -2427,66 +2432,92 @@ function checkLockout() {
 <!-- 版权保护 -->
 <script>
 (function() {
-  // 控制台版权声明
-  console.log('%c© HE YONG — Twintec SFRC Mix 技术整合和汉化 %c未经授权禁止复制、转载、套用',
-    'font-size:14px;font-weight:bold;color:#6b8e89;','font-size:12px;color:#c49555;');
-  console.log('%c本页面受版权保护，侵权必究','font-size:11px;color:#b85a3f;');
+  // ===== 控制台保护 =====
+  console.clear();
+  console.log('%c⚠ 警告 %c本页面受版权保护，请勿在控制台执行任何代码。',
+    'font-size:16px;font-weight:bold;color:#c4553a;','font-size:12px;color:#252220;');
+  console.log('%c© HE YONG — Twintec SFRC Mix %c侵权必究',
+    'font-size:13px;font-weight:bold;color:#2c5f8a;','font-size:11px;color:#8a8278;');
+  // 周期性清除控制台
+  setInterval(function(){ console.clear(); }, 3000);
 
-  // 禁用右键菜单（在全文中生效）
+  // ===== DevTools 检测 (debugger 计时) =====
+  var devtoolsOpen = false;
+  setInterval(function() {
+    var before = new Date().getTime();
+    debugger;
+    var after = new Date().getTime();
+    if (after - before > 100) {
+      devtoolsOpen = true;
+      document.body.style.opacity = '0.15';
+      document.body.style.pointerEvents = 'none';
+      showProtectAlert('⚠ 检测到开发者工具已打开<br><span style="font-size:.7rem;color:#c4bcb0;">请关闭开发者工具后刷新页面</span>');
+    } else if (devtoolsOpen) {
+      document.body.style.opacity = '1';
+      document.body.style.pointerEvents = '';
+      devtoolsOpen = false;
+    }
+  }, 1000);
+
+  // ===== 禁用右键 =====
   document.addEventListener('contextmenu', function(e) {
     e.preventDefault();
-    showCopyAlert();
+    showProtectAlert('© HE YONG<br><span style="font-size:.7rem;color:#c4bcb0;">右键已禁用 — 内容受版权保护</span>');
     return false;
   });
 
-  // 禁用 Ctrl+U / Ctrl+S / Ctrl+Shift+I / F12
+  // ===== 禁用快捷键 =====
   document.addEventListener('keydown', function(e) {
-    if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S')) {
-      e.preventDefault(); showCopyAlert(); return false;
+    var blocked = false;
+    // F12
+    if (e.key === 'F12') { blocked = true; }
+    // Ctrl+U / Ctrl+S / Ctrl+P
+    if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) { blocked = true; }
+    // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C
+    if (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I' || e.key === 'j' || e.key === 'J' || e.key === 'c' || e.key === 'C')) { blocked = true; }
+    if (blocked) {
+      e.preventDefault();
+      showProtectAlert('© HE YONG<br><span style="font-size:.7rem;color:#c4bcb0;">快捷键已禁用 — 内容受版权保护</span>');
+      return false;
     }
-    if (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I' || e.key === 'j' || e.key === 'J' || e.key === 'c' || e.key === 'C')) {
-      e.preventDefault(); showCopyAlert(); return false;
-    }
-    if (e.key === 'F12') { e.preventDefault(); showCopyAlert(); return false; }
   });
 
-  // 复制提示
-  var alertShown = false;
-  function showCopyAlert() {
-    if (alertShown) return;
-    alertShown = true;
+  // ===== 禁用复制 / 剪切 / 拖拽 =====
+  document.addEventListener('copy', function(e) { e.preventDefault(); showProtectAlert('© HE YONG — 禁止复制'); return false; });
+  document.addEventListener('cut', function(e) { e.preventDefault(); return false; });
+  document.addEventListener('dragstart', function(e) { e.preventDefault(); return false; });
+
+  // ===== 提示弹窗 =====
+  var alertActive = false;
+  function showProtectAlert(msg) {
+    if (alertActive) return;
+    alertActive = true;
     var div = document.createElement('div');
-    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99999;'
-      + 'background:rgba(46,42,37,.92);color:#f3efe8;padding:18px 32px;border-radius:10px;'
+    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100000;'
+      + 'background:rgba(37,34,32,.94);color:#f3efe8;padding:20px 36px;border-radius:10px;'
       + 'font-family:Inter,"Noto Sans SC",sans-serif;font-size:.92rem;text-align:center;'
-      + 'box-shadow:0 8px 32px rgba(0,0,0,.25);border:1px solid rgba(196,154,74,.3);'
-      + 'animation:fadeIn .3s ease;';
-    div.innerHTML = '© HE YONG<br><span style="font-size:.72rem;color:#c4bcb0;">本页面内容受版权保护，未经授权禁止复制、转载。</span>';
+      + 'box-shadow:0 12px 48px rgba(0,0,0,.3);border:1px solid rgba(196,154,74,.3);'
+      + 'animation:protectFade .25s ease;pointer-events:none;';
+    div.innerHTML = msg;
     document.body.appendChild(div);
-    setTimeout(function() { div.remove(); alertShown = false; }, 2200);
+    setTimeout(function() { div.remove(); alertActive = false; }, 2500);
   }
 
-  // CSS 动画注入
   var style = document.createElement('style');
-  style.textContent = '@keyframes fadeIn{from{opacity:0;transform:translate(-50%,-50%) scale(.92)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}';
+  style.textContent = '@keyframes protectFade{from{opacity:0;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}';
   document.head.appendChild(style);
 
-  // 防止选中关键内容区域
+  // ===== 全局禁止选中 =====
   document.addEventListener('DOMContentLoaded', function() {
-    var protectSelectors = [
-      '.card h2',       // 卡片标题
-      '.callout',       // 结论
-      '#fmGrid',        // FM 数据
-      '.theory-grid',   // 理论卡片
-      '.formula',       // 公式
-    ];
-    protectSelectors.forEach(function(sel) {
-      var els = document.querySelectorAll(sel);
-      els.forEach(function(el) {
-        el.style.userSelect = 'none';
-        el.style.webkitUserSelect = 'none';
-      });
+    var all = document.querySelectorAll('.card, .callout, table, .formula, .theory-grid, h2, h3, .ec2-conclusion, .legend-grid');
+    all.forEach(function(el) {
+      el.style.userSelect = 'none';
+      el.style.webkitUserSelect = 'none';
+      el.style.msUserSelect = 'none';
     });
+    // 也禁用主体文本选中
+    document.body.style.userSelect = 'none';
+    document.body.style.webkitUserSelect = 'none';
   });
 })();
 </script>
