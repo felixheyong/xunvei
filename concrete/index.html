@@ -514,13 +514,20 @@
 <!-- ===== 级配曲线图 ===== -->
 <div class="card">
   <h2>骨料组合级配曲线（实时更新）</h2>
-  <p class="desc">半对数坐标：横轴为筛孔尺寸 mm（对数），纵轴为累计过筛率 %。阴影区域为 Twintec SFRC 目标范围。</p>
+  <p class="desc">半对数坐标：横轴为筛孔尺寸 mm（对数），纵轴为累计过筛率 %。阴影区域为 Twintec SFRC 目标范围。&nbsp;
+<label style="font-size:.74rem;font-weight:600;">理想曲线模型：</label>
+<select id="idealModelSelect" style="font-family:inherit;font-size:.72rem;padding:3px 6px;border-radius:4px;border:1px solid #d9d0c0;background:#faf8f3;">
+<option value="fuller">Fuller n=0.45</option>
+<option value="andreassen037">Andreasen q=0.37（最优堆积）</option>
+<option value="andreassen030">Andreasen q=0.30</option>
+<option value="andreassen025">Andreasen q=0.25（低水胶比）</option>
+</select></p>
   <div class="chart-wrap"><canvas id="gradingChart"></canvas></div>
   <div class="legend-grid">
     <div class="legend-item"><div class="legend-swatch" style="background:#b85a3f;"></div> 组合级配</div>
     <div class="legend-item"><div class="legend-swatch dashed" style="border-color:#d48865;"></div> 组合级配（内插）</div>
     <div class="legend-item"><div class="legend-swatch" style="background:rgba(72,135,105,.24); height:16px; border-radius:4px; width:26px;"></div> Twintec 目标范围</div>
-    <div class="legend-item"><div class="legend-swatch dashed" style="border-color:#8a9080;"></div> Fuller 理想曲线</div>
+    <div class="legend-item"><div class="legend-swatch dashed" style="border-color:#8a9080;"></div> <span id="idealCurveLabel">Fuller n=0.45</span></div>
     <div class="legend-item"><div class="legend-swatch" style="background:#4a6880;"></div> 碎石 ①（25mm）</div>
     <div class="legend-item"><div class="legend-swatch" style="background:#4d8c70;"></div> 碎石 ②（10mm）</div>
     <div class="legend-item"><div class="legend-swatch" style="background:#c49555;"></div> 砂 ①（机制砂/河砂）</div>
@@ -835,6 +842,18 @@ function getStatus(val, lo, hi) {
   return 'fail';
 }
 
+// 从级配曲线估算 Andreasen 分布模数 q
+function estimateQ(passingArr) {
+  let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, n = 0;
+  for (let i = 0; i < SIEVE_SIZES.length; i++) {
+    if (SIEVE_SIZES[i] <= 0 || passingArr[i] <= 0 || passingArr[i] >= 100) continue;
+    const x = Math.log(SIEVE_SIZES[i] / DMAX);
+    const y = Math.log(passingArr[i] / 100);
+    sumX += x; sumY += y; sumXY += x*y; sumX2 += x*x; n++;
+  }
+  if (n < 3) return 0.45;
+  return parseFloat(((n*sumXY - sumX*sumY) / (n*sumX2 - sumX*sumX)).toFixed(2));
+}
 function calcFM(passingArr) {
   const sieveIndices = [5, 6, 7, 8, 9, 10]; // 4.75 ~ 0.15 mm
   let sumRetained = 0;
@@ -1092,7 +1111,14 @@ function updateChart() {
     }
   }
 
-  const fullerData = fineX.map(d => ({ x: d, y: Math.min(100, 100 * Math.pow(d / DMAX, 0.45)) }));
+  // 理想曲线：根据选择器动态计算
+  const idealModel = document.getElementById('idealModelSelect')?.value || 'fuller';
+  let idealN = 0.45; // Fuller default
+  let idealLabel = 'Fuller n=0.45';
+  if (idealModel === 'andreassen037') { idealN = 0.37; idealLabel = 'Andreasen q=0.37'; }
+  else if (idealModel === 'andreassen030') { idealN = 0.30; idealLabel = 'Andreasen q=0.30'; }
+  else if (idealModel === 'andreassen025') { idealN = 0.25; idealLabel = 'Andreasen q=0.25'; }
+  const idealData = fineX.map(d => ({ x: d, y: Math.min(100, 100 * Math.pow(d / DMAX, idealN)) }));
 
   const datasets = [
     {
@@ -1118,8 +1144,8 @@ function updateChart() {
       pointBackgroundColor: AGG_COLORS[a], tension: 0.2, order: 20,
     })),
     {
-      label: 'Fuller',
-      data: fullerData,
+      label: idealLabel,
+      data: idealData,
       borderColor: '#8a9080', backgroundColor: 'transparent',
       borderWidth: 1.5, borderDash: [4, 6], pointRadius: 0, order: 15,
     },
@@ -1138,6 +1164,10 @@ function updateChart() {
       showLine: true, tension: 0, order: 1,
     },
   ];
+
+  // 更新图例标签
+  const legendSpan = document.getElementById('idealCurveLabel');
+  if (legendSpan) legendSpan.textContent = idealLabel;
 
   if (chart) {
     chart.data.datasets = datasets;
@@ -1203,6 +1233,19 @@ function updateFM() {
   const totalAgg = proportions.reduce((a, b) => a + b, 0);
   const sandRatio = totalAgg > 0 ? (sandSum / totalAgg) * 100 : 0;
 
+  // 骨料比表面积 SSA (m²/kg) — 球形假设
+  let totalSSA = 0, totalPct = 0;
+  const combinedForSSA = getCombined();
+  for (let i = 0; i < SIEVE_SIZES.length - 1; i++) {
+    const dm = Math.sqrt(SIEVE_SIZES[i] * SIEVE_SIZES[i+1]) / 1000; // m
+    const pd = combinedForSSA[i] - combinedForSSA[i+1];
+    if (pd <= 0) continue;
+    totalSSA += (6 / (2650 * dm)) * pd;
+    totalPct += pd;
+  }
+  const avgSSA = totalPct > 0 ? totalSSA / totalPct : 0;
+  const estQ = estimateQ(combinedForSSA);
+
   const grid = document.getElementById('fmGrid');
   grid.innerHTML = `
     <table style="font-size:.78rem;margin-top:4px;">
@@ -1254,6 +1297,12 @@ function updateFM() {
         </tr>
       </tbody>
     </table>
+	  <hr style="border:none;border-top:1px solid var(--border);margin:14px 0 10px;">
+	  <div style="font-size:.74rem;font-weight:600;color:var(--accent2);margin-bottom:6px;">骨料比表面积 &amp; 颗粒间距</div>
+	  <table style="font-size:.72rem;line-height:1.8;width:100%;">
+	    <tr><td style="text-align:left;">骨料比表面积 SSA</td><td><strong style="color:var(--accent);">${avgSSA > 0 ? avgSSA.toFixed(3) : '—'} m²/kg</strong></td><td style="font-size:.65rem;color:var(--muted);">球形假设 ρ=2650 kg/m³</td></tr>
+	    <tr><td style="text-align:left;">分布模数 q</td><td><strong style="color:var(--accent);">${estQ.toFixed(2)}</strong></td><td style="font-size:.65rem;color:var(--muted);">Fuller=0.45, AA最优=0.37, 低水胶比=0.25</td></tr>
+	  </table>
   `;
 }
 
@@ -2369,6 +2418,18 @@ function showLockout() {
 }
 
 function showAnalysis() {
+  // 理想曲线模型切换监听
+  const idealSelect = document.getElementById('idealModelSelect');
+  if (idealSelect) {
+    idealSelect.addEventListener('change', function() {
+      updateChart();
+      // 如果 chart 存在，确报更新
+      if (typeof chart !== 'undefined' && chart) {
+        chart.update('none');
+      }
+    });
+  }
+
   if (isAuthorized()) {
     document.getElementById('resultsSection').style.display = '';
     updateAll();
@@ -2447,6 +2508,18 @@ function checkLockout() {
 }
 
 (function() {
+  // 理想曲线模型切换监听
+  const idealSelect = document.getElementById('idealModelSelect');
+  if (idealSelect) {
+    idealSelect.addEventListener('change', function() {
+      updateChart();
+      // 如果 chart 存在，确报更新
+      if (typeof chart !== 'undefined' && chart) {
+        chart.update('none');
+      }
+    });
+  }
+
   if (isAuthorized()) {
     var resultsEl = document.getElementById('resultsSection');
     if (resultsEl) { resultsEl.style.display = ''; }
