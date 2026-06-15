@@ -663,7 +663,7 @@
     <span style="font-size:.74rem;font-weight:600;color:var(--muted);">混凝土类型：</span>
     <select class="aci-select" id="ec2ConcreteType" onchange="updateEC2()" style="font-size:.74rem;">
       <option value="plain" selected>素混凝土（无筋）</option>
-      <option value="reinforced">配筋 + 钢纤维混凝土</option>
+      <option value="reinforced">配筋/钢纤维混凝土</option>
     </select>
     <span id="ec2JointSpan" style="font-size:.74rem;color:var(--muted);"></span>
   </div>
@@ -1968,7 +1968,7 @@ function updateEC2() {
     const sel = (v) => v === Ljoint ? 'selected' : '';
     document.getElementById('ec2JointSpan').innerHTML = `→ 接缝间距：<select class="aci-select" id="ec2ReinfSpan" onchange="updateEC2()" style="font-size:.72rem;">${spanOpts.map(s => `<option value="${s}" ${sel(s)}>${s} m${s === 3 ? '（密缝）' : s === 36 ? '（最大）' : ''}</option>`).join('')}</select>`;
     document.getElementById('ec2JointSpan').style.display = '';
-    Lnote = `L = <strong>${Ljoint} m</strong>（配筋+钢纤维，自定义间距）`;
+    Lnote = `L = <strong>${Ljoint} m</strong>（配筋/钢纤维，自定义间距）`;
   }
 
   // 约束度和有效应变（先计算，后续 ACI 配筋和 EC2 指标都用到）
@@ -2030,7 +2030,7 @@ function updateEC2() {
 	  guideHtml += '1年：ε<sub>cs</sub> = ' + epsCsY1.toFixed(0) + ' µε，φ = ' + phiY1.toFixed(2) + '，ε<sub>eff</sub> = <strong>' + epsEffY1.toFixed(0) + ' µε</strong> → 位移 ≈ <strong>' + dispY1 + ' mm</strong><br>';
 	  guideHtml += '3年：ε<sub>cs</sub> = ' + epsCsY3.toFixed(0) + ' µε，φ = ' + phiY3.toFixed(2) + '，ε<sub>eff</sub> = <strong>' + epsEffY3.toFixed(0) + ' µε</strong> → 位移 ≈ <strong>' + dispY3 + ' mm</strong>';
 	  guideHtml += '<div style="margin-top:6px;font-size:.7rem;color:var(--muted);">' + modeNote + ' · ' + Ljoint + 'm 板长</div></div></div></div>';
-	  guideHtml += '<p style="font-size:.7rem;color:var(--muted);margin-top:8px;">💡 素混凝土依赖接缝间距控制裂缝；配筋+钢纤维混凝土可通过子层拖拽配筋减少接缝数量。EC2 应变指标为接缝设计提供变形输入。</p>';
+	  guideHtml += '<p style="font-size:.7rem;color:var(--muted);margin-top:8px;">💡 素混凝土依赖接缝间距控制裂缝；配筋/钢纤维混凝土可通过子层拖拽配筋减少接缝数量。EC2 应变指标为接缝设计提供变形输入。</p>';
 		  document.getElementById('ec2DesignGuide').innerHTML = guideHtml;
 
   // Update chart
