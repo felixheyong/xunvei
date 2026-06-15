@@ -1982,9 +1982,24 @@ function updateEC2() {
   const dispY3 = (epsEffY3 * parseFloat(Ljoint) / 1000).toFixed(1);
 
   // ACI 360 子层拖拽配筋
-  const fsAci = 0.67 * 400; // MPa (HRB400, 0.67fy)
-  const AsAci = (muFricDesign * parseFloat(Ljoint) * slabWgt * 1000) / (2 * fsAci);
+  const fsAci = 0.67 * 400; // MPa (HRB400, 0.67fy)，收缩裂缝控制用
+  const AsAciDrag = (muFricDesign * parseFloat(Ljoint) * slabWgt * 1000) / (2 * fsAci);
+  const rhoAciDrag = AsAciDrag / (slabH * 1000 * 1000) * 100;
+  // 最小配筋率校验：GB 50010 §8.5.1 板类受弯构件最小配筋率 0.15%；
+  // ACI 318-19 Table 24.4.3.2 T&S 最小配筋率 Grade 60 ≈ 0.18% → HRB400 ≈ 0.15%
+  const rhoMin = 0.15; // %
+  const AsMin = rhoMin / 100 * slabH * 1000 * 1000; // mm²/m
+  const governedByMin = AsAciDrag < AsMin;
+  const AsAci = governedByMin ? AsMin : AsAciDrag;
   const rhoAci = AsAci / (slabH * 1000 * 1000) * 100;
+  // 裂缝宽度简化估计（基于 ACI 224R Frosch 模型简化）
+  // w ≈ 2 × fs_crack / Es × β × (cover_factor)，其中 β ≈ 1.0 + 0.08 × (cover/spacing)
+  const dcCover = 50; // mm
+  const barSpacingEst = Math.max(80, Math.min(300, Math.round(AsAci > 0 ? (113 * 1000 / AsAci) : 300))); // D12 等效间距
+  const fsCrack = governedByMin ? (fsAci * AsAciDrag / AsMin) : fsAci;
+  const crackWidthEst = 2.0 * (fsCrack / 200000) * (1.0 + 0.08 * (dcCover / barSpacingEst)) * (dcCover + barSpacingEst * 0.25);
+  const crackSeverity = crackWidthEst < 0.3 ? 'ok' : crackWidthEst < 0.5 ? 'warn' : 'fail';
+  const crackLabel = crackWidthEst < 0.3 ? '≤ 0.3 mm · 干燥环境可控' : crackWidthEst < 0.5 ? '0.3–0.5 mm · 需关注' : '> 0.5 mm · 建议加密配筋或减小接缝间距';
 
 	  // 渲染设计指导
 	  const modeNote = ec2Mode === 'creep' ? '压荷载叠加' : '约束松弛';
@@ -2004,22 +2019,45 @@ function updateEC2() {
 	    guideHtml += '基层 μ = ' + muFricDesign.toFixed(1) + '，自重 ' + slabWgt.toFixed(0) + ' kN/m²。';
 	    guideHtml += '</div></div></div>';
 	  } else {
-		    // 配筋混凝土 — 子层拖拽法计算配筋
+		    // 配筋混凝土 — 子层拖拽法 + 最小配筋率校验
 		    guideHtml += '<div style="background:#f7f4ed;border-radius:8px;padding:12px 14px;border:1px solid var(--border);">';
-		    guideHtml += '<strong style="color:var(--accent2);">🇺🇸 ACI 360 子层拖拽法 (配筋)</strong>';
+		    guideHtml += '<strong style="color:var(--accent2);">ACI 360 子层拖拽法 + 最小配筋率</strong>';
 		    guideHtml += '<div style="margin-top:8px;line-height:1.8;">';
-		    guideHtml += 'A<sub>s</sub> = F × L × w / (2 × f<sub>s</sub>)（子层拖拽）<br>';
+		    guideHtml += '子层拖拽 A<sub>s</sub> = F × L × w / (2 × f<sub>s</sub>)<br>';
 		    guideHtml += '= ' + muFricDesign.toFixed(1) + ' × ' + Ljoint + ' m × ' + slabWgt.toFixed(0) + ' kN/m² / (2 × ' + fsAci.toFixed(0) + ' MPa)<br>';
-		    guideHtml += '= <strong style="color:var(--accent);">' + AsAci.toFixed(0) + ' mm²/m</strong>';
+		    guideHtml += '= <strong>' + AsAciDrag.toFixed(0) + ' mm²/m</strong>';
+		    if (governedByMin) {
+		      guideHtml += ' <span style="color:#b85a3f;font-weight:600;">→ 低于最小配筋率，取 ρ<sub>min</sub> = ' + rhoMin.toFixed(2) + '%</span>';
+		    }
 		    guideHtml += '</div>';
-		    // 配筋率信息卡片
-		    guideHtml += '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.72rem;">';
-		    guideHtml += '<div style="background:#faf8f3;border-radius:6px;padding:8px 10px;text-align:center;border:1px solid var(--border);">';
-		    guideHtml += '<div style="font-size:.65rem;color:var(--muted);margin-bottom:2px;">配筋率</div>';
-		    guideHtml += '<div style="font-size:1.1rem;font-weight:700;color:var(--accent);">' + rhoAci.toFixed(2) + '%</div></div>';
-		    guideHtml += '<div style="background:#faf8f3;border-radius:6px;padding:8px 10px;text-align:center;border:1px solid var(--border);">';
-			    guideHtml += '<div style="font-size:.65rem;color:var(--muted);margin-bottom:2px;">每增加 10m 接缝间距</div>';
-			    guideHtml += '<div style="font-size:1.1rem;font-weight:700;color:var(--accent2);">需 +' + (muFricDesign * 10 * slabWgt * 1000 / (2 * fsAci)).toFixed(0) + ' mm²/m</div></div>';
+		    // 三卡片：拖拽计算值 / 最小配筋要求 / 设计取值
+		    guideHtml += '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:.68rem;">';
+		    // Card 1: 拖拽公式值
+		    guideHtml += '<div style="background:#faf8f3;border-radius:6px;padding:8px 8px;text-align:center;border:1px solid var(--border);">';
+		    guideHtml += '<div style="font-size:.6rem;color:var(--muted);margin-bottom:2px;">子层拖拽计算值</div>';
+		    guideHtml += '<div style="font-size:.9rem;font-weight:700;color:var(--accent2);">' + rhoAciDrag.toFixed(3) + '%</div>';
+		    guideHtml += '<div style="font-size:.6rem;color:var(--muted);">' + AsAciDrag.toFixed(0) + ' mm²/m</div></div>';
+		    // Card 2: 最小配筋要求
+		    guideHtml += '<div style="background:#faf8f3;border-radius:6px;padding:8px 8px;text-align:center;border:1px solid var(--border);">';
+		    guideHtml += '<div style="font-size:.6rem;color:var(--muted);margin-bottom:2px;">最小配筋 (GB/ACI)</div>';
+		    guideHtml += '<div style="font-size:.9rem;font-weight:700;color:var(--accent2);">' + rhoMin.toFixed(2) + '%</div>';
+		    guideHtml += '<div style="font-size:.6rem;color:var(--muted);">' + AsMin.toFixed(0) + ' mm²/m</div></div>';
+		    // Card 3: 设计取值
+		    guideHtml += '<div style="background:' + (governedByMin ? '#f7e9e3' : '#ebf2ec') + ';border-radius:6px;padding:8px 8px;text-align:center;border:1px solid ' + (governedByMin ? '#b85a3f' : '#6b8e78') + ';">';
+		    guideHtml += '<div style="font-size:.6rem;color:var(--muted);margin-bottom:2px;">设计取值 As,design</div>';
+		    guideHtml += '<div style="font-size:.9rem;font-weight:700;color:' + (governedByMin ? '#b85a3f' : '#6b8e78') + ';">' + rhoAci.toFixed(2) + '%</div>';
+		    guideHtml += '<div style="font-size:.6rem;color:var(--muted);">' + AsAci.toFixed(0) + ' mm²/m ' + (governedByMin ? '(最小配筋控制)' : '(拖拽公式控制)') + '</div></div>';
+		    guideHtml += '</div>';
+		    // 裂缝宽度估算
+		    guideHtml += '<div style="margin-top:10px;background:#f5f2ea;border-radius:6px;padding:8px 12px;font-size:.68rem;line-height:1.6;">';
+		    guideHtml += '裂缝宽度估计 w<sub>est</sub> &asymp; ' + crackWidthEst.toFixed(3) + ' mm &nbsp;(' + crackLabel + ')<br>';
+		    guideHtml += '<span style="color:var(--muted);">钢筋间距估 ≈ ' + barSpacingEst + ' mm · HRB400 · 保护层 ' + dcCover + ' mm</span>';
+		    if (governedByMin) {
+		      guideHtml += '<br><span style="color:#6b8e78;font-weight:600;">已按最小配筋率修正，配筋率由 ' + rhoAciDrag.toFixed(3) + '% → ' + rhoAci.toFixed(2) + '%</span>';
+		    }
+		    if (parseFloat(Ljoint) > 12) {
+		      guideHtml += '<br><span style="color:#c49555;">⚠ 接缝间距 > 12m，建议校核裂缝宽度或增设施工缝</span>';
+		    }
 		    guideHtml += '</div>';
 		    guideHtml += '<div style="margin-top:6px;font-size:.7rem;color:var(--muted);">' + Lnote + ' · 板厚 ' + (slabH*1000).toFixed(0) + ' mm · HRB400</div></div>';
 		  }
@@ -2030,7 +2068,7 @@ function updateEC2() {
 	  guideHtml += '1年：ε<sub>cs</sub> = ' + epsCsY1.toFixed(0) + ' µε，φ = ' + phiY1.toFixed(2) + '，ε<sub>eff</sub> = <strong>' + epsEffY1.toFixed(0) + ' µε</strong> → 位移 ≈ <strong>' + dispY1 + ' mm</strong><br>';
 	  guideHtml += '3年：ε<sub>cs</sub> = ' + epsCsY3.toFixed(0) + ' µε，φ = ' + phiY3.toFixed(2) + '，ε<sub>eff</sub> = <strong>' + epsEffY3.toFixed(0) + ' µε</strong> → 位移 ≈ <strong>' + dispY3 + ' mm</strong>';
 	  guideHtml += '<div style="margin-top:6px;font-size:.7rem;color:var(--muted);">' + modeNote + ' · ' + Ljoint + 'm 板长</div></div></div></div>';
-	  guideHtml += '<p style="font-size:.7rem;color:var(--muted);margin-top:8px;">💡 素混凝土依赖接缝间距控制裂缝；配筋/钢纤维混凝土可通过子层拖拽配筋减少接缝数量。EC2 应变指标为接缝设计提供变形输入。</p>';
+	  guideHtml += '<p style="font-size:.7rem;color:var(--muted);margin-top:8px;">素混凝土依赖接缝间距控制裂缝；配筋/钢纤维混凝土通过子层拖拽配筋 + 最小配筋率（' + rhoMin.toFixed(2) + '%）控制裂缝。EC2 应变指标为接缝设计提供变形输入。</p>';
 		  document.getElementById('ec2DesignGuide').innerHTML = guideHtml;
 
   // Update chart
