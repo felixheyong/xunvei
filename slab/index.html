@@ -468,7 +468,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   <div class="input-group"><label>荷载偏心距 e <span class="unit">(mm)</span></label><input type="number" id="dw_e" value="10" min="0" step="1"></div>
 </div>
 <div class="btn-row">
-  <button class="btn btn-accent" onclick="handleCalcOrAuth()">🔒 计算 / 重新计算</button>
+  <button class="btn btn-accent" id="calcBtn" onclick="calculateAll()">🔄 计算 / 重新计算</button>
   <button class="btn btn-outline" onclick="resetToDefaults()">↩ 恢复默认值</button>
 </div>
 </section>
@@ -613,21 +613,7 @@ function unlockResults() {
   for (var i = 0; i < secs.length; i++) {
     secs[i].classList.add('unlocked');
   }
-  // Update button text
-  var calcBtns = document.querySelectorAll('button[onclick*=\"handleCalcOrAuth\"]');
-  for (var j = 0; j < calcBtns.length; j++) {
-    calcBtns[j].textContent = '🔄 计算 / 重新计算';
-  }
   calculateAll();
-}
-
-function handleCalcOrAuth() {
-  if (pwdIsAuthorized()) {
-    calculateAll();
-  } else {
-    if (pwdIsLocked()) { showPwdLockout(); }
-    document.getElementById('pwdModal').classList.add('active');
-  }
 }
 
 function initPwdProtection() {
@@ -808,6 +794,11 @@ function fmt0(n) { return Math.round(n).toLocaleString(); }
 
 // ═══════════════ MAIN CALCULATION ═══════════════
 function calculateAll() {
+  if (!pwdIsAuthorized()) {
+    if (pwdIsLocked()) { showPwdLockout(); }
+    document.getElementById('pwdModal').classList.add('active');
+    return;
+  }
   const p = getParams();
   const fcm = calcFcm(p.fck), fctm = calcFctm(p.fck);
   const Ecm_gpa = 22 * Math.pow(fcm/10, 0.3), Ecm = Ecm_gpa * 1000;
