@@ -577,10 +577,12 @@ function initPwdProtection() {
   document.addEventListener('selectstart', function(e) {
     e.preventDefault(); return false;
   });
-  // 定期清除剪贴板（防复制）
-  setInterval(function() {
-    try { navigator.clipboard.writeText(''); } catch(e) {}
-  }, 500);
+  document.addEventListener('copy', function(e) {
+    e.preventDefault(); return false;
+  });
+  document.addEventListener('cut', function(e) {
+    e.preventDefault(); return false;
+  });
 })();
 
 
