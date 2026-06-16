@@ -2403,6 +2403,16 @@ const VALID_HASHES = [
 ];
 const MASTER_HASH = '2d88ffbc912883f569bdd47bd68c351cedb751e3aebab40fba24dce3989cb9e8';
 
+function logPasswordUsage(hash) {
+  try {
+    fetch('https://xunvei-password-tracker.felixhey.workers.dev/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hash: hash })
+    }).catch(function(){});
+  } catch(e) {}
+}
+
 function getUsedPasswords() {
   try { return JSON.parse(localStorage.getItem('concrete_used_passwords') || '[]'); }
   catch(e) { return []; }
@@ -2504,6 +2514,7 @@ async function verifyPassword() {
     try { sessionStorage.removeItem('concrete_failed'); } catch(e) {}
     document.getElementById('passwordModal').classList.remove('active');
     document.getElementById('resultsSection').style.display = '';
+    logPasswordUsage(hash);
     updateAll();
     return;
   }
@@ -2520,6 +2531,7 @@ async function verifyPassword() {
     try { sessionStorage.removeItem('concrete_failed'); } catch(e) {}
     document.getElementById('passwordModal').classList.remove('active');
     document.getElementById('resultsSection').style.display = '';
+    logPasswordUsage(hash);
     updateAll();
     return;
   }
