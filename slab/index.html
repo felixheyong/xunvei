@@ -616,20 +616,8 @@ function unlockResults() {
 }
 
 function initPwdProtection() {
-  // Make locked overlays clickable to open password modal
-  document.querySelectorAll('.locked-content').forEach(function(el) {
-    el.addEventListener('click', function(e) {
-      if (!pwdIsAuthorized() && !el.classList.contains('unlocked')) {
-        if (pwdIsLocked()) { showPwdLockout(); }
-        document.getElementById('pwdModal').classList.add('active');
-      }
-    });
-  });
   if (pwdIsAuthorized()) {
     unlockResults();
-  } else {
-    if (pwdIsLocked()) { showPwdLockout(); }
-    document.getElementById('pwdModal').classList.add('active');
   }
 }
 
