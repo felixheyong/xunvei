@@ -1189,7 +1189,7 @@ function renderJointSpacing(p, results) {
   html += 'M<sub>demand</sub>='+fmt(M_demand,2)+' ≤ M<sub>n</sub>='+fmt(Mn_sfrc,2)+' kNm/m  |  SF='+fmt(sf,2);
   html += '  |  设计L<sub>j</sub>='+p.jointSpacing+'m';
   if (!pass) html += '<br>'+recommendation;
-  html += '<br><span style="font-size:0.78rem; color:var(--muted);">依据: TR34 §8.8 + Freeplan 工程实践</span>';
+  html += '<br><span style="font-size:0.78rem; color:var(--muted);">依据: TR34 §8.8 + Freeplan® 工程实践，非精确计算，需要调整混凝土配合比以实现设缝间距</span>';
   html += '</div>';
 
   document.getElementById('jointSpacingResult').innerHTML = html;
