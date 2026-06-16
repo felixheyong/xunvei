@@ -1366,9 +1366,11 @@ function updateMixDesign() {
       <tr>
         <td style="text-align:center;font-size:.73rem;">${r.name}</td>
         <td style="text-align:center;">
-          <input class="num-input mix-qty ${isAgg ? 'wide' : ''}"
-                 data-idx="${r.idx}" value="${qty}" style="width:58px;" inputmode="decimal" onfocus="this.select()">
-          ${hasUnit ? '&nbsp;<small>' + r.unit + '</small>' : ''}
+          <span style="position:relative;display:inline-block;">
+            <input class="num-input mix-qty ${isAgg ? 'wide' : ''}"
+                   data-idx="${r.idx}" value="${qty}" style="width:58px;" inputmode="decimal" onfocus="this.select()">
+            ${hasUnit ? '<small style="position:absolute;margin-left:2px;white-space:nowrap;">' + r.unit + '</small>' : ''}
+          </span>
         </td>
         <td style="text-align:center;">
           ${isPC
@@ -1384,7 +1386,10 @@ function updateMixDesign() {
     <tr style="background:#f7f4ed;">
       <td style="text-align:center;font-size:.73rem;font-weight:600;">含气量</td>
       <td style="text-align:center;">
-        <input class="num-input mix-qty air-content-input" value="${airContent}" style="width:58px;" step="0.5" inputmode="decimal" onfocus="this.select()"> <small>%</small>
+        <span style="position:relative;display:inline-block;">
+          <input class="num-input mix-qty air-content-input" value="${airContent}" style="width:58px;" step="0.5" inputmode="decimal" onfocus="this.select()">
+          <small style="position:absolute;margin-left:2px;white-space:nowrap;">%</small>
+        </span>
       </td>
       <td style="text-align:center;"><span style="color:var(--muted);font-size:.7rem;">—</span></td>
       <td style="text-align:center;color:var(--accent);font-variant-numeric:tabular-nums;">${airVol.toFixed(4)}</td>
