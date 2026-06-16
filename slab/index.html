@@ -383,7 +383,17 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 	</div>
 
 
-	<h3>2.5 候选板厚（可填1-3个方案进行比选）</h3>
+	<h4 style="font-size:0.92rem; color: var(--accent2); margin:16px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">2.4d 最大设缝间距（Freeplan / 不切缝设计）</h4>
+		<div class="alert alert-info" style="font-size:0.82rem; margin-top:4px;">
+		  <strong>📐 原理（Freeplan / TR34）：</strong>不切缝钢纤维地坪的最大设缝间距由 SFRC 负弯矩承载力 M<sub>n</sub> 控制。基层摩擦约束 + 温度翘曲的组合弯矩需求必须 ≤ M<sub>n</sub>（钢纤维提供）。M<sub>n</sub> 越大，可实现的设缝间距越大。典型值 25–40m。
+		</div>
+		<div class="input-grid">
+		  <div class="input-group"><label>设计设缝间距 L<sub>j</sub> <span class="unit">(m)</span> <span class="hint">不切缝设计通常≤35m</span></label><input type="number" id="jointSpacing" value="35" min="10" max="60" step="1" onchange="calculateAll()"></div>
+		  <div class="input-group"><label>板/基层摩擦系数 μ <span class="hint">0.5=PE膜+碎石; 1.0=直接浇筑</span></label><input type="number" id="jointMu" value="0.5" min="0.3" max="1.5" step="0.1" onchange="calculateAll()"></div>
+		</div>
+		<div id="jointSpacingResult" style="margin-top:8px; font-size:0.85rem;"></div>
+
+		<h3>2.5 候选板厚（可填1-3个方案进行比选）</h3>
 <div class="input-grid">
   <div class="input-group"><label>方案 A 板厚 <span class="unit">(mm)</span> <span class="hint">推荐值</span></label><input type="number" id="hA" value="160" min="80" max="500" step="5"></div>
   <div class="input-group"><label>方案 B 板厚 <span class="unit">(mm)</span> <span class="hint">保守方案</span></label><input type="number" id="hB" value="180" min="80" max="500" step="5"></div>
@@ -655,6 +665,8 @@ function getParams() {
   p.mheTons = parseFloat(document.getElementById('mheWeight').value) || 0;
   p.dynFactor = parseFloat(document.getElementById('dynamicFactor').value) || 1.4;
   p.N = parseFloat(document.getElementById('fatigueCycles').value) || 500000;
+  p.jointSpacing = parseFloat(document.getElementById('jointSpacing').value) || 35;
+  p.jointMu = parseFloat(document.getElementById('jointMu').value) || 0.5;
   p.propertyE = parseFloat(document.getElementById('propertyE').value) || 15;
   p.fl_Q = parseFloat(document.getElementById('fl_Q').value) || 30;
   p.fl_p = parseFloat(document.getElementById('fl_p').value) || 4.0;
@@ -801,6 +813,7 @@ function calculateAll() {
   renderSection7(p, results);
   renderSection8(p, results);
   renderSection9(p, results);
+  renderJointSpacing(p, results);
   } catch(e) { console.error(e); }
 }
 
@@ -1113,7 +1126,90 @@ function renderSection9(p, results) {
   document.getElementById('section9Content').innerHTML = html;
 }
 
-// ═══════════════ SHRINKAGE RESTRAINT CHECK ═══════════════
+// ═══════════════ MAX JOINT SPACING (Freeplan) ═══════════════
+function renderJointSpacing(p, results) {
+  const r0 = results[0];  // 方案A
+  if (!r0 || r0.isRC) return; // 仅SFRC适用
+
+  const h = r0.h;
+  const rho_c = 24; // kN/m³
+  const slabWt = rho_c * h / 1000; // kN/m²
+
+  // ── ① SFRC 负弯矩承载力 Mn ──
+  const Mn_sfrc = r0.Mn_internal; // = Mp for SFRC internal
+
+  // ── ② 摩擦约束弯矩需求 ──
+  // 半板长摩擦约束力: F_drag = μ × w × L/2 (kN/m)
+  const F_drag = p.jointMu * slabWt * p.jointSpacing / 2;
+  // 约束弯矩: M_friction = F_drag × h/2 (偏心距)
+  const M_friction = F_drag * h / 2 / 1000; // kNm/m
+
+  // ── ③ 翘曲(Curling)附加弯矩 ──
+  // σ_curl = C × E × α × ΔT / (1-ν), 取ΔT=20°C, C=0.5
+  const fcm = p.fck + 8;
+  const Ecm_val = 22 * Math.pow(fcm/10, 0.3) * 1000; // N/mm²
+  const alpha_T = 10e-6;
+  const dT_curl = 20; // °C 典型夜间负温差
+  const C_curl = 0.5;
+  const sigma_curl = C_curl * Ecm_val * alpha_T * dT_curl / (1 - p.nu) * 0.5; // ×0.5 蠕变折减
+  const M_curl = sigma_curl * h * h / 6 / 1000; // kNm/m (弹性截面模量)
+
+  // ── ④ 组合需求 ──
+  const M_demand = M_friction + M_curl;
+
+  // ── ⑤ 最大设缝间距（反算） ──
+  // L_max = 2 × (Mn - M_curl) × h / (2 × μ × w × h/2) ... simplifying
+  // M_friction_max = Mn - M_curl
+  // L_max = 2 × (Mn - M_curl) × 2000 / (μ × w × h)
+  let Lmax = 0;
+  const Mn_remaining = Mn_sfrc - M_curl;
+  if (Mn_remaining > 0 && p.jointMu > 0) {
+    Lmax = Math.sqrt(2 * Mn_remaining * 1000 / (p.jointMu * slabWt / 2));
+    // Actually M_friction = μ × w × (L/2) × h/2 / 1000
+    // L = 2 × M_friction × 1000 / (μ × w/2 × h/2) = 2 × M_friction × 1000 × 4 / (μ × w × h)
+    // Let me simplify:
+    Lmax = (2 * Mn_remaining * 1000 * 2) / (p.jointMu * slabWt * h / 2);
+    Lmax = Math.min(Lmax, 60); // cap at 60m
+  }
+
+  const pass = Mn_sfrc >= M_demand;
+  const sf = M_demand > 0 ? Mn_sfrc / M_demand : 999;
+
+  let html = '';
+  html += '<div class="calc-box" style="margin-top:8px;">';
+
+  html += '<span class="comment">// ══ 最大设缝间距验算（Freeplan Joint-Free Method）══</span>\n';
+  html += '<span class="comment">// SFRC 负弯矩承载力 M<sub>n</sub> = '+fmt(Mn_sfrc,2)+' kNm/m（来自 f<sub>R1</sub>/f<sub>R4</sub>）</span>\n\n';
+
+  html += '<span class="comment">// ① 基层摩擦约束弯矩（半板长 L/2 = '+fmt(p.jointSpacing/2,1)+'m）</span>\n';
+  html += '<span class="formula">F<sub>drag</sub> = μ×w×L/2 = '+p.jointMu+'×'+slabWt.toFixed(2)+'×'+fmt(p.jointSpacing/2,1)+' = '+fmt(F_drag,2)+' kN/m</span>\n';
+  html += '<span class="formula">M<sub>friction</sub> = F<sub>drag</sub>×h/2 = '+fmt(F_drag,2)+'×'+h+'/2/1000 = <span class="result">'+fmt(M_friction,2)+' kNm/m</span></span>\n\n';
+
+  html += '<span class="comment">// ② 温度翘曲弯矩（ΔT='+dT_curl+'°C, 蠕变折减0.5）</span>\n';
+  html += '<span class="formula">σ<sub>curl</sub> = '+fmt(sigma_curl,3)+' N/mm²</span>\n';
+  html += '<span class="formula">M<sub>curl</sub> = σ<sub>curl</sub>×h²/6 = <span class="result">'+fmt(M_curl,2)+' kNm/m</span></span>\n\n';
+
+  html += '<span class="comment">// ③ 组合弯矩需求 vs SFRC 抗力</span>\n';
+  html += '<span class="formula">M<sub>demand</sub> = '+fmt(M_friction,2)+' + '+fmt(M_curl,2)+' = <span class="result" style="color:'+(pass?'var(--pass)':'var(--fail)')+';">'+fmt(M_demand,2)+' kNm/m</span></span>\n';
+  html += '<span class="formula">M<sub>n</sub> (SFRC) = <span class="result" style="color:var(--accent);">'+fmt(Mn_sfrc,2)+' kNm/m</span></span>\n';
+  html += '<span class="formula">SF = '+fmt(Mn_sfrc,2)+'/'+fmt(M_demand,2)+' = <span class="result" style="color:'+(sf>=1?'var(--pass)':'var(--fail)')+';">'+fmt(sf,2)+'</span> '+ (sf>=1?'✅ 满足':'❌ 不满足')+'</span>\n\n';
+
+  html += '<span class="comment">// ④ 最大设缝间距（Freeplan 推荐 25-40m）</span>\n';
+  html += '<span class="formula"><strong>L<sub>max</sub> = <span class="result">'+fmt(Lmax,1)+' m</span></strong></span>';
+  html += ' <span style="font-size:0.82rem; color:'+(Lmax>=p.jointSpacing?'var(--pass)':'var(--warn)')+';">'+(Lmax>=p.jointSpacing?'✅ ≥ '+p.jointSpacing+'m 满足':'⚠️ < '+p.jointSpacing+'m 建议缩小间距或提高纤维等级')+'</span>\n';
+
+  html += '</div>';
+
+  html += '<div class="alert '+(pass?'alert-success':'alert-warning')+'" style="font-size:0.85rem;">';
+  html += '<strong>'+(pass?'✅ 设缝间距验算通过（Freeplan Joint-Free）':'⚠️ 设缝间距验算不通过')+'</strong><br>';
+  html += 'M<sub>demand</sub>='+fmt(M_demand,2)+' ≤ M<sub>n</sub>='+fmt(Mn_sfrc,2)+' kNm/m';
+  html += ' | L<sub>max</sub>='+fmt(Lmax,1)+'m';
+  html += ' | 设计L<sub>j</sub>='+p.jointSpacing+'m';
+  html += (Lmax >= 35 ? '<br>✅ <strong>可不切缝施工（L<sub>max</sub> ≥ 35m，满足 Freeplan 最小要求）</strong>' : '<br>⚠️ L<sub>max</sub> < 35m，需设置中间锯缝或提高纤维掺量');
+  html += '</div>';
+
+  document.getElementById('jointSpacingResult').innerHTML = html;
+}
 // ═══════════════ UTILITIES ═══════════════
 
 function updatePoisson() {
@@ -1191,7 +1287,7 @@ function resetToDefaults() {
   document.getElementById('rackingLoad').value='90'; document.getElementById('basePlateSize').value='150';
   document.getElementById('backToBackSpacing').value='300'; document.getElementById('udl').value='50';
   document.getElementById('mheWeight').value='7'; document.getElementById('dynamicFactor').value='1.4';
-  document.getElementById('fatigueCycles').value='500000'; document.getElementById('propertyE').value='15';
+  document.getElementById('fatigueCycles').value='500000'; document.getElementById('propertyE').value='15'; document.getElementById('jointSpacing').value='35'; document.getElementById('jointMu').value='0.5';
    
   document.getElementById('fl_Q').value='30'; document.getElementById('fl_p').value='4.0';
   document.getElementById('fl_D').value='1100'; document.getElementById('fl_gf').value='1.6';
