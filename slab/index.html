@@ -481,7 +481,6 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 <section id="s7" class="locked-content"><h2><span class="sec-num">7</span>MHE 与叉车荷载验算</h2><div id="section7Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
 <section id="s8" class="locked-content"><h2><span class="sec-num">8</span>方案比选与推荐</h2><div id="section8Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
 <section id="s9" class="locked-content"><h2><span class="sec-num">9</span>计算汇总与导出</h2><div id="section9Content"><p style="color:var(--muted);">请先执行计算。</p></div>
-<div class="btn-row" style="margin-top:16px;"><button class="btn btn-primary" onclick="window.print()">🖨️ 打印/导出PDF</button><button class="btn btn-outline" onclick="exportJSON()">📋 导出JSON</button><button class="btn btn-outline" onclick="copySummary()">📝 复制汇总</button></div>
 </section>
 
 <footer>地基承载混凝土地坪通用设计计算工具 · 基于 TR34 第4版 (2016) &amp; Eurocode 2 · 仅作参考</footer>
@@ -634,30 +633,29 @@ function initPwdProtection() {
   }
 }
 
-// ═══════════════ ANTI-THEFT PROTECTION ═══════════════
+// ═══════════════ ANTI-THEFT PROTECTION (始终启用) ═══════════════
 (function(){
-  // Disable right-click on locked content
   document.addEventListener('contextmenu', function(e) {
-    if (!pwdIsAuthorized()) { e.preventDefault(); return false; }
+    e.preventDefault(); return false;
   });
-  // Disable Ctrl+S, Ctrl+U, Ctrl+P, Ctrl+Shift+I, F12 when not authorized
   document.addEventListener('keydown', function(e) {
-    if (!pwdIsAuthorized()) {
-      if (e.ctrlKey && (e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U' || e.key === 'p' || e.key === 'P')) {
-        e.preventDefault(); return false;
-      }
-      if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j')) {
-        e.preventDefault(); return false;
-      }
-      if (e.key === 'F12' || e.key === 'PrintScreen') {
-        e.preventDefault(); return false;
-      }
+    if (e.ctrlKey && (e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U' || e.key === 'p' || e.key === 'P')) {
+      e.preventDefault(); return false;
+    }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j')) {
+      e.preventDefault(); return false;
+    }
+    if (e.key === 'F12' || e.key === 'PrintScreen') {
+      e.preventDefault(); return false;
     }
   });
-  // Disable text selection on locked content
   document.addEventListener('selectstart', function(e) {
-    if (!pwdIsAuthorized()) { e.preventDefault(); return false; }
+    e.preventDefault(); return false;
   });
+  // 定期清除剪贴板（防复制）
+  setInterval(function() {
+    try { navigator.clipboard.writeText(''); } catch(e) {}
+  }, 500);
 })();
 
 
