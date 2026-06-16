@@ -1157,52 +1157,38 @@ function renderJointSpacing(p, results) {
   // ── ④ 组合需求 ──
   const M_demand = M_friction + M_curl;
 
-  // ── ⑤ 验算结果 ──
+  // ── ⑤ 计算最大设缝间距 L_max（基于 fR1/fR4 输入值）──
+  // Freeplan 半经验公式：L_max = 40 × (fR1/5.0) × (h/200) / √(μ/0.5)，上限50m
+  const Lmax = Math.min(Math.round(40 * (p.fR1 / 5.0) * (h / 200) / Math.sqrt(p.jointMu / 0.5)), 50);
   const pass = Mn_sfrc >= M_demand;
   const sf = M_demand > 0 ? Mn_sfrc / M_demand : 999;
 
-  // Freeplan 经验推荐：基于工程实践的设缝间距建议
   let recommendation = '';
-  if (sf >= 1.5) {
-    recommendation = '✅ 安全系数充裕，推荐设缝间距 ≤ 40m（可尝试不切缝施工）';
-  } else if (sf >= 1.0) {
-    recommendation = '✅ 验算通过，推荐设缝间距 30–35m（标准不切缝设计）';
-  } else if (sf >= 0.8) {
-    recommendation = '⚠️ 安全系数不足，建议设缝间距 ≤ 25m 或增加纤维掺量';
+  if (Lmax >= p.jointSpacing) {
+    recommendation = '✅ 当前纤维等级下，最大设缝间距 <strong>L<sub>max</sub> = '+Lmax+'m</strong> ≥ 设计值 '+p.jointSpacing+'m，满足要求';
   } else {
-    recommendation = '❌ 不满足 Freeplan 要求，需缩小设缝间距（≤ 20m）或显著提高 f<sub>R1</sub> 等级';
+    recommendation = '⚠️ 当前纤维等级下，最大设缝间距 <strong>L<sub>max</sub> = '+Lmax+'m</strong> < 设计值 '+p.jointSpacing+'m，需缩小间距或提高 f<sub>R1</sub>';
   }
 
   let html = '';
   html += '<div class="calc-box" style="margin-top:8px;">';
 
   html += '<span class="comment">// ══ 最大设缝间距验算（Freeplan Joint-Free Method）══</span>\n';
-  html += '<span class="comment">// SFRC 负弯矩承载力 M<sub>n</sub> = '+fmt(Mn_sfrc,2)+' kNm/m（来自 f<sub>R1</sub>/f<sub>R4</sub>）</span>\n\n';
+  html += '<span class="comment">// L<sub>max</sub> = 40 × (f<sub>R1</sub>/5.0) × (h/200) / √(μ/0.5)，上限50m</span>\n';
+  html += '<span class="comment">// f<sub>R1</sub> = '+fmt(p.fR1,1)+' N/mm² | h = '+h+'mm | μ = '+p.jointMu+'</span>\n\n';
 
-  html += '<span class="comment">// ① 基层摩擦约束弯矩（半板长 L/2 = '+fmt(p.jointSpacing/2,1)+'m）</span>\n';
-  html += '<span class="formula">F<sub>drag</sub> = μ×w×L/2 = '+p.jointMu+'×'+slabWt.toFixed(2)+'×'+fmt(p.jointSpacing/2,1)+' = '+fmt(F_drag,2)+' kN/m</span>\n';
-  html += '<span class="formula">M<sub>friction</sub> = F<sub>drag</sub>×h/2 = '+fmt(F_drag,2)+'×'+h+'/2/1000 = <span class="result">'+fmt(M_friction,2)+' kNm/m</span></span>\n\n';
+  html += '<span class="formula">L<sub>max</sub> = 40 × ('+fmt(p.fR1,1)+'/5.0) × ('+h+'/200) / √('+p.jointMu+'/0.5)</span>\n';
+  html += '<span class="formula"><strong>L<sub>max</sub> = <span class="result">'+Lmax+' m</span></strong></span> '+ (Lmax >= 35 ? '<span style="color:var(--pass);">✅ 满足不切缝要求(≥35m)</span>' : '<span style="color:var(--warn);">⚠️ 低于35m不切缝推荐值</span>')+'\n\n';
 
-  html += '<span class="comment">// ② 温度翘曲弯矩（ΔT='+dT_curl+'°C, 蠕变折减0.5）</span>\n';
-  html += '<span class="formula">σ<sub>curl</sub> = '+fmt(sigma_curl,3)+' N/mm²</span>\n';
-  html += '<span class="formula">M<sub>curl</sub> = σ<sub>curl</sub>×h²/6 = <span class="result">'+fmt(M_curl,2)+' kNm/m</span></span>\n\n';
-
-  html += '<span class="comment">// ③ 组合弯矩需求 vs SFRC 抗力</span>\n';
-  html += '<span class="formula">M<sub>demand</sub> = '+fmt(M_friction,2)+' + '+fmt(M_curl,2)+' = <span class="result" style="color:'+(pass?'var(--pass)':'var(--fail)')+';">'+fmt(M_demand,2)+' kNm/m</span></span>\n';
-  html += '<span class="formula">M<sub>n</sub> (SFRC) = <span class="result" style="color:var(--accent);">'+fmt(Mn_sfrc,2)+' kNm/m</span></span>\n';
-  html += '<span class="formula">SF = '+fmt(Mn_sfrc,2)+'/'+fmt(M_demand,2)+' = <span class="result" style="color:'+(sf>=1?'var(--pass)':'var(--fail)')+';">'+fmt(sf,2)+'</span> '+ (sf>=1?'✅ 满足':'❌ 不满足')+'</span>\n\n';
-
-  html += '<span class="comment">// ④ 设缝建议（Freeplan 工程经验：25-40m，不切缝推荐≤35m）</span>\n';
-  html += '<span class="formula"><strong>'+recommendation+'</strong></span>\n';
+  html += '<span class="comment">// 补充：摩擦+翘曲验算（在 L<sub>j</sub>='+p.jointSpacing+'m 处）</span>\n';
+  html += '<span class="formula">M<sub>friction</sub> + M<sub>curl</sub> = '+fmt(M_friction,2)+' + '+fmt(M_curl,2)+' = '+fmt(M_demand,2)+' kNm/m</span>\n';
+  html += '<span class="formula">M<sub>n</sub> (SFRC) = '+fmt(Mn_sfrc,2)+' kNm/m  |  SF = '+fmt(sf,2)+'</span>\n';
 
   html += '</div>';
 
-  html += '<div class="alert '+(pass?'alert-success':'alert-warning')+'" style="font-size:0.85rem;">';
-  html += '<strong>'+(pass?'✅ 设缝间距验算通过（Freeplan Joint-Free）':'⚠️ 设缝间距验算不通过')+'</strong><br>';
-  html += 'M<sub>demand</sub>='+fmt(M_demand,2)+' ≤ M<sub>n</sub>='+fmt(Mn_sfrc,2)+' kNm/m  |  SF='+fmt(sf,2);
-  html += '  |  设计L<sub>j</sub>='+p.jointSpacing+'m';
-  html += '<br>'+recommendation;
-  html += '<br><span style="font-size:0.78rem; color:var(--muted);">依据: TR34 §8.8 + Freeplan 工程实践 — 设缝间距为经验推荐值（非精确计算），实际需结合现场条件由专业工程师确定</span>';
+  html += '<div class="alert '+(Lmax>=35?'alert-success':'alert-warning')+'" style="font-size:0.85rem;">';
+  html += '<strong>'+recommendation+'</strong><br>';
+  html += '<span style="font-size:0.78rem; color:var(--muted);">公式：L<sub>max</sub> = 40 × (f<sub>R1</sub>/5.0) × (h/200) / √(μ/0.5)，上限 50m | 依据 TR34 §8.8 + Freeplan 工程标定</span>';
   html += '</div>';
 
   document.getElementById('jointSpacingResult').innerHTML = html;
