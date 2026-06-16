@@ -263,7 +263,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 <main><!-- ════════════ HEADER ════════════ -->
 <div class="report-header">
   <h1>🏗️ 地基承载混凝土地坪通用设计计算工具</h1>
-  <div class="subtitle">基于 Twintec® Freeplan 技术 · TR34 第4版 (2016) &amp; Eurocode 2 | SFRC 钢纤维 + 传统RC配筋双体系 | 仅作参考，工程决策请以专业工程师判断为准<br>技术整合和汉化 HE YONG <span style="display:inline-block;margin-left:8px;font-size:.62rem;padding:2px 8px;border-radius:50px;border:1px solid rgba(44,95,138,.3);color:var(--accent);vertical-align:middle;">© 版权所有</span></div>
+  <div class="subtitle">基于 Twintec Freeplan® 技术 · TR34 第4版 (2016) &amp; Eurocode 2 | SFRC 钢纤维 + 传统RC配筋双体系 | 仅作参考，工程决策请以专业工程师判断为准<br>技术整合和汉化 HE YONG <span style="display:inline-block;margin-left:8px;font-size:.62rem;padding:2px 8px;border-radius:50px;border:1px solid rgba(44,95,138,.3);color:var(--accent);vertical-align:middle;">© 版权所有</span></div>
 </div>
 <!-- ===== 密码弹窗 ===== -->
 <div class="modal-overlay" id="pwdModal">
@@ -389,7 +389,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 		</div>
 		<div class="input-grid">
 		  <div class="input-group"><label>设计设缝间距 L<sub>j</sub> <span class="unit">(m)</span> <span class="hint">不切缝设计通常≤35m</span></label><input type="number" id="jointSpacing" value="35" min="10" max="60" step="1" onchange="calculateAll()"></div>
-		  <div class="input-group"><label>板/基层摩擦系数 μ <span class="hint">0.5=PE膜+碎石; 1.0=直接浇筑</span></label><input type="number" id="jointMu" value="0.5" min="0.3" max="1.5" step="0.1" onchange="calculateAll()"></div>
+		  <div class="input-group"><label>板/基层摩擦系数 μ</label><select id="jointMu" onchange="calculateAll()"><option value="0.5" selected>μ=0.5 — PE滑移膜 + 级配碎石（标准/Freeplan推荐）</option><option value="0.8">μ=0.8 — 单层PE膜 + 碎石基层</option><option value="1.0">μ=1.0 — 直接浇筑在基层上（无滑移膜）</option><option value="1.5">μ=1.5 — 粗糙基层 / 粘结界面的保守取值</option></select></div>
 		</div>
 		<div id="jointSpacingResult" style="margin-top:8px; font-size:0.85rem;"></div>
 
