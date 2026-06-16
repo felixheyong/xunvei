@@ -249,8 +249,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 
 <nav id="toc">
   <div class="logo"><h2>地基承载计算工具</h2><span>地基承载混凝土地坪设计</span></div>
-  <a href="#s1">1. 项目信息</a>
-  <a href="#s2">2. 材料与荷载参数</a>
+<a href="#s2">2. 材料与荷载参数</a>
   <a href="#s3">3. 板厚设计计算</a>
   <a href="#s4">4. 荷载验算结果</a>
   <a href="#s5">5. 冲切剪力验算</a>
@@ -283,25 +282,6 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   </div>
 </div>
 
-
-<!-- ════════════ SECTION 1 ════════════ -->
-<section id="s1"><h2><span class="sec-num">1</span>项目基本信息 <span style="font-size:0.78rem; font-weight:400; color:var(--muted);">（可选）</span></h2>
-<div class="input-grid">
-  <div class="input-group"><label>地坪面积 <span class="unit">(m²)</span></label><input type="number" id="warehouseArea" value="" min="0" step="1" placeholder="例: 20000"></div>
-  <div class="input-group"><label>地坪平整度等级</label><select id="floorCategory" onchange="toggleFlatness()">
-    <option value="FM1">FM1 — 超高平整 (UHF/VNA)</option>
-    <option value="FM2" selected>FM2 — 自由移动</option>
-    <option value="FM3">FM3 — 一般仓储</option>
-    <option value="DM1">DM1 — 限定移动 (VNA 特高)</option>
-    <option value="DM2">DM2 — 限定移动 (VNA 高)</option>
-    <option value="ACI-Fmin">ACI Fmin — 美国标准 (常规)</option>
-    <option value="ACI-FL">ACI FL — 美国标准 (高平整)</option>
-    <option value="GB-F1">GB/T F1 — 国标一级 (优)</option>
-    <option value="GB-F2">GB/T F2 — 国标二级 (良)</option>
-    <option value="GB-F3">GB/T F3 — 国标三级 (合格)</option>
-  </select></div>
-  <div class="input-group"><label>净高 <span class="unit">(m)</span></label><input type="number" id="clearHeight" value="" min="0" step="0.1" placeholder="例: 14.0"></div>
-</div></section>
 
 <!-- ════════════ SECTION 2 ════════════ -->
 <section id="s2"><h2><span class="sec-num">2</span>材料与荷载设计参数</h2>
