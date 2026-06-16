@@ -1368,7 +1368,7 @@ function updateMixDesign() {
         <td style="text-align:center;">
           <input class="num-input mix-qty ${isAgg ? 'wide' : ''}"
                  data-idx="${r.idx}" value="${qty}" style="width:58px;" inputmode="decimal" onfocus="this.select()">
-          ${hasUnit ? ' <small>' + r.unit + '</small>' : ''}
+          ${hasUnit ? '&nbsp;<small>' + r.unit + '</small>' : ''}
         </td>
         <td style="text-align:center;">
           ${isPC
@@ -1384,7 +1384,7 @@ function updateMixDesign() {
     <tr style="background:#f7f4ed;">
       <td style="text-align:center;font-size:.73rem;font-weight:600;">含气量</td>
       <td style="text-align:center;">
-        <input class="num-input air-content-input" value="${airContent}" style="width:58px;" step="0.5" inputmode="decimal" onfocus="this.select()"> <small>%</small>
+        <input class="num-input mix-qty air-content-input" value="${airContent}" style="width:58px;" step="0.5" inputmode="decimal" onfocus="this.select()"> <small>%</small>
       </td>
       <td style="text-align:center;"><span style="color:var(--muted);font-size:.7rem;">—</span></td>
       <td style="text-align:center;color:var(--accent);font-variant-numeric:tabular-nums;">${airVol.toFixed(4)}</td>
@@ -1396,32 +1396,6 @@ function updateMixDesign() {
     ? `${materialVolume.toFixed(4)} + ${airVol.toFixed(4)} = <strong>${totalVolume.toFixed(4)}</strong> m³`
     : '—';
 
-
-  // ── Mix table keyboard navigation: Arrow Up/Down stays within same column ──
-  function setupMixTableKeyboard() {
-    const tbody = document.getElementById('mixTable');
-    if (!tbody) return;
-    tbody.querySelectorAll('input').forEach(inp => {
-      inp.addEventListener('keydown', function(e) {
-        if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
-        e.preventDefault();
-        const td = this.closest('td');
-        if (!td) return;
-        const tr = td.closest('tr');
-        if (!tr) return;
-        const colIdx = Array.from(tr.children).indexOf(td);
-        const targetRow = e.key === 'ArrowDown' ? tr.nextElementSibling : tr.previousElementSibling;
-        if (!targetRow) return;
-        const targetTd = targetRow.children[colIdx];
-        if (!targetTd) return;
-        const targetInput = targetTd.querySelector('input');
-        if (targetInput) { targetInput.focus(); targetInput.select(); }
-      });
-    });
-  }
-  // Call after table render
-  const _origUpdateMixTable = updateMixTable;
-  updateMixTable = function() { _origUpdateMixTable(); setTimeout(setupMixTableKeyboard, 0); };
 
   // Volume evaluation — 体积评估：是否接近 1 m³
   const volumeNoteEl = document.getElementById('volumeNote');
@@ -1454,6 +1428,27 @@ function updateMixDesign() {
   document.querySelectorAll('.air-content-input').forEach(inp => {
     inp.addEventListener('input', onAirContentChange);
   });
+
+  // Keyboard navigation: Arrow Up/Down moves focus within same column
+  (function setupMixTableNav() {
+    document.querySelectorAll('#mixTable input').forEach(inp => {
+      inp.addEventListener('keydown', function(e) {
+        if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+        e.preventDefault();
+        const td = this.closest('td');
+        if (!td) return;
+        const tr = td.closest('tr');
+        if (!tr) return;
+        const colIdx = Array.from(tr.children).indexOf(td);
+        const targetRow = e.key === 'ArrowDown' ? tr.nextElementSibling : tr.previousElementSibling;
+        if (!targetRow) return;
+        const targetTd = targetRow.children[colIdx];
+        if (!targetTd) return;
+        const targetInput = targetTd.querySelector('input');
+        if (targetInput) { targetInput.focus(); targetInput.select(); }
+      });
+    });
+  })();
 
   // Restore focus & cursor position if previously focused
   if (savedQtyIdx >= 0 || savedDenIdx >= 0) {
