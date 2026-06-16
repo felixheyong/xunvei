@@ -249,14 +249,14 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 
 <nav id="toc">
   <div class="logo"><h2>地基承载计算工具</h2><span>地基承载混凝土地坪设计</span></div>
-<a href="#s2">2. 材料与荷载参数</a>
-  <a href="#s3">3. 板厚设计计算</a>
-  <a href="#s4">4. 荷载验算结果</a>
-  <a href="#s5">5. 冲切剪力验算</a>
-  <a href="#s6">6. 接缝传力设计</a>
-  <a href="#s7">7. MHE 与叉车荷载</a>
-  <a href="#s8">8. 方案比选与推荐</a>
-  <a href="#s9">9. 计算汇总与导出</a>
+<a href="#s1">1. 材料与荷载参数</a>
+  <a href="#s2">2. 板厚设计计算</a>
+  <a href="#s3">3. 荷载验算结果</a>
+  <a href="#s4">4. 冲切剪力验算</a>
+  <a href="#s5">5. 接缝传力设计</a>
+  <a href="#s6">6. MHE 与叉车荷载</a>
+  <a href="#s7">7. 方案比选与推荐</a>
+  <a href="#s8">8. 计算汇总与导出</a>
 </nav>
 
 <main><!-- ════════════ HEADER ════════════ -->
@@ -284,7 +284,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 
 
 <!-- ════════════ SECTION 2 ════════════ -->
-<section id="s2"><h2><span class="sec-num">2</span>材料与荷载设计参数</h2>
+<section id="s1"><h2><span class="sec-num">1</span>材料与荷载设计参数</h2>
 
 <h3>2.1 混凝土等级（GB 国标预设）</h3>
 <div class="preset-row" id="concretePresets">
@@ -407,13 +407,13 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 </section>
 
 <!-- ════════════ SECTIONS 3–9 (results — populated by JS) ════════════ -->
-<section id="s3" class="locked-content"><h2><span class="sec-num">3</span>板厚设计计算</h2><div id="section3Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
-<section id="s4" class="locked-content"><h2><span class="sec-num">4</span>荷载验算结果</h2><div id="section4Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
-<section id="s5" class="locked-content"><h2><span class="sec-num">5</span>冲切剪力验算</h2><div id="section5Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
-<section id="s6" class="locked-content"><h2><span class="sec-num">6</span>接缝传力设计（传力杆/钢板）</h2><div id="section6Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
-<section id="s7" class="locked-content"><h2><span class="sec-num">7</span>MHE 与叉车荷载验算</h2><div id="section7Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
-<section id="s8" class="locked-content"><h2><span class="sec-num">8</span>方案比选与推荐</h2><div id="section8Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
-<section id="s9" class="locked-content"><h2><span class="sec-num">9</span>计算汇总与导出</h2><div id="section9Content"><p style="color:var(--muted);">请先执行计算。</p></div>
+<section id="s2" class="locked-content"><h2><span class="sec-num">2</span>板厚设计计算</h2><div id="section2Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
+<section id="s3" class="locked-content"><h2><span class="sec-num">3</span>荷载验算结果</h2><div id="section3Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
+<section id="s4" class="locked-content"><h2><span class="sec-num">4</span>冲切剪力验算</h2><div id="section4Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
+<section id="s5" class="locked-content"><h2><span class="sec-num">5</span>接缝传力设计（传力杆/钢板）</h2><div id="section5Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
+<section id="s6" class="locked-content"><h2><span class="sec-num">6</span>MHE 与叉车荷载验算</h2><div id="section6Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
+<section id="s7" class="locked-content"><h2><span class="sec-num">7</span>方案比选与推荐</h2><div id="section7Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
+<section id="s8" class="locked-content"><h2><span class="sec-num">8</span>计算汇总与导出</h2><div id="section8Content"><p style="color:var(--muted);">请先执行计算。</p></div>
 </section>
 
 <footer>地基承载混凝土地坪通用设计计算工具 · 基于 TR34 第4版 (2016) &amp; Eurocode 2 · 仅作参考</footer>
@@ -775,19 +775,19 @@ function calculateAll() {
       As, d_eff_rc, fy, Mrc_pos, Mrc_neg };
   });
 
-  renderSection3(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4);
+  renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4);
+  renderSection3(p, results);
   renderSection4(p, results);
   renderSection5(p, results);
   renderSection6(p, results);
   renderSection7(p, results);
   renderSection8(p, results);
-  renderSection9(p, results);
   renderJointSpacing(p, results);
   } catch(e) { console.error(e); }
 }
 
 // ═══════════════ RENDER FUNCTIONS ═══════════════
-function renderSection3(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
+function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
   let html = '';
   html += '<h3>3.1 材料参数汇总</h3><div class="table-wrap"><table><thead><tr><th>参数</th><th>符号</th><th>公式/来源</th><th>值</th><th>单位</th></tr></thead><tbody>';
   html += '<tr><td>圆柱体特征抗压强度</td><td>f<sub>ck</sub></td><td>输入</td><td><strong>'+fmt(p.fck,1)+'</strong></td><td>N/mm²</td></tr>';
@@ -879,10 +879,10 @@ function renderSection3(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
     html += '<span class="comment">// 注意：方案C冲切验算使用实际配筋率，不含纤维贡献 (vf=0)</span>\n';
     html += '</div>';
   }
-  document.getElementById('section3Content').innerHTML = html;
+  document.getElementById('section2Content').innerHTML = html;
 }
 
-function renderSection4(p, results) {
+function renderSection2(p, results) {
   let html = '';
   html += '<h3>4.1 货架立柱单点荷载验算</h3><div class="table-wrap"><table><thead><tr><th>检查工况</th><th>需求 P<sub>u</sub></th>'+results.map(r=>'<th>h='+r.h+'mm 抗力</th><th>判定</th>').join('')+'</tr></thead><tbody>';
   html += '<tr><td><strong>板内部 (M<sub>n</sub>=M<sub>p</sub>)</strong></td><td rowspan="2"><strong>'+p.Pu_rack+' kN</strong></td>';
@@ -905,10 +905,10 @@ function renderSection4(p, results) {
     return r.Pu0_internal>=p.Pu_rack && (p.lt>0?r.Pu0_edge_lt:r.Pu0_edge)>=p.Pu_rack && r.Pu0_dual>=2*p.Pu_rack && r.qu>=p.udl && r.Pu0_mhe>=wheelDesign && r.Pp_fiber>=p.Pu_rack;
   });
   html += '<div class="alert '+(allPassSection4?'alert-success':'alert-danger')+'"><strong>'+(allPassSection4?'✅ 荷载验算全部通过':'❌ 存在未通过的验算项。建议：增加板厚、提高纤维等级或增大底板尺寸、或提高基床系数 k')+'</strong></div>';
-  document.getElementById('section4Content').innerHTML = html;
+  document.getElementById('section3Content').innerHTML = html;
 }
 
-function renderSection5(p, results) {
+function renderSection3(p, results) {
   let html = '';
   html += '<h3>5.1 最大冲切抗力 (EC2 §6.5)</h3><div class="calc-box">';
   results.forEach(r=>{ html += '<span class="comment">// h='+r.h+'mm: v<sub>max</sub>='+fmt(r.vmax,2)+' N/mm², u<sub>0</sub>='+r.u0+'mm, d='+fmt(r.d,0)+'mm</span>\n<span class="formula">P<sub>p,max</sub></span> = '+fmt(r.vmax,2)+'×'+r.u0+'×'+fmt(r.d,0)+'/1000 = <span class="result">'+fmt(r.Pp_max,1)+' kN</span>\n'; });
@@ -922,10 +922,10 @@ function renderSection5(p, results) {
   html += '</tbody></table></div>';
   const allOk=results.every(r=>r.Pp_fiber>=p.Pu_rack&&r.Pp_max>=p.Pu_rack);
   html += '<div class="alert '+(allOk?'alert-success':'alert-danger')+'"><strong>'+(allOk?'✅ 冲切验算全部通过':'❌ 部分板厚冲切不满足')+'</strong></div>';
-  document.getElementById('section5Content').innerHTML = html;
+  document.getElementById('section4Content').innerHTML = html;
 }
 
-function renderSection6(p, results) {
+function renderSection4(p, results) {
   const h0=results[0].h;
   const d=calculateDowel({dw_W:p.dw_W,dw_L:p.dw_L,dw_Emb:p.dw_Emb,dw_T:p.dw_T,dw_S:p.dw_S,dw_ds:p.dw_ds,dw_e:p.dw_e,fck:p.fck,h:h0});
   const modeLabel=d.P_critical===d.Psh?'钢板剪切控制':d.P_critical===d.Pmax?'混凝土承压控制':'混凝土冲切（无筋）控制';
@@ -949,10 +949,10 @@ function renderSection6(p, results) {
   } else {
     html += '<div class="alert alert-info"><strong>ℹ️ LT=0：</strong>假定为内部区域或无缝设计，无需传力验算。</div>';
   }
-  document.getElementById('section6Content').innerHTML = html;
+  document.getElementById('section5Content').innerHTML = html;
 }
 
-function renderSection7(p, results) {
+function renderSection5(p, results) {
   let html = '';
   html += '<h3>7.1 MHE 轮载计算</h3><div class="calc-box">';
   results.forEach(r=>{
@@ -985,10 +985,10 @@ function renderSection7(p, results) {
     });
     html += '</tbody></table></div>';
   }
-  document.getElementById('section7Content').innerHTML = html;
+  document.getElementById('section6Content').innerHTML = html;
 }
 
-function renderSection8(p, results) {
+function renderSection6(p, results) {
   let html = '<p style="margin-bottom:16px;">基于荷载验算、冲切验算、MHE验算的综合结果，对 '+results.length+' 个方案进行比选：</p><div class="card-grid">';
   results.forEach((r,i)=>{
     const isRec=i===0;
@@ -1038,10 +1038,10 @@ function renderSection8(p, results) {
   const passing=results.filter(r=>r.Pu0_internal>=p.Pu_rack&&(p.lt>0?r.Pu0_edge_lt:r.Pu0_edge)>=p.Pu_rack&&r.Pu0_dual>=2*p.Pu_rack&&r.qu>=p.udl&&r.Pu0_mhe>=wheelDesignS8&&r.Pp_fiber>=p.Pu_rack);
   if (passing.length>0) html += '<div class="alert alert-success"><strong>🏆 推荐方案：h='+passing[0].h+' mm</strong> — 满足全部设计荷载要求。</div>';
   else html += '<div class="alert alert-danger"><strong>⚠️ 当前参数下无方案完全通过。</strong>建议：增加板厚、提高纤维等级 (f<sub>R1</sub>/f<sub>R4</sub>)、增大底板尺寸、或提高基床系数 k。</div>';
-  document.getElementById('section8Content').innerHTML = html;
+  document.getElementById('section7Content').innerHTML = html;
 }
 
-function renderSection9(p, results) {
+function renderSection7(p, results) {
   let html = '';
   const wheelDesign = p.mheTons*10*0.9/2*p.dynFactor;
   html += '<h3>9.1 荷载验算汇总表</h3><div class="table-wrap"><table><thead><tr><th>验算项</th>'+results.map(r=>'<th>h='+r.h+'mm ('+(r.isRC?'RC':'SFRC')+')</th>').join('')+'</tr></thead><tbody>';
@@ -1092,7 +1092,7 @@ function renderSection9(p, results) {
   html += '<tr><td><strong>基床系数 k (Winkler地基)</strong></td><td><strong>≥ '+p.k+' N/mm³</strong></td></tr>';
   html += '<tr><td><strong>地坪等级</strong></td><td><strong>'+p.floorCategory+'</strong> (±'+p.propertyE+'mm / 3m)</td></tr>';
   html += '</tbody></table></div></div>';
-  document.getElementById('section9Content').innerHTML = html;
+  document.getElementById('section8Content').innerHTML = html;
 }
 
 // ═══════════════ MAX JOINT SPACING (Freeplan) ═══════════════
