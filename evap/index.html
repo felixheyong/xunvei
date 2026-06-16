@@ -6,19 +6,19 @@
 <title>ACI 305R / 308R — 混凝土蒸发量计算与塑性开裂风险评估</title>
 <style>
   :root {
-    --primary: #6b8e89;
-    --primary-light: #8ab5a8;
-    --accent: #c49555;
-    --danger: #b85a3f;
-    --success: #6b8e78;
-    --warning: #c49555;
-    --bg: #f3efe8;
-    --card-bg: #faf8f3;
-    --text: #2e2a25;
-    --text-light: #8a8278;
-    --border: #e0dbd0;
-    --radius: 10px;
-    --shadow: 0 1px 3px rgba(46,42,37,.05), 0 1px 2px rgba(46,42,37,.03);
+    --primary: #2c5f8a;   /* 唐青金 — 主色 */
+    --primary-light: #4a80ad;   /* 浅青金 — 悬停态 */
+    --accent: #b8965a;   /* 唐金 — 强调 */
+    --danger: #c4553a;   /* 唐朱砂 — 危险 */
+    --success: #3d7a5c;   /* 唐石绿 — 合规 */
+    --warning: #d4943a;   /* 唐土黄赤 — 临界 */
+    --bg:           #f3efe8;   /* 宋素白 — 仿古纸底 */
+    --card-bg:      #faf8f3;   /* 宋茶白 — 卷面微暖 */
+    --text: #252220;   /* 宋墨 — 微深化 */
+    --text-light:   #8a8278;   /* 宋灰檀 — 次文 */
+    --border:       #e0dbd0;   /* 宋绢色 — 细边 */
+    --radius:       10px;
+    --shadow: 0 1px 3px rgba(37,34,32,.05), 0 1px 2px rgba(37,34,32,.03);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -30,14 +30,14 @@
 
   /* ── Header ── */
   .header {
-    background: linear-gradient(165deg, #2a2722 0%, #3b3630 40%, #4a3f35 100%);
+    background: linear-gradient(165deg, #2a2722 0%, #36312b 40%, #3d3730 100%);
     color: #fff;
     padding: 20px 32px;
     text-align: center;
   }
   .header h1 { font-size: 1.4rem; letter-spacing: 0.5px; font-weight: 700; }
-  .header { border-bottom: 3px solid #8a9e96; }
-  .header p { font-size: 0.82rem; opacity: 0.8; margin-top: 4px; color: #c4bcb0; }
+  .header { border-bottom: 3px solid #2c5f8a; }
+  .header p { font-size: 0.82rem; opacity: 0.8; margin-top: 4px; color: #c4b898; }
 
   /* ── Layout ── */
   .container {
@@ -109,10 +109,10 @@
     padding: 20px 24px; margin-top: 12px;
     text-align: center; transition: all 0.3s;
   }
-  .risk-safe    { background: #ebf2ec; border: 2px solid #6b8e78; }
-  .risk-caution { background: #f7f3eb; border: 2px solid #c49555; }
-  .risk-danger  { background: #f7e9e3; border: 2px solid #b85a3f; }
-  .risk-critical { background: #f2e0da; border: 2px solid #9b5040; }
+  .risk-safe    { background: #e8f0ea; border: 2px solid #3d7a5c; }
+  .risk-caution { background: #f9f2e5; border: 2px solid #d4943a; }
+  .risk-danger  { background: #f7e9e3; border: 2px solid #c4553a; }
+  .risk-critical { background: #f2e0da; border: 2px solid #a04030; }
 
   .evap-value {
     font-size: 2.8rem; font-weight: 800; line-height: 1.1;
@@ -136,7 +136,7 @@
     font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px;
   }
   .methods-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
-  .methods-table .active-row { background: #f2f6f4; font-weight: 600; }
+  .methods-table .active-row { background: #eef5f0; font-weight: 600; }
 
   /* ── Mitigation ── */
   .mitigation-list {
@@ -158,15 +158,15 @@
   .threshold-bar {
     height: 30px; border-radius: 15px; position: relative; margin: 10px 0;
     background: linear-gradient(to right,
-      #6b8e78 0%, #6b8e78 20%,
-      #c49555 20%, #c49555 38%,
-      #b0853f 38%, #b0853f 58%,
-      #b85a3f 58%, #9b5040 100%
+      #3d7a5c 0%, #3d7a5c 20%,
+      #d4943a 20%, #d4943a 38%,
+      #b8965a 38%, #b8965a 58%,
+      #c4553a 58%, #a04030 100%
     );
   }
   .threshold-marker {
     position: absolute; top: -6px;
-    width: 4px; height: 42px; background: #2e2a25; border-radius: 2px;
+    width: 4px; height: 42px; background: #252220; border-radius: 2px;
     transition: left 0.3s;
   }
   .threshold-labels {
@@ -184,14 +184,14 @@
     background: var(--card-bg); cursor: pointer; font-size: 0.72rem;
     text-align: left; transition: all 0.15s;
   }
-  .preset-btn:hover { border-color: var(--accent); background: #f5f2ea; }
+  .preset-btn:hover { border-color: var(--primary); background: #f2f6f4; }
   .preset-btn .big { font-weight: 700; display: block; font-size: 0.85rem; }
 
   /* ── Footer ── */
   .footer {
     text-align: center; padding: 16px; font-size: 0.7rem; color: var(--text-light);
   }
-  .footer a { color: var(--primary); }
+  .footer a { color: var(--primary); text-decoration: none; }
 
   /* ── Print ── */
   @media print {
@@ -242,7 +242,7 @@
         <span class="val" id="val-v-m">20 kph</span>
       </div>
       <!-- Wind mode toggle -->
-      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 12px;background:#f5f2ea;border-radius:6px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 12px;background:#f7f4eb;border-radius:6px;">
         <span style="font-size:0.78rem;font-weight:600;color:var(--text-light);">🌬️ 风速模式</span>
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.78rem;">
           <input type="radio" name="wind-mode" value="indoor" onchange="setWindMode('indoor')">
@@ -253,8 +253,8 @@
           ☀️ 露天 (天气风速)
         </label>
       </div>
-      <div id="wind-note" style="font-size:0.65rem;color:#b85a3f;margin-top:3px;display:none;">
-        ⚠️ 户外风速需在距离地坪板面 <b>50cm 高度</b> 处实测为准
+      <div id="wind-note" style="font-size:0.65rem;color:#c4553a;margin-top:3px;display:none;">
+        户外风速需在距离地坪板面 <b>50cm 高度</b> 处实测为准
       </div>
     </div>
 
@@ -293,7 +293,7 @@
     </div>
 
     <!-- Location + Weather -->
-    <div style="margin-top:12px;background:#f2f6f4;border-radius:8px;padding:12px 14px;" id="weather-box">
+    <div style="margin-top:12px;background:#f2f6f4;border-radius:8px;padding:12px 14px;border-left:3px solid var(--primary);" id="weather-box">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="font-size:1.2rem;">📍</span>
@@ -411,7 +411,7 @@
         <tr><td>普通混凝土 (预防)</td><td>0.5 kg/m²/hr</td><td>ACI 305R/308R</td></tr>
         <tr><td>低泌水混凝土 (现代)</td><td>0.50–0.75</td><td>ACI 308R 更新</td></tr>
         <tr><td>路面混凝土 (FHWA)</td><td>0.3 kg/m²/hr</td><td>FHWA-HRT-05-038</td></tr>
-        <tr style="color:#b85a3f;"><td>硅灰混凝土 ☠️</td><td>0.25 kg/m²/hr</td><td>ACI 308R</td></tr>
+        <tr style="color:#c4553a;"><td>硅灰混凝土 ☠️</td><td>0.25 kg/m²/hr</td><td>ACI 308R</td></tr>
       </table>
     </div>
   </div>
@@ -717,11 +717,11 @@ function drawGauge(value, unit, risk) {
 
   // Background arc
   const segments = [
-    { start: -Math.PI, end: -0.6*Math.PI, color: '#6b8e78' },
-    { start: -0.6*Math.PI, end: -0.2*Math.PI, color: '#c49555' },
-    { start: -0.2*Math.PI, end: 0.16*Math.PI, color: '#b0853f' },
-    { start: 0.16*Math.PI, end: 0.5*Math.PI, color: '#b85a3f' },
-    { start: 0.5*Math.PI, end: Math.PI, color: '#9b5040' },
+    { start: -Math.PI, end: -0.6*Math.PI, color: '#3d7a5c' },
+    { start: -0.6*Math.PI, end: -0.2*Math.PI, color: '#d4943a' },
+    { start: -0.2*Math.PI, end: 0.16*Math.PI, color: '#b8965a' },
+    { start: 0.16*Math.PI, end: 0.5*Math.PI, color: '#c4553a' },
+    { start: 0.5*Math.PI, end: Math.PI, color: '#a04030' },
   ];
 
   ctx.lineWidth = 18;
@@ -733,7 +733,7 @@ function drawGauge(value, unit, risk) {
   }
 
   // Ticks
-  ctx.fillStyle = '#5b4e3e';
+  ctx.fillStyle = '#4a4030';
   ctx.font = 'bold 14px Segoe UI';
   ctx.textAlign = 'center';
   const ticks = [0, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5];
@@ -749,7 +749,7 @@ function drawGauge(value, unit, risk) {
   if (unit === 'lb/ft²/hr') needleVal = value / 0.2048;
   const needleAngle = -Math.PI + Math.min(1, needleVal / 2.5) * (2 * Math.PI);
 
-  ctx.strokeStyle = '#2e2a25';
+  ctx.strokeStyle = '#252220';
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(cx, cy);
@@ -807,7 +807,7 @@ function drawNomograph(inp) {
 
   for (const ax of axes) {
     // Axis line
-    ctx.strokeStyle = '#d8d2c4';
+    ctx.strokeStyle = '#e4dfd5';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(ax.x, axisTop);
@@ -844,7 +844,7 @@ function drawNomograph(inp) {
       ctx.stroke();
 
       // Value label
-      ctx.fillStyle = '#6b6052';
+      ctx.fillStyle = '#5b4e3e';
       ctx.font = '8px Segoe UI';
       ctx.textAlign = ax.x > W1/2 ? 'left' : 'right';
       const labelX = ax.x > W1/2 ? ax.x + 12 : ax.x - 12;
@@ -861,7 +861,7 @@ function drawNomograph(inp) {
       const y = axisTop + frac * (axisBot - axisTop);
 
       // Red dot
-      ctx.fillStyle = '#b85a3f';
+      ctx.fillStyle = '#c4553a';
       ctx.beginPath();
       ctx.arc(ax.x, y, 6, 0, Math.PI*2);
       ctx.fill();
@@ -870,7 +870,7 @@ function drawNomograph(inp) {
       ctx.stroke();
 
       // Value label
-      ctx.fillStyle = '#9b5040';
+      ctx.fillStyle = '#a04030';
       ctx.font = 'bold 10px Segoe UI';
       const labelVal = ax.label.includes('蒸发') ? ax.val.toFixed(3) : Math.round(ax.val).toString();
       ctx.textAlign = ax.x > W1/2 ? 'left' : 'right';
@@ -898,7 +898,7 @@ function drawNomograph(inp) {
   const evapY = axisTop + evapFrac * (axisBot - axisTop);
 
   // Draw 4-step connecting lines
-  ctx.strokeStyle = 'rgba(107,142,137,0.6)';
+  ctx.strokeStyle = 'rgba(44,95,138,0.55)';
   ctx.lineWidth = 2.5;
   ctx.setLineDash([6, 3]);
   ctx.beginPath();
@@ -915,7 +915,7 @@ function drawNomograph(inp) {
   ctx.setLineDash([]);
 
   // Draw the final evaporation point
-  ctx.fillStyle = '#6b8e89';
+  ctx.fillStyle = '#2c5f8a';
   ctx.beginPath();
   ctx.arc(Evap.x, evapY, 9, 0, Math.PI*2);
   ctx.fill();
@@ -924,13 +924,13 @@ function drawNomograph(inp) {
   ctx.stroke();
 
   // Evaporation value label
-  ctx.fillStyle = '#4a3f35';
+  ctx.fillStyle = '#252220';
   ctx.font = 'bold 11px Segoe UI';
   ctx.textAlign = 'left';
   ctx.fillText(evapVal.toFixed(3), Evap.x + 14, evapY + 4);
 
   // Step numbers
-  ctx.fillStyle = '#6b8e89';
+  ctx.fillStyle = '#2c5f8a';
   ctx.font = 'bold 9px Segoe UI';
   const mid12x = (Ta.x + RH.x) / 2;
   const mid12y = (taY + rhY) / 2;
