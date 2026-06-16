@@ -626,7 +626,7 @@ document.querySelectorAll('input, select').forEach(el => {
     clearTimeout(recalcTimeout); recalcTimeout = setTimeout(calculateAll, 300);
   });
 });
-window.addEventListener('load', () => { calculateAll(); updateRebarRatio(); });
+window.addEventListener('load', () => { updatePoisson(); toggleFlatness(); updateRebarRatio(); initPwdProtection(); });
 
 // ═══════════════ CORE ENGINE ═══════════════
 function getParams() {
