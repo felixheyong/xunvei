@@ -792,11 +792,13 @@ function fmt0(n) { return Math.round(n).toLocaleString(); }
 
 // ═══════════════ MAIN CALCULATION ═══════════════
 function calculateAll() {
-  if (!pwdIsAuthorized()) {
-    if (pwdIsLocked()) { showPwdLockout(); }
-    document.getElementById('pwdModal').classList.add('active');
+  if (typeof pwdIsAuthorized === 'function' && !pwdIsAuthorized()) {
+    if (typeof pwdIsLocked === 'function' && pwdIsLocked()) { showPwdLockout(); }
+    var modal = document.getElementById('pwdModal');
+    if (modal) modal.classList.add('active');
     return;
   }
+  try {
   const p = getParams();
   const fcm = calcFcm(p.fck), fctm = calcFctm(p.fck);
   const Ecm_gpa = 22 * Math.pow(fcm/10, 0.3), Ecm = Ecm_gpa * 1000;
@@ -866,6 +868,7 @@ function calculateAll() {
   renderSection7(p, results);
   renderSection8(p, results);
   renderSection9(p, results);
+  } catch(e) { console.error(e); }
 }
 
 // ═══════════════ RENDER FUNCTIONS ═══════════════
