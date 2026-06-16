@@ -611,9 +611,6 @@ window.addEventListener('load', () => { updatePoisson(); updateRebarRatio(); ini
 // ═══════════════ CORE ENGINE ═══════════════
 function getParams() {
   const p = {};
-  p.warehouseArea = parseFloat(document.getElementById('warehouseArea').value) || 0;
-  p.floorCategory = document.getElementById('floorCategory').value;
-  p.clearHeight = parseFloat(document.getElementById('clearHeight').value) || 0;
   p.fck = parseFloat(document.getElementById('fck').value) || 23;
   p.fckcube = parseFloat(document.getElementById('fckcube').value) || 35;
   p.gammaC = parseFloat(document.getElementById('gammaC').value) || 1.5;
@@ -637,7 +634,10 @@ function getParams() {
   p.N = parseFloat(document.getElementById('fatigueCycles').value) || 500000;
   p.jointSpacing = parseFloat(document.getElementById('jointSpacing').value) || 35;
   p.jointMu = parseFloat(document.getElementById('jointMu').value) || 0.5;
-  p.propertyE = parseFloat(document.getElementById('propertyE').value) || 15;
+  p.warehouseArea = 0;
+  p.floorCategory = 'FM2';
+  p.clearHeight = 0;
+  p.propertyE = 15;
   p.fl_Q = parseFloat(document.getElementById('fl_Q').value) || 30;
   p.fl_p = parseFloat(document.getElementById('fl_p').value) || 4.0;
   p.fl_D = parseFloat(document.getElementById('fl_D').value) || 1100;
@@ -1239,8 +1239,8 @@ function setForkliftPreset(Q, pVal, D, gf) {
 }
 
 function resetToDefaults() {
-    document.getElementById('warehouseArea').value=''; 
-  document.getElementById('clearHeight').value=''; document.getElementById('floorCategory').value='FM2';
+     
+  
   document.getElementById('fck').value='23'; document.getElementById('fckcube').value='35';
   document.getElementById('gammaC').value='1.5'; document.getElementById('alphaCC').value='0.85';
   document.getElementById('fR1').value=''; document.getElementById('fR4').value='';
@@ -1252,7 +1252,7 @@ function resetToDefaults() {
   document.getElementById('rackingLoad').value='90'; document.getElementById('basePlateSize').value='150';
   document.getElementById('backToBackSpacing').value='300'; document.getElementById('udl').value='50';
   document.getElementById('mheWeight').value='7'; document.getElementById('dynamicFactor').value='1.4';
-  document.getElementById('fatigueCycles').value='500000'; document.getElementById('propertyE').value='15'; document.getElementById('jointSpacing').value='35'; document.getElementById('jointMu').value='0.5';
+  document.getElementById('fatigueCycles').value='500000';  document.getElementById('jointSpacing').value='35'; document.getElementById('jointMu').value='0.5';
    
   document.getElementById('fl_Q').value='30'; document.getElementById('fl_p').value='4.0';
   document.getElementById('fl_D').value='1100'; document.getElementById('fl_gf').value='1.6';
