@@ -548,6 +548,10 @@ function unlockResults() {
 function initPwdProtection() {
   if (pwdIsAuthorized()) {
     unlockResults();
+  } else {
+    // 未授权时弹出密码框
+    if (pwdIsLocked()) { showPwdLockout(); }
+    document.getElementById('pwdModal').classList.add('active');
   }
 }
 
