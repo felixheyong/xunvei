@@ -1120,9 +1120,11 @@ function renderJointSpacing(p, results) {
   const Ecm_val = 22 * Math.pow(fcm/10, 0.3) * 1000; // N/mm²
   const alpha_T = 10e-6;
   const dT_curl = 20; // °C 典型夜间负温差
-  const C_curl = 0.5;
-  const sigma_curl = C_curl * Ecm_val * alpha_T * dT_curl / (1 - p.nu) * 0.5; // ×0.5 蠕变折减
-  const M_curl = sigma_curl * h * h / 6 / 1000; // kNm/m (弹性截面模量)
+  // 翘曲应力随板厚增加而减小（厚板自重大 → 自约束强）
+  const C_curl = 0.5 * (1 - h/400); // 板厚修正: h=200→0.5, h=150→0.625, h=250→0.375
+  const sigma_curl_raw = C_curl * Ecm_val * alpha_T * dT_curl / (1 - p.nu);
+  const sigma_curl = sigma_curl_raw * 0.5; // ×0.5 蠕变折减
+  const M_curl = sigma_curl * h * h / 6 / 1000; // kNm/m
 
   // ── ④ 组合需求 ──
   const M_demand = M_friction + M_curl;
@@ -1151,9 +1153,10 @@ function renderJointSpacing(p, results) {
   html += '<span class="formula">F<sub>drag</sub> = μ×w×L/2 = '+p.jointMu+'×'+slabWt.toFixed(2)+'×'+fmt(p.jointSpacing/2,1)+' = '+fmt(F_drag,2)+' kN/m</span>\n';
   html += '<span class="formula">M<sub>friction</sub> = F<sub>drag</sub>×h/2 = '+fmt(F_drag,2)+'×'+h+'/2/1000 = <span class="result">'+fmt(M_friction,2)+' kNm/m</span></span>\n\n';
 
-  html += '<span class="comment">// ② 温度翘曲弯矩（ΔT='+dT_curl+'°C, 蠕变折减0.5）</span>\n';
-  html += '<span class="formula">σ<sub>curl</sub> = '+fmt(sigma_curl,3)+' N/mm²</span>\n';
-  html += '<span class="formula">M<sub>curl</sub> = σ<sub>curl</sub>×h²/6 = <span class="result">'+fmt(M_curl,2)+' kNm/m</span></span>\n\n';
+  html += '<span class="comment">// ② 温度翘曲弯矩（ΔT='+dT_curl+'°C, C_curl=0.5×(1−h/400)='+fmt(C_curl,3)+', 蠕变×0.5）</span>\n';
+  html += '<span class="formula">σ<sub>curl,raw</sub> = '+fmt(C_curl,3)+'×E×α×ΔT/(1−ν) = '+fmt(sigma_curl_raw,3)+' N/mm²</span>\n';
+  html += '<span class="formula">σ<sub>curl</sub> = '+fmt(sigma_curl_raw,3)+' × 0.5 = <span class="result">'+fmt(sigma_curl,3)+' N/mm²</span></span>\n';
+  html += '<span class="formula">M<sub>curl</sub> = '+fmt(sigma_curl,3)+' × '+h+'²/6 / 1000 = <span class="result">'+fmt(M_curl,2)+' kNm/m</span></span>\n\n';
 
   html += '<span class="comment">// ③ 组合弯矩需求 vs SFRC 抗力</span>\n';
   html += '<span class="formula">M<sub>demand</sub> = '+fmt(M_friction,2)+' + '+fmt(M_curl,2)+' = <span class="result" style="color:'+(pass?'var(--pass)':'var(--fail)')+';">'+fmt(M_demand,2)+' kNm/m</span></span>\n';
