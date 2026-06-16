@@ -365,7 +365,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 		  <strong>📐 原理（Freeplan / TR34）：</strong>不切缝钢纤维地坪的最大设缝间距由 SFRC 负弯矩承载力 M<sub>n</sub> 控制。基层摩擦约束 + 温度翘曲的组合弯矩需求必须 ≤ M<sub>n</sub>（钢纤维提供）。M<sub>n</sub> 越大，可实现的设缝间距越大。典型值 25–40m。
 		</div>
 		<div class="input-grid">
-		  <div class="input-group"><label>设计设缝间距 L<sub>j</sub> <span class="unit">(m)</span> </label><input type="number" id="jointSpacing" value="35" min="5" max="60" step="1" onchange="calculateAll()"></div>
+		  <div class="input-group"><label>设计设缝间距 L<sub>j</sub> <span class="unit">(m)</span> </label><input type="number" id="jointSpacing" value="30" min="5" max="60" step="1" onchange="calculateAll()"></div>
 		  <div class="input-group"><label>板/基层摩擦系数 μ</label><select id="jointMu" onchange="calculateAll()"><option value="0.5" selected>μ=0.5 — PE滑移膜 + 级配碎石（标准/Freeplan推荐）</option><option value="0.8">μ=0.8 — 单层PE膜 + 碎石基层</option><option value="1.0">μ=1.0 — 直接浇筑在基层上（无滑移膜）</option><option value="1.5">μ=1.5 — 粗糙基层 / 粘结界面的保守取值</option></select></div>
 		</div>
 		<div id="jointSpacingResult" style="margin-top:8px; font-size:0.85rem;"></div>
@@ -632,7 +632,7 @@ function getParams() {
   p.mheTons = parseFloat(document.getElementById('mheWeight').value) || 0;
   p.dynFactor = parseFloat(document.getElementById('dynamicFactor').value) || 1.4;
   p.N = parseFloat(document.getElementById('fatigueCycles').value) || 500000;
-  p.jointSpacing = parseFloat(document.getElementById('jointSpacing').value) || 35;
+  p.jointSpacing = parseFloat(document.getElementById('jointSpacing').value) || 30;
   p.jointMu = parseFloat(document.getElementById('jointMu').value) || 0.5;
   p.warehouseArea = 0;
   p.floorCategory = 'FM2';
