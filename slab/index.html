@@ -249,7 +249,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 
 <nav id="toc">
   <div class="logo"><h2>地基承载计算工具</h2><span>地基承载混凝土地坪设计</span></div>
-<a href="#s1">1. 材料与荷载参数</a>
+  <a href="#s1">1. 材料与荷载参数</a>
   <a href="#s2">2. 板厚设计计算</a>
   <a href="#s3">3. 荷载验算结果</a>
   <a href="#s4">4. 冲切剪力验算</a>
@@ -286,7 +286,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 <!-- ════════════ SECTION 2 ════════════ -->
 <section id="s1"><h2><span class="sec-num">1</span>材料与荷载设计参数</h2>
 
-<h3>2.1 混凝土等级（GB 国标预设）</h3>
+<h3>1.1 混凝土等级（GB 国标预设）</h3>
 <div class="preset-row" id="concretePresets">
   <button class="preset-btn" data-fck="17" data-fckcube="25">GB C25</button>
   <button class="preset-btn" data-fck="20" data-fckcube="30">GB C30</button>
@@ -301,7 +301,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   <div class="input-group"><label>长期系数 α<sub>cc</sub></label><input type="number" id="alphaCC" value="0.85" min="0.5" max="1.0" step="0.05"></div>
 </div>
 
-<h3>2.2 钢纤维参数 <span style="font-size:0.78rem; font-weight:400; color:var(--accent2);">（请输入依据EN14889-1标准试验数据填写）</span></h3>
+<h3>1.2 钢纤维参数 <span style="font-size:0.78rem; font-weight:400; color:var(--accent2);">（请输入依据EN14889-1标准试验数据填写）</span></h3>
 <div class="input-grid">
 	  <div class="input-group"><label>f<sub>R1</sub> — CMOD=0.5mm 残余抗弯强度 <span class="unit">(N/mm²)</span> <span class="hint">必填</span></label><input type="number" id="fR1" value="" min="0" max="20" step="0.1" placeholder="请输入 fR1 值"></div>
   <div class="input-group"><label>f<sub>R2</sub> — CMOD=1.5mm <span class="unit">(N/mm²)</span> <span class="hint">冲切验算用</span></label><input type="number" id="fR2" value="" placeholder="请输入 fR2 值" min="0" max="20" step="0.1"></div>
@@ -310,7 +310,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   <div class="input-group" style="grid-column: span 2;"><label>纤维品牌/型号 &nbsp;|&nbsp; 参考掺量 <span class="unit">(kg/m³)</span> <span class="hint">需试验数据确定</span></label><div style="display:flex; gap:10px;"><input type="text" id="fiberLabel" value="" placeholder="例: AFT+ 高性能钢纤维" style="flex:2;"><input type="text" id="fiberDosage" value="" placeholder="由纤维类型与掺量试验确定" style="flex:1;"></div></div>
 </div>
 
-<h3>2.3 地基参数</h3>
+<h3>1.3 地基参数</h3>
 <div class="input-grid">
   <div class="input-group"><label>压实系数 λ <span class="unit">(0.90–0.98)</span> <span class="hint">国内常用→自动估K</span></label><input type="number" id="compactionCoeff" value="0.95" min="0.85" max="1.00" step="0.01" onchange="estimateKfromCompaction()"></div>
   <div class="input-group"><label>底基层类型</label><select id="subbaseType" onchange="estimateKfromCompaction()">
@@ -328,9 +328,9 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   <strong>📐 压实系数 → K值换算（经验公式）：</strong><br>λ=0.95, 级配碎石 → CBR≈29% → k≈0.052 N/mm³ (52 MN/m³)
 </div>
 
-<h3>2.4 设计荷载</h3>
+<h3>1.4 设计荷载</h3>
 
-	<h4 style="font-size:0.92rem; color: var(--accent2); margin:12px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">2.4a 静荷载</h4>
+	<h4 style="font-size:0.92rem; color: var(--accent2); margin:12px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">1.4a 静荷载</h4>
 	<div class="input-grid">
 	  <div class="input-group"><label>均布荷载 UDL <span class="unit">(kN/m²)</span></label><input type="number" id="udl" value="50" min="0" step="1"></div>
 	  <div class="input-group"><label>点荷载 / 货架立柱荷载 P<sub>u</sub> <span class="unit">(kN)</span></label><input type="number" id="rackingLoad" value="90" min="0" step="0.1"></div>
@@ -338,7 +338,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 	  <div class="input-group"><label>背对背立柱间距 <span class="unit">(mm)</span></label><input type="number" id="backToBackSpacing" value="300" min="0" step="10"></div>
 	</div>
 
-	<h4 style="font-size:0.92rem; color: var(--accent2); margin:12px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">2.4b 动荷载（叉车 / MHE）</h4>
+	<h4 style="font-size:0.92rem; color: var(--accent2); margin:12px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">1.4b 动荷载（叉车 / MHE）</h4>
 	<div class="input-grid">
 	  <div class="input-group"><label>叉车总重 <span class="unit">(吨)</span></label><input type="number" id="mheWeight" value="7" min="0" step="0.5"></div>
 	  <div class="input-group"><label>叉车轮荷载 Q <span class="unit">(kN)</span> <span class="hint">接触压力法</span></label><input type="number" id="fl_Q" value="30" min="0" step="0.5"></div>
@@ -357,13 +357,10 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 	  <button class="preset-btn" onclick="setForkliftPreset(0,0,0,1.0)">不使用</button>
 	</div>
 
-	<h4 style="font-size:0.92rem; color: var(--accent2); margin:12px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">2.4c 平整度要求</h4>
-	<div class="input-grid" id="flatnessGroup" style="display:none;">
-	  <div class="input-group"><label>平整度属性 E 限值 <span class="unit">(±mm)</span> <span class="hint">仅FM/DM类地坪需要</span></label><input type="number" id="propertyE" value="15" min="0" max="50" step="1"></div>
-	</div>
+	
 
 
-	<h4 style="font-size:0.92rem; color: var(--accent2); margin:16px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">2.4d 最大设缝间距（Freeplan / 不切缝设计）</h4>
+	<h4 style="font-size:0.92rem; color: var(--accent2); margin:16px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">1.4d 最大设缝间距（Freeplan / 不切缝设计）</h4>
 		<div class="alert alert-info" style="font-size:0.82rem; margin-top:4px;">
 		  <strong>📐 原理（Freeplan / TR34）：</strong>不切缝钢纤维地坪的最大设缝间距由 SFRC 负弯矩承载力 M<sub>n</sub> 控制。基层摩擦约束 + 温度翘曲的组合弯矩需求必须 ≤ M<sub>n</sub>（钢纤维提供）。M<sub>n</sub> 越大，可实现的设缝间距越大。典型值 25–40m。
 		</div>
@@ -373,14 +370,14 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 		</div>
 		<div id="jointSpacingResult" style="margin-top:8px; font-size:0.85rem;"></div>
 
-		<h3>2.5 候选板厚（可填1-3个方案进行比选）</h3>
+		<h3>1.5 候选板厚（可填1-3个方案进行比选）</h3>
 <div class="input-grid">
   <div class="input-group"><label>方案 A 板厚 <span class="unit">(mm)</span> <span class="hint">推荐值</span></label><input type="number" id="hA" value="160" min="80" max="500" step="5"></div>
   <div class="input-group"><label>方案 B 板厚 <span class="unit">(mm)</span> <span class="hint">保守方案</span></label><input type="number" id="hB" value="180" min="80" max="500" step="5"></div>
   <div class="input-group"><label>方案 C 板厚 <span class="unit">(mm)</span> <span class="hint">传统配筋方案</span></label><input type="number" id="hC" value="200" min="80" max="500" step="5" placeholder="传统RC方案板厚" onchange="updateRebarRatio()"></div>
 </div>
 
-<h3>2.5a 方案C — 传统配筋参数</h3>
+<h3>1.5a 方案C — 传统配筋参数</h3>
 <div class="input-grid">
   <div class="input-group"><label>钢筋等级</label><select id="rebarGrade"><option value="HRB400" selected>HRB400 (fy=360N/mm²)</option><option value="HRB500">HRB500 (fy=435N/mm²)</option><option value="HPB300">HPB300 (fy=270N/mm²)</option></select></div>
   <div class="input-group"><label>钢筋直径 <span class="unit">(mm)</span></label><input type="number" id="rebarDia" value="12" min="6" max="32" step="1" onchange="updateRebarRatio()"></div>
@@ -389,7 +386,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   <div class="input-group"><label>截面配筋率 ρ <span class="unit">(%)</span> <span class="hint">自动计算</span></label><input type="text" id="rebarRatio" value="—" readonly></div>
 </div>
 
-<h3>2.6 接缝传力杆参数（可选 — 用于 Section 6 传力验算）</h3>
+<h3>1.6 接缝传力杆参数（可选 — 用于 第5节 传力验算）</h3>
 <div class="input-grid">
   <div class="input-group"><label>钢板宽度 W <span class="unit">(mm)</span></label><input type="number" id="dw_W" value="150" min="0" step="1"></div>
   <div class="input-group"><label>钢板长度 L <span class="unit">(mm)</span></label><input type="number" id="dw_L" value="135" min="0" step="1"></div>
@@ -605,7 +602,7 @@ document.querySelectorAll('input, select').forEach(el => {
     clearTimeout(recalcTimeout); recalcTimeout = setTimeout(calculateAll, 300);
   });
 });
-window.addEventListener('load', () => { updatePoisson(); toggleFlatness(); updateRebarRatio(); initPwdProtection(); });
+window.addEventListener('load', () => { updatePoisson(); updateRebarRatio(); initPwdProtection(); });
 
 // ═══════════════ CORE ENGINE ═══════════════
 function getParams() {
@@ -882,7 +879,7 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
   document.getElementById('section2Content').innerHTML = html;
 }
 
-function renderSection2(p, results) {
+function renderSection3(p, results) {
   let html = '';
   html += '<h3>4.1 货架立柱单点荷载验算</h3><div class="table-wrap"><table><thead><tr><th>检查工况</th><th>需求 P<sub>u</sub></th>'+results.map(r=>'<th>h='+r.h+'mm 抗力</th><th>判定</th>').join('')+'</tr></thead><tbody>';
   html += '<tr><td><strong>板内部 (M<sub>n</sub>=M<sub>p</sub>)</strong></td><td rowspan="2"><strong>'+p.Pu_rack+' kN</strong></td>';
@@ -908,7 +905,7 @@ function renderSection2(p, results) {
   document.getElementById('section3Content').innerHTML = html;
 }
 
-function renderSection3(p, results) {
+function renderSection4(p, results) {
   let html = '';
   html += '<h3>5.1 最大冲切抗力 (EC2 §6.5)</h3><div class="calc-box">';
   results.forEach(r=>{ html += '<span class="comment">// h='+r.h+'mm: v<sub>max</sub>='+fmt(r.vmax,2)+' N/mm², u<sub>0</sub>='+r.u0+'mm, d='+fmt(r.d,0)+'mm</span>\n<span class="formula">P<sub>p,max</sub></span> = '+fmt(r.vmax,2)+'×'+r.u0+'×'+fmt(r.d,0)+'/1000 = <span class="result">'+fmt(r.Pp_max,1)+' kN</span>\n'; });
@@ -925,7 +922,7 @@ function renderSection3(p, results) {
   document.getElementById('section4Content').innerHTML = html;
 }
 
-function renderSection4(p, results) {
+function renderSection5(p, results) {
   const h0=results[0].h;
   const d=calculateDowel({dw_W:p.dw_W,dw_L:p.dw_L,dw_Emb:p.dw_Emb,dw_T:p.dw_T,dw_S:p.dw_S,dw_ds:p.dw_ds,dw_e:p.dw_e,fck:p.fck,h:h0});
   const modeLabel=d.P_critical===d.Psh?'钢板剪切控制':d.P_critical===d.Pmax?'混凝土承压控制':'混凝土冲切（无筋）控制';
@@ -952,7 +949,7 @@ function renderSection4(p, results) {
   document.getElementById('section5Content').innerHTML = html;
 }
 
-function renderSection5(p, results) {
+function renderSection6(p, results) {
   let html = '';
   html += '<h3>7.1 MHE 轮载计算</h3><div class="calc-box">';
   results.forEach(r=>{
@@ -988,7 +985,7 @@ function renderSection5(p, results) {
   document.getElementById('section6Content').innerHTML = html;
 }
 
-function renderSection6(p, results) {
+function renderSection7(p, results) {
   let html = '<p style="margin-bottom:16px;">基于荷载验算、冲切验算、MHE验算的综合结果，对 '+results.length+' 个方案进行比选：</p><div class="card-grid">';
   results.forEach((r,i)=>{
     const isRec=i===0;
@@ -1041,7 +1038,7 @@ function renderSection6(p, results) {
   document.getElementById('section7Content').innerHTML = html;
 }
 
-function renderSection7(p, results) {
+function renderSection8(p, results) {
   let html = '';
   const wheelDesign = p.mheTons*10*0.9/2*p.dynFactor;
   html += '<h3>9.1 荷载验算汇总表</h3><div class="table-wrap"><table><thead><tr><th>验算项</th>'+results.map(r=>'<th>h='+r.h+'mm ('+(r.isRC?'RC':'SFRC')+')</th>').join('')+'</tr></thead><tbody>';
