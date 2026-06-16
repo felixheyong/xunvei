@@ -1152,14 +1152,12 @@ function renderJointSpacing(p, results) {
 
   // Freeplan 经验推荐：基于工程实践的设缝间距建议
   let recommendation = '';
-  if (sf >= 1.5) {
-    recommendation = '✅ 安全系数充裕，推荐设缝间距 ≤ 40m';
-  } else if (sf >= 1.0) {
-    recommendation = '✅ 验算通过，推荐设缝间距 30–35m';
+  if (sf >= 1.0) {
+    recommendation = '✅ 验算通过';
   } else if (sf >= 0.8) {
     recommendation = '⚠️ 安全系数不足，建议设缝间距 ≤ 25m 或增加纤维掺量';
   } else {
-    recommendation = '❌ 不满足 Freeplan 要求，需缩小设缝间距或显著提高 f<sub>R1</sub> 等级';
+    recommendation = '❌ 不满足要求，需缩小设缝间距或显著提高 f<sub>R1</sub> 等级';
   }
 
   let html = '';
@@ -1190,8 +1188,8 @@ function renderJointSpacing(p, results) {
   html += '<strong>'+(pass?'✅ 设缝间距验算通过（Freeplan Joint-Free）':'⚠️ 设缝间距验算不通过')+'</strong><br>';
   html += 'M<sub>demand</sub>='+fmt(M_demand,2)+' ≤ M<sub>n</sub>='+fmt(Mn_sfrc,2)+' kNm/m  |  SF='+fmt(sf,2);
   html += '  |  设计L<sub>j</sub>='+p.jointSpacing+'m';
-  html += '<br>'+recommendation;
-  html += '<br><span style="font-size:0.78rem; color:var(--muted);">依据: TR34 §8.8 + Freeplan 工程实践 — 设缝间距为经验推荐值（非精确计算），实际需结合现场条件由专业工程师确定</span>';
+  if (!pass) html += '<br>'+recommendation;
+  html += '<br><span style="font-size:0.78rem; color:var(--muted);">依据: TR34 §8.8 + Freeplan 工程实践</span>';
   html += '</div>';
 
   document.getElementById('jointSpacingResult').innerHTML = html;
