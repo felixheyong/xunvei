@@ -782,6 +782,26 @@ function calcVmax(k2, fcd) { return 0.5 * k2 * fcd; }
 function calcK2(fck) { return 0.6 * (1 - fck/250); }
 function calcFcd(fck, alphaCC, gammaC) { return alphaCC * fck / gammaC; }
 function badge(ok, text) { if(ok===true) return '<span class="badge badge-ok">✅ '+text+'</span>'; if(ok==='warn') return '<span class="badge badge-warn">⚠️ '+text+'</span>'; return '<span class="badge badge-fail">❌ '+text+'</span>'; }
+
+// ── 传力杆计算（内联自 tr34-engine.js）──
+function calculateDowel(params) {
+  var W   = params.dw_W, L = params.dw_L, Emb = params.dw_Emb;
+  var T   = params.dw_T, S = params.dw_S, ds = params.dw_ds;
+  var e   = params.dw_e, fck = params.fck, h = params.h;
+  var fcd_val = fck / 1.5; // design concrete strength (γc=1.5)
+  var k3 = 3, vRd_ct = 0.52, d2 = h / 2;
+  var Wcrit = W, Abear = Wcrit * L, Wp_max = W;
+  var Scrit1 = Wp_max + 4 * d2;
+  var U1 = 2 * Emb + W + 2 * Math.PI * d2;
+  var Psh = 0.6 * ds * T * W * 0.9 / 1000;
+  var b1 = 2 * e * k3 * fcd_val * W;
+  var c1 = 2 * k3 * fcd_val * W * W * T * T * ds;
+  var Pmax = 0.5 * (Math.sqrt(b1 * b1 + c1) - b1) / 1000;
+  var Pburst_unreinf = U1 * d2 * vRd_ct / 1000;
+  var P_critical = Math.min(Psh, Pmax, Pburst_unreinf);
+  var ULS_per_m = P_critical / (S / 1000);
+  return { Psh: Psh, Pmax: Pmax, Pburst_unreinf: Pburst_unreinf, P_critical: P_critical, ULS_per_m: ULS_per_m };
+}
 function utilizationBar(ratio) { let cls='fill-green'; if(ratio>0.85) cls='fill-red'; else if(ratio>0.65) cls='fill-yellow'; const pct=Math.min(ratio*100,100); return '<div class="utilization-bar"><div class="fill '+cls+'" style="width:'+pct+'%"></div></div><span style="font-size:0.75rem;color:var(--muted);">利用率 '+(ratio*100).toFixed(0)+'%</span>'; }
 function fmt(n, d){ d=d||2; return n.toFixed(d); }
 function fmt0(n) { return Math.round(n).toLocaleString(); }
