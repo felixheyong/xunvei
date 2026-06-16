@@ -1185,7 +1185,7 @@ function renderJointSpacing(p, results) {
   html += '</div>';
 
   html += '<div class="alert '+(pass?'alert-success':'alert-warning')+'" style="font-size:0.85rem;">';
-  html += '<strong>'+(pass?'✅ 设缝间距验算通过（Freeplan Joint-Free）':'⚠️ 设缝间距验算不通过')+'</strong><br>';
+  html += '<strong>'+(pass?'✅ 设缝间距验算通过（Freeplan® Joint-Free）':'⚠️ 设缝间距验算不通过（Freeplan®）')+'</strong><br>';
   html += 'M<sub>demand</sub>='+fmt(M_demand,2)+' ≤ M<sub>n</sub>='+fmt(Mn_sfrc,2)+' kNm/m  |  SF='+fmt(sf,2);
   html += '  |  设计L<sub>j</sub>='+p.jointSpacing+'m';
   if (!pass) html += '<br>'+recommendation;
