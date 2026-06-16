@@ -1434,26 +1434,7 @@ function updateMixDesign() {
     inp.addEventListener('input', onAirContentChange);
   });
 
-  // Keyboard navigation: Arrow Up/Down moves focus within same column
-  (function setupMixTableNav() {
-    document.querySelectorAll('#mixTable input').forEach(inp => {
-      inp.addEventListener('keydown', function(e) {
-        if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
-        e.preventDefault();
-        const td = this.closest('td');
-        if (!td) return;
-        const tr = td.closest('tr');
-        if (!tr) return;
-        const colIdx = Array.from(tr.children).indexOf(td);
-        const targetRow = e.key === 'ArrowDown' ? tr.nextElementSibling : tr.previousElementSibling;
-        if (!targetRow) return;
-        const targetTd = targetRow.children[colIdx];
-        if (!targetTd) return;
-        const targetInput = targetTd.querySelector('input');
-        if (targetInput) { targetInput.focus(); targetInput.select(); }
-      });
-    });
-  })();
+
 
   // Restore focus & cursor position if previously focused
   if (savedQtyIdx >= 0 || savedDenIdx >= 0) {
@@ -1782,10 +1763,32 @@ document.addEventListener('focusin', function(e) {
 // 方向键在输入框间跳转（↓→下一格，↑←上一格）
 document.addEventListener('keydown', function(e) {
   if (!e.target.classList.contains('num-input')) return;
-  // 配合比表格由独立的列内导航处理，此处跳过
-  if (e.target.closest('#mixTable')) return;
   if (!['ArrowDown','ArrowUp','ArrowRight','ArrowLeft'].includes(e.key)) return;
   e.preventDefault();
+  // 表格内输入：同列上下移动（↓↑），同行左右移动（←→）
+  const table = e.target.closest('table');
+  if (table) {
+    const td = e.target.closest('td');
+    if (!td) return;
+    const tr = td.closest('tr');
+    if (!tr) return;
+    const colIdx = Array.from(tr.children).indexOf(td);
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      const targetRow = e.key === 'ArrowDown' ? tr.nextElementSibling : tr.previousElementSibling;
+      if (!targetRow) return;
+      const targetTd = targetRow.children[colIdx];
+      if (!targetTd) return;
+      const targetInput = targetTd.querySelector('input.num-input');
+      if (targetInput) { targetInput.focus(); targetInput.select(); }
+    } else {
+      const targetTd = e.key === 'ArrowRight' ? td.nextElementSibling : td.previousElementSibling;
+      if (!targetTd) return;
+      const targetInput = targetTd.querySelector('input.num-input');
+      if (targetInput) { targetInput.focus(); targetInput.select(); }
+    }
+    return;
+  }
+  // 非表格输入：按 DOM 顺序移动
   const all = Array.from(document.querySelectorAll('.num-input'));
   const idx = all.indexOf(e.target);
   if (idx < 0) return;
