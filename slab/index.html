@@ -143,88 +143,10 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   thead th, tbody td { padding: 6px 8px; }
 }
 
-/* ── 打印样式 ── */
+/* ── 打印禁止 ── */
 @media print {
-  @page {
-    size: A4 landscape;
-    margin: 12mm;
-  }
-  body {
-    background: #fff;
-    color: #000;
-    display: block;
-  }
-  nav#toc, #toc-toggle, .watermark-layer, .btn,
-  #cookie-settings-btn, footer, .alert, .btn-row {
-    display: none !important;
-  }
-  main {
-    max-width: 100%;
-    width: 100%;
-    padding: 0;
-    margin: 0;
-  }
-  .report-header {
-    background: #fff;
-    border: 2px solid #000;
-    border-top: 4px solid #000;
-    padding: 12px 16px;
-    margin-bottom: 12px;
-    box-shadow: none;
-  }
-  section {
-    background: #fff;
-    border: 1px solid #ccc;
-    box-shadow: none;
-    padding: 12px 16px;
-    margin-bottom: 10px;
-    page-break-inside: avoid;
-  }
-  section h2 {
-    border-bottom: 2px solid #000;
-    color: #000;
-    font-size: 1rem;
-  }
-  section h3 { color: #000; border-left-color: #000; font-size: 0.9rem; }
-  section h2 .sec-num {
-    background: #000;
-    color: #fff;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-  .input-group input, .input-group select {
-    background: #fff;
-    border: 1px solid #999;
-    color: #000;
-  }
-  thead {
-    background: #ddd !important;
-    color: #000;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-  thead th { color: #000; border-bottom: 2px solid #000; }
-  tbody tr:nth-child(even) { background: #f5f5f5; }
-  .calc-box { background: #fafafa; border-left-color: #000; border: 1px solid #ccc; }
-  .badge-ok { background: #e8f5e9; color: #000; border: 1px solid #4caf50; }
-  .badge-warn { background: #fff8e1; color: #000; border: 1px solid #ff9800; }
-  .badge-fail { background: #ffebee; color: #000; border: 1px solid #f44336; }
-  .card { border: 1px solid #ccc; box-shadow: none; }
-  .card.recommended { border: 2px solid #4caf50; }
-  .card.recommended::before {
-    background: #4caf50;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-  .final-banner {
-    background: #fff;
-    border: 3px solid #000;
-    padding: 16px 20px;
-  }
-  .table-wrap { border: 1px solid #000; }
-  table { font-size: 0.7rem; }
-  thead th, tbody td { padding: 5px 8px; }
-  .calc-box { font-size: 0.75rem; }
+  body, body * { display: none !important; visibility: hidden !important; }
+  html, body { height: 0 !important; overflow: hidden !important; }
 }
 
 /* ── 大屏优化 ── */
@@ -639,6 +561,19 @@ function initPwdProtection() {
   });
   document.addEventListener('selectstart', function(e) {
     e.preventDefault(); return false;
+  });
+  // 阻止打印（包括 Ctrl+P、浏览器菜单打印）
+  window.addEventListener('beforeprint', function() {
+    // 打印前强制清空页面
+    document.body.innerHTML = '';
+    // 延迟恢复（打印取消后）
+    setTimeout(function() { location.reload(); }, 100);
+  });
+  // 阻止 Ctrl+Shift+P (Firefox 打印)
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
+      e.preventDefault(); return false;
+    }
   });
   // 定期清除剪贴板（防复制）
   setInterval(function() {
