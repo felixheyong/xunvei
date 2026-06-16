@@ -1782,6 +1782,8 @@ document.addEventListener('focusin', function(e) {
 // 方向键在输入框间跳转（↓→下一格，↑←上一格）
 document.addEventListener('keydown', function(e) {
   if (!e.target.classList.contains('num-input')) return;
+  // 配合比表格由独立的列内导航处理，此处跳过
+  if (e.target.closest('#mixTable')) return;
   if (!['ArrowDown','ArrowUp','ArrowRight','ArrowLeft'].includes(e.key)) return;
   e.preventDefault();
   const all = Array.from(document.querySelectorAll('.num-input'));
