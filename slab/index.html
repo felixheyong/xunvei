@@ -1181,7 +1181,7 @@ function renderJointSpacing(p, results) {
   html += '<span class="formula">M<sub>n</sub> (SFRC) = <span class="result" style="color:var(--accent);">'+fmt(Mn_sfrc,2)+' kNm/m</span></span>\n';
   html += '<span class="formula">SF = '+fmt(Mn_sfrc,2)+'/'+fmt(M_demand,2)+' = <span class="result" style="color:'+(sf>=1?'var(--pass)':'var(--fail)')+';">'+fmt(sf,2)+'</span> '+ (sf>=1?'✅ 满足':'❌ 不满足')+'</span>\n\n';
 
-  html += '<span class="comment">// ④ 设缝建议（Freeplan 工程经验：25-40m，不切缝推荐≤35m）</span>\n';
+  html += '<span class="comment">// ④ 设缝建议</span>\n';
   html += '<span class="formula"><strong>'+recommendation+'</strong></span>\n';
 
   html += '</div>';
