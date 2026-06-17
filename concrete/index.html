@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>混凝土配合比智能分析和优化系统</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<meta name="copyright" content="HE YONG — Twintec SFRC Mix 技术整合和汉化">
+<meta name="copyright" content="HE YONG — SFRC Mix 技术整合和汉化">
 <meta name="author" content="HE YONG">
 <meta name="robots" content="noarchive">
 <style>
@@ -27,7 +27,7 @@
 	    --pass:         #3d7a5c;   /* 唐石绿 — 合规 */
 	    --warn:         #d4943a;   /* 唐土黄赤 — 临界 */
 	    --fail:         #c4553a;   /* 唐朱砂 — 不合规 */
-	    --celadon:      #8aac92;   /* 青玉 — Twintec 包络线 */
+	    --celadon:      #8aac92;   /* 青玉 — 包络线 */
 	    --blue:         #3d5a70;   /* 石青 — 骨料1 */
 	    --teal:         #3d7a5c;   /* 石绿 — 骨料2 */
 	    --sand:         #c49555;   /* 铜赭 — 骨料3 */
@@ -373,7 +373,7 @@
   <div class="container">
     <h1>混凝土配合比智能分析和优化系统</h1>
     <p class="sub">
-      基于 Twintec SFRC Mix 配合比技术 &nbsp;·&nbsp; 技术整合和汉化 HE YONG
+      基于 SFRC Mix 配合比技术 &nbsp;·&nbsp; 技术整合和汉化 HE YONG
       <span style="display:inline-block;margin-left:10px;font-size:.62rem;padding:2px 8px;border-radius:50px;border:1px solid rgba(255,255,255,.2);color:#c4bcb0;vertical-align:middle;">© 版权所有</span>
     </p>
   </div>
@@ -514,7 +514,7 @@
 <!-- ===== 级配曲线图 ===== -->
 <div class="card">
   <h2>骨料组合级配曲线（实时更新）</h2>
-  <p class="desc">半对数坐标：横轴为筛孔尺寸 mm（对数），纵轴为累计过筛率 %。阴影区域为 Twintec SFRC 目标范围。&nbsp;
+  <p class="desc">半对数坐标：横轴为筛孔尺寸 mm（对数），纵轴为累计过筛率 %。阴影区域为 SFRC 目标范围。&nbsp;
 <label style="font-size:.74rem;font-weight:600;">理想曲线模型：</label>
 <select id="idealModelSelect" style="font-family:inherit;font-size:.72rem;padding:3px 6px;border-radius:4px;border:1px solid #d9d0c0;background:#faf8f3;">
 <option value="fuller">Fuller n=0.45</option>
@@ -526,7 +526,7 @@
   <div class="legend-grid">
     <div class="legend-item"><div class="legend-swatch" style="background:#b85a3f;"></div> 组合级配</div>
     <div class="legend-item"><div class="legend-swatch dashed" style="border-color:#d48865;"></div> 组合级配（内插）</div>
-    <div class="legend-item"><div class="legend-swatch" style="background:rgba(72,135,105,.24); height:16px; border-radius:4px; width:26px;"></div> Twintec 目标范围</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:rgba(72,135,105,.24); height:16px; border-radius:4px; width:26px;"></div> 目标范围</div>
     <div class="legend-item"><div class="legend-swatch dashed" style="border-color:#8a9080;"></div> <span id="idealCurveLabel">Fuller n=0.45</span></div>
     <div class="legend-item"><div class="legend-swatch" style="background:#4a6880;"></div> 碎石 ①（25mm）</div>
     <div class="legend-item"><div class="legend-swatch" style="background:#4d8c70;"></div> 碎石 ②（10mm）</div>
@@ -545,7 +545,7 @@
 <!-- ===== 骨料连续级配评估 ===== -->
 <div class="card">
   <h2>骨料连续级配评估</h2>
-  <p class="desc">当前材料的级配 vs Twintec 目标范围评估</p>
+  <p class="desc">当前材料的级配 vs 目标范围评估</p>
   <div class="callout" id="complianceCallout"></div>
   <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:12px;" id="complianceBadges"></div>
 </div>
@@ -553,7 +553,7 @@
 <!-- ===== 自动优化级配 ===== -->
 <div class="card">
   <h2>🎯 基于当前材料自动优化级配</h2>
-  <p class="desc">在当前骨料级配数据下自动搜索最优比例组合，使骨料组合级配曲线尽可能落在 Twintec 目标范围内。</p>
+  <p class="desc">在当前骨料级配数据下自动搜索最优比例组合，使骨料组合级配曲线尽可能落在 目标范围内。</p>
   <div class="btn-row" style="margin-bottom:0;">
     <button class="btn primary" onclick="autoOptimize()">🎯 开始自动优化</button>
     <span style="font-size:.74rem;color:var(--muted);align-self:center;" id="autoMsg"></span>
@@ -719,8 +719,8 @@
     </div>
 
     <div class="theory-card">
-      <h4>⚙️ Twintec SFRC 工程修正</h4>
-      <p>Twintec 的目标范围是对经典堆积理论的工程修正：</p>
+      <h4>⚙️ SFRC 工程修正</h4>
+      <p>目标范围是对经典堆积理论的工程修正：</p>
       <ul style="padding-left:18px;">
         <li>粗端略开（为钢纤维留空间）</li>
         <li>细粉严格控制（&lt; 0.15mm 上限 3%）— 防止塑性收缩开裂</li>
@@ -738,7 +738,7 @@
 </div>
 
 <footer>
-  Twintec Combined Grading Analysis · Particle Packing Density Theory (Fuller · Andreasen · CPM) &nbsp;|&nbsp; HE YONG
+  Combined Grading Analysis · Particle Packing Density Theory (Fuller · Andreasen · CPM) &nbsp;|&nbsp; HE YONG
 </footer>
 
 <!-- ===== 密码弹窗 ===== -->
@@ -787,11 +787,11 @@ const ORIGINAL_DATA = [
 ];
 const ORIGINAL_PROPS = [0, 0, 0, 0]; // 骨料1-4 比例 (清零，需手动输入)
 
-// Twintec SFRC target envelope — interpolated to JGJ 52-2006 sieve sizes
+// SFRC target envelope — interpolated to JGJ 52-2006 sieve sizes
 // Original at [25,19,12.5,9.5,4.75,2.36,1.18,0.6,0.3,0.15,0.075]
 // Extended for [31.5,26.5,19,16,9.5,...] — 31.5mm is max nominal size, 100% passing
-const TWINTEC_LOWER = [100, 100, 90, 77, 46, 36, 26, 17, 11, 6, 1, 0];
-const TWINTEC_UPPER = [100, 100, 100, 92, 70, 53, 44, 32, 21, 13, 3, 2];
+const ENVELOPE_LOWER = [100, 100, 90, 77, 46, 36, 26, 17, 11, 6, 1, 0];
+const ENVELOPE_UPPER = [100, 100, 100, 92, 70, 53, 44, 32, 21, 13, 3, 2];
 
 const AGG_NAMES = ['碎石 ①（25mm）', '碎石 ②（10mm）', '砂 ①（机制砂/河砂）', '砂 ②（超细砂）'];
 const AGG_COLORS = ['#4a6880', '#4d8c70', '#c49555', '#8a7098']; // 靛青 松绿 赭色 藕荷
@@ -900,7 +900,7 @@ function buildFormTable() {
   tbodyCombined.innerHTML = '';
   SIEVE_SIZES.forEach((s, i) => {
     const combined = getCombined();
-    const st = getStatus(combined[i], TWINTEC_LOWER[i], TWINTEC_UPPER[i]);
+    const st = getStatus(combined[i], ENVELOPE_LOWER[i], ENVELOPE_UPPER[i]);
     const badge = st === 'pass' ? '<span style="color:#6b8e78;font-weight:700;">✅</span>'
                 : st === 'warn' ? '<span style="color:#c49555;font-weight:700;">⚠</span>'
                 : '<span style="color:#b85a3f;font-weight:700;">❌</span>';
@@ -1049,7 +1049,7 @@ function updateFormTableDisplay() {
   // Update combined results table
   const rows = document.querySelectorAll('#combinedForm tbody tr');
   rows.forEach((tr, i) => {
-    const st = getStatus(combined[i], TWINTEC_LOWER[i], TWINTEC_UPPER[i]);
+    const st = getStatus(combined[i], ENVELOPE_LOWER[i], ENVELOPE_UPPER[i]);
     const badge = st === 'pass' ? '<span style="color:#6b8e78;font-weight:700;">✅</span>'
                 : st === 'warn' ? '<span style="color:#c49555;font-weight:700;">⚠</span>'
                 : '<span style="color:#b85a3f;font-weight:700;">❌</span>';
@@ -1104,8 +1104,8 @@ function updateChart() {
       if (d >= SIEVE_SIZES[j + 1] && d <= SIEVE_SIZES[j]) {
         const logD = Math.log(d), logD0 = Math.log(SIEVE_SIZES[j]), logD1 = Math.log(SIEVE_SIZES[j + 1]);
         const t = (logD - logD0) / (logD1 - logD0);
-        fineLower.push(TWINTEC_LOWER[j] + t * (TWINTEC_LOWER[j + 1] - TWINTEC_LOWER[j]));
-        fineUpper.push(TWINTEC_UPPER[j] + t * (TWINTEC_UPPER[j + 1] - TWINTEC_UPPER[j]));
+        fineLower.push(ENVELOPE_LOWER[j] + t * (ENVELOPE_LOWER[j + 1] - ENVELOPE_LOWER[j]));
+        fineUpper.push(ENVELOPE_UPPER[j] + t * (ENVELOPE_UPPER[j + 1] - ENVELOPE_UPPER[j]));
         break;
       }
     }
@@ -1122,13 +1122,13 @@ function updateChart() {
 
   const datasets = [
     {
-      label: 'Twintec 上限',
+      label: '上限',
       data: fineX.map((x, i) => ({ x, y: fineUpper[i] })),
       borderColor: 'rgba(72,135,105,.30)', backgroundColor: 'transparent',
       borderWidth: 1, pointRadius: 0, fill: false, order: 10,
     },
     {
-      label: 'Twintec 下限',
+      label: '下限',
       data: fineX.map((x, i) => ({ x, y: fineLower[i] })),
       borderColor: 'rgba(72,135,105,.30)',
       backgroundColor: 'rgba(72,135,105,.12)',
@@ -1478,14 +1478,14 @@ function updateCompliance() {
   const issues = [], badges = [];
 
   SIEVE_SIZES.forEach((s, i) => {
-    const st = getStatus(combined[i], TWINTEC_LOWER[i], TWINTEC_UPPER[i]);
+    const st = getStatus(combined[i], ENVELOPE_LOWER[i], ENVELOPE_UPPER[i]);
     const label = `${METRIC_LABELS[i]} (${IMPERIAL_LABELS[i]})`;
     if (st === 'fail') {
-      if (combined[i] < TWINTEC_LOWER[i]) {
-        issues.push(`<li><strong>${label}：</strong>组合过筛率 <strong>${combined[i].toFixed(2)}%</strong> 低于下限 <strong>${TWINTEC_LOWER[i]}%</strong>，粗骨料偏多/偏粗，可能导致表面裸露或包裹性不足。</li>`);
+      if (combined[i] < ENVELOPE_LOWER[i]) {
+        issues.push(`<li><strong>${label}：</strong>组合过筛率 <strong>${combined[i].toFixed(2)}%</strong> 低于下限 <strong>${ENVELOPE_LOWER[i]}%</strong>，粗骨料偏多/偏粗，可能导致表面裸露或包裹性不足。</li>`);
         badges.push(`<span class="badge badge-fail">❌ ${label} — 低于下限</span>`);
       } else {
-        issues.push(`<li><strong>${label}：</strong>组合过筛率 <strong>${combined[i].toFixed(2)}%</strong> 超出上限 <strong>${TWINTEC_UPPER[i]}%</strong>，细颗粒偏多，增加收缩开裂风险。</li>`);
+        issues.push(`<li><strong>${label}：</strong>组合过筛率 <strong>${combined[i].toFixed(2)}%</strong> 超出上限 <strong>${ENVELOPE_UPPER[i]}%</strong>，细颗粒偏多，增加收缩开裂风险。</li>`);
         badges.push(`<span class="badge badge-fail">❌ ${label} — 超出上限</span>`);
       }
     } else if (st === 'warn') {
@@ -1497,7 +1497,7 @@ function updateCompliance() {
 
   const callout = document.getElementById('complianceCallout');
   if (issues.length === 0) {
-    callout.innerHTML = '<strong>✅ 所有筛孔均合规！</strong> 组合级配完全落在 Twintec SFRC 目标范围内，骨料连续级配良好。';
+    callout.innerHTML = '<strong>✅ 所有筛孔均合规！</strong> 组合级配完全落在 SFRC 目标范围内，骨料连续级配良好。';
     callout.className = 'callout info';
   } else {
     callout.innerHTML = `<strong>⚠️ 发现 ${issues.length} 处不合规：</strong><ul style="margin:8px 0 0 18px; line-height:1.8;">${issues.join('')}</ul>`;
@@ -1513,7 +1513,7 @@ function updateAdjustments() {
   const suggestions = [];
 
   SIEVE_SIZES.forEach((s, i) => {
-    const val = combined[i], lo = TWINTEC_LOWER[i], hi = TWINTEC_UPPER[i];
+    const val = combined[i], lo = ENVELOPE_LOWER[i], hi = ENVELOPE_UPPER[i];
     const label = `${METRIC_LABELS[i]}（${IMPERIAL_LABELS[i]}）`;
 
     if (val < lo) {
@@ -1555,7 +1555,7 @@ function updateAdjustments() {
   });
 
   if (suggestions.length === 0) {
-    container.innerHTML = '<p style="color:#6b8e78;font-weight:600;">✅ 当前材料级配完全合规，骨料连续级配良好。各筛孔过筛率均在 Twintec 目标范围之内。</p>';
+    container.innerHTML = '<p style="color:#6b8e78;font-weight:600;">✅ 当前材料级配完全合规，骨料连续级配良好。各筛孔过筛率均在 目标范围之内。</p>';
   } else {
     container.innerHTML = suggestions.map((sg, idx) => `
       <div class="adjust-card" style="border-left:3px solid ${sg.type === 'high' ? 'var(--fail)' : 'var(--warn)'};">
@@ -1584,7 +1584,7 @@ function countViolations(props) {
   SIEVE_SIZES.forEach((_, i) => {
     let sum = 0;
     for (let a = 0; a < 4; a++) sum += aggData[i][a] * props[a];
-    if (sum < TWINTEC_LOWER[i] || sum > TWINTEC_UPPER[i]) count++;
+    if (sum < ENVELOPE_LOWER[i] || sum > ENVELOPE_UPPER[i]) count++;
   });
   return count;
 }
@@ -1596,8 +1596,8 @@ function fitScore(props) {
   SIEVE_SIZES.forEach((_, i) => {
     let combined = 0;
     for (let a = 0; a < 4; a++) combined += aggData[i][a] * props[a];
-    const lo = TWINTEC_LOWER[i];
-    const hi = TWINTEC_UPPER[i];
+    const lo = ENVELOPE_LOWER[i];
+    const hi = ENVELOPE_UPPER[i];
     const range = hi - lo;
     if (range === 0) return;
     const center = (lo + hi) / 2;
@@ -2591,7 +2591,7 @@ function checkLockout() {
   console.clear();
   console.log('%c⚠ 警告 %c本页面受版权保护，请勿在控制台执行任何代码。',
     'font-size:16px;font-weight:bold;color:#c4553a;','font-size:12px;color:#252220;');
-  console.log('%c© HE YONG — Twintec SFRC Mix %c侵权必究',
+  console.log('%c© HE YONG — SFRC Mix %c侵权必究',
     'font-size:13px;font-weight:bold;color:#2c5f8a;','font-size:11px;color:#8a8278;');
   // 周期性清除控制台
   setInterval(function(){ console.clear(); }, 3000);
