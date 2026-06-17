@@ -162,7 +162,6 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   section { background: #fff; border: 1px solid #ccc; box-shadow: none; padding: 12px 16px; margin-bottom: 10px; page-break-inside: avoid; }
   section h2 { border-bottom: 2px solid #000; color: #000; font-size: 1rem; }
   section h2 .sec-num { background: #000; color: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .locked-content::after, .locked-content::before { display: none !important; }
   thead { background: #ddd !important; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   thead th { color: #000; }
   .calc-box { background: #fafafa; border-left-color: #000; }
@@ -181,57 +180,6 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   .input-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
   .card-grid { grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); }
 }
-
-/* ── 密码弹窗 ── */
-.modal-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,.75); z-index: 10000;
-  align-items: center; justify-content: center;
-}
-.modal-overlay.active { display: flex; }
-.modal-dialog {
-  background: var(--card-bg); border-radius: var(--radius-lg);
-  padding: 32px 36px; max-width: 420px; width: 90%;
-  box-shadow: 0 20px 60px rgba(0,0,0,.5);
-  text-align: center;
-}
-.modal-dialog h3 { font-size: 1.1rem; color: #2e2a25; margin-bottom: 8px; }
-.modal-dialog .modal-desc {
-  font-size: .78rem; color: var(--muted); margin-bottom: 18px;
-}
-.modal-dialog input[type="password"] {
-  width: 100%; padding: 10px 14px; border: 1px solid #d5cfc4;
-  border-radius: var(--radius-sm); font-size: .95rem; font-family: inherit;
-  text-align: center; letter-spacing: .1em;
-  background: #fefefc; margin-bottom: 12px;
-}
-.modal-dialog input[type="password"]:focus {
-  outline: none; border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(107,142,137,.14);
-}
-.modal-error { color: var(--fail); font-size: .78rem; margin-bottom: 10px; min-height: 1.2em; }
-.modal-dialog .btn { margin: 4px; min-width: 80px; }
-.locked-content {
-  position: relative; overflow: hidden;
-}
-.locked-content::after {
-  content: "🔒 需输入密码查看计算结果";
-  position: absolute; inset: 0;
-  background: var(--card-bg);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem; font-weight: 600; color: var(--accent2);
-  border-radius: var(--radius-lg);
-  z-index: 10; cursor: pointer;
-}
-.locked-content::before {
-  content: "";
-  position: absolute; inset: 0;
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  z-index: 9;
-}
-.locked-content.unlocked::after,
-.locked-content.unlocked::before { display: none; }
 
 </style>
 </head>
@@ -255,10 +203,10 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 <nav id="toc">
   <div class="logo"><h2>地基承载计算工具</h2><span>地基承载混凝土地坪设计</span></div>
   <a href="#s1">1. 材料与荷载参数</a>
-  <a href="#s2">2. 板厚设计计算</a>
-  <a href="#s3">3. 荷载验算结果</a>
-  <a href="#s4">4. 冲切剪力验算</a>
-  <a href="#s5">5. 接缝传力设计</a>
+  <a href="#s2">2. 设计参数推导 — 弯拉强度 · 刚度半径 · 抵抗力矩</a>
+  <a href="#s3">3. 荷载验算 — UDL · 点荷载 · 叉车轮载</a>
+  <a href="#s4">4. 冲切剪力验算 — 最大抗力 · 临界截面</a>
+  <a href="#s5">5. 接缝传力设计 — 传力杆/钢板</a>
   <a href="#s6">6. MHE 与叉车荷载</a>
   <a href="#s7">7. 方案比选与推荐</a>
   <a href="#s8">8. 计算汇总与导出</a>
@@ -269,24 +217,6 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   <h1>🏗️ 地基承载混凝土地坪通用设计计算工具</h1>
   <div class="subtitle">基于 TR34 第4版 (2016) &amp; Eurocode 2 | SFRC 钢纤维 + 传统RC配筋双体系 | 仅作参考，工程决策请以专业工程师判断为准<br>技术整合和汉化 HE YONG <span style="display:inline-block;margin-left:8px;font-size:.62rem;padding:2px 8px;border-radius:50px;border:1px solid rgba(44,95,138,.3);color:var(--accent);vertical-align:middle;">© 版权所有</span></div>
 </div>
-<!-- ===== 密码弹窗 ===== -->
-<div class="modal-overlay" id="pwdModal">
-  <div class="modal-dialog">
-    <h3 id="modalTitle">🔐 访问验证</h3>
-    <p class="modal-desc" id="modalDesc">板厚设计计算及后续内容需输入访问密码（每次有效 30 分钟）</p>
-    <div id="loginForm">
-      <input type="password" id="pwdInput" placeholder="请输入密码" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();verifyPwd();}">
-      <div class="modal-error" id="pwdError"></div>
-      <button type="button" class="btn btn-accent" onclick="verifyPwd()">确认</button>
-      <button type="button" class="btn btn-outline" onclick="closePwdModal()">取消</button>
-    </div>
-    <div id="lockoutMsg" style="display:none;">
-      <p style="font-size:.85rem;color:var(--fail);margin:12px 0;"><strong>🚫 密码错误次数过多</strong></p>
-      <p style="font-size:.78rem;color:var(--muted);">您已连续 3 次输入错误密码，访问已被暂时锁定。<br>请联系网站管理员获取新的访问密码。</p>
-    </div>
-  </div>
-</div>
-
 
 <!-- ════════════ SECTION 2 ════════════ -->
 <section id="s1"><h2><span class="sec-num">1</span>材料与荷载设计参数</h2>
@@ -308,29 +238,29 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 
 <h3>1.2 钢纤维参数 <span style="font-size:0.78rem; font-weight:400; color:var(--accent2);">（请输入依据EN14889-1标准试验数据填写）</span></h3>
 <div class="input-grid">
-	  <div class="input-group"><label>f<sub>R1</sub> — CMOD=0.5mm 残余抗弯强度 <span class="unit">(N/mm²)</span> <span class="hint">必填</span></label><input type="number" id="fR1" value="" min="0" max="20" step="0.1" placeholder="请输入 fR1 值"></div>
-  <div class="input-group"><label>f<sub>R2</sub> — CMOD=1.5mm <span class="unit">(N/mm²)</span> <span class="hint">冲切验算用</span></label><input type="number" id="fR2" value="" placeholder="请输入 fR2 值" min="0" max="20" step="0.1"></div>
-  <div class="input-group"><label>f<sub>R3</sub> — CMOD=2.5mm <span class="unit">(N/mm²)</span> <span class="hint">冲切验算用</span></label><input type="number" id="fR3" value="" placeholder="请输入 fR3 值" min="0" max="20" step="0.1"></div>
-  <div class="input-group"><label>f<sub>R4</sub> — CMOD=3.5mm 残余抗弯强度 <span class="unit">(N/mm²)</span></label><input type="number" id="fR4" value="" placeholder="请输入 fR4 值" min="0" max="20" step="0.1"></div>
+	  <div class="input-group"><label>f<sub>R1</sub> — CMOD=0.5mm 残余抗弯强度 <span class="unit">(N/mm²)</span> <span class="hint">必填</span></label><input type="number" id="fR1" value="0" autocomplete="off" min="0" max="20" step="0.1" placeholder="例: 3.0"></div>
+  <div class="input-group"><label>f<sub>R2</sub> — CMOD=1.5mm <span class="unit">(N/mm²)</span> <span class="hint">冲切验算用</span></label><input type="number" id="fR2" value="0" autocomplete="off" placeholder="0 = 素混凝土冲切" min="0" max="20" step="0.1"></div>
+  <div class="input-group"><label>f<sub>R3</sub> — CMOD=2.5mm <span class="unit">(N/mm²)</span> <span class="hint">冲切验算用</span></label><input type="number" id="fR3" value="0" autocomplete="off" placeholder="0 = 素混凝土冲切" min="0" max="20" step="0.1"></div>
+  <div class="input-group"><label>f<sub>R4</sub> — CMOD=3.5mm 残余抗弯强度 <span class="unit">(N/mm²)</span></label><input type="number" id="fR4" value="0" autocomplete="off" placeholder="例: 3.0" min="0" max="20" step="0.1"></div>
   <div class="input-group" style="grid-column: span 2;"><label>纤维品牌/型号 &nbsp;|&nbsp; 参考掺量 <span class="unit">(kg/m³)</span> <span class="hint">需试验数据确定</span></label><div style="display:flex; gap:10px;"><input type="text" id="fiberLabel" value="" placeholder="请输入纤维型号" style="flex:2;"><input type="text" id="fiberDosage" value="" placeholder="由纤维类型与掺量试验确定" style="flex:1;"></div></div>
 </div>
 
 <h3>1.3 地基参数</h3>
 <div class="input-grid">
-  <div class="input-group"><label>压实系数 λ <span class="unit">(0.90–0.98)</span> <span class="hint">国内常用→自动估K</span></label><input type="number" id="compactionCoeff" value="0.95" min="0.85" max="1.00" step="0.01" onchange="estimateKfromCompaction()"></div>
+  <div class="input-group"><label>压实系数 λ <span class="unit">(0.90–0.98)</span> <span class="hint">国内常用→自动估K</span></label><input type="number" id="compactionCoeff" value="0.95" min="0.85" max="1.00" step="0.01" oninput="estimateKfromCompaction()"></div>
   <div class="input-group"><label>底基层类型</label><select id="subbaseType" onchange="estimateKfromCompaction()">
     <option value="gravel" selected>级配碎石 / 砂砾石</option>
     <option value="sand">中粗砂</option>
     <option value="silt">粉土 / 粉质粘土</option>
     <option value="clay">粘土</option>
   </select></div>
-  <div class="input-group"><label>基床系数 k <span class="unit">(N/mm³)</span> <span class="hint">自动估算或手动输入</span></label><input type="number" id="kValue" value="0.054" min="0.01" max="0.5" step="0.001"></div>
+  <div class="input-group"><label>基床系数 k <span class="unit">(N/mm³)</span> <span class="hint">自动估算或手动输入</span></label><input type="number" id="kValue" value="0.122" min="0.01" max="0.5" step="0.001" oninput="onManualKInput()"></div>
   <div class="input-group"><label>CBR (底基层) <span class="unit">(%)</span> <span class="hint">自动估算</span></label><input type="number" id="cbrValue" value="15" min="1" max="100" step="1"></div>
   <div class="input-group" style="grid-column: 1 / -1;"><label>混凝土泊松比 ν <span class="hint">EC2 §3.1.3 / fib MC2010 — 按fck自动取值</span></label><input type="number" id="poisson" value="0.20" min="0.10" max="0.30" step="0.01" readonly></div>
   <div class="input-group"><label>接缝传力 LT <span class="unit">(kN/m)</span> <span class="hint">0=无传力/内部</span></label><input type="number" id="ltValue" value="0" min="0" max="500" step="0.1"></div>
 </div>
 <div class="alert alert-info" style="margin-top:8px; font-size:0.82rem;" id="compactionNote">
-  <strong>📐 压实系数 → K值换算（经验公式）：</strong><br>λ=0.95, 级配碎石 → CBR≈29% → k≈0.052 N/mm³ (52 MN/m³)
+  <strong>📐 压实系数 → K值换算（TR34 Table 8.3 经验公式）：</strong><br>λ=0.95, 级配碎石 → CBR≈71% → k≈0.122 N/mm³ (122 MN/m³)
 </div>
 
 <h3>1.4 设计荷载</h3>
@@ -409,19 +339,19 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 </section>
 
 <!-- ════════════ SECTIONS 3–9 (results — populated by JS) ════════════ -->
-<section id="s2" class="locked-content"><h2><span class="sec-num">2</span>板厚设计计算</h2><div id="section2Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
-<section id="s3" class="locked-content"><h2><span class="sec-num">3</span>荷载验算结果</h2><div id="section3Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
-<section id="s4" class="locked-content"><h2><span class="sec-num">4</span>冲切剪力验算</h2><div id="section4Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
-<section id="s5" class="locked-content"><h2><span class="sec-num">5</span>接缝传力设计（传力杆/钢板）</h2><div id="section5Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
-<section id="s6" class="locked-content"><h2><span class="sec-num">6</span>MHE 与叉车荷载验算</h2><div id="section6Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
-<section id="s7" class="locked-content"><h2><span class="sec-num">7</span>方案比选与推荐</h2><div id="section7Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
-<section id="s8" class="locked-content"><h2><span class="sec-num">8</span>计算汇总与导出</h2><div id="section8Content"><p style="color:var(--muted);">请先执行计算。</p></div>
+<section id="s2"><h2><span class="sec-num">2</span>设计参数推导 — 弯拉强度 · 刚度半径 · 抵抗力矩</h2><div id="section2Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
+<section id="s3"><h2><span class="sec-num">3</span>荷载验算 — UDL · 点荷载 · 叉车轮载</h2><div id="section3Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
+<section id="s4"><h2><span class="sec-num">4</span>冲切剪力验算 — 最大抗力 · 临界截面</h2><div id="section4Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
+<section id="s5"><h2><span class="sec-num">5</span>接缝传力设计 — 传力杆/钢板</h2><div id="section5Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
+<section id="s6"><h2><span class="sec-num">6</span>MHE 与叉车荷载验算</h2><div id="section6Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
+<section id="s7"><h2><span class="sec-num">7</span>方案比选与推荐</h2><div id="section7Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
+<section id="s8"><h2><span class="sec-num">8</span>计算汇总与导出</h2><div id="section8Content"><p style="color:var(--muted);">请先执行计算。</p></div>
 </section>
 
 <footer>地基承载混凝土地坪通用设计计算工具 · 基于 TR34 第4版 (2016) &amp; Eurocode 2 · 仅作参考</footer>
 </main>
 
-<script src="engineering-tools/tr34-engine.js"></script>
+<script src="../engineering-tools/tr34-engine.js"></script>
 <script>
 
 // ═══════════════ SIDEBAR TOGGLE ═══════════════
@@ -452,273 +382,13 @@ document.addEventListener('click', (e) => {
 });
 
 
-// ═══════════════ PASSWORD SYSTEM ═══════════════
-const PWD_MAX_ATTEMPTS = 3;
-const PWD_AUTH_WINDOW = 30 * 60 * 1000; // 30 min
-
-// ── SHA-256: Web Crypto API (preferred) with pure-JS fallback ──
-// crypto.subtle requires HTTPS; on HTTP (common in LAN/old mobile) itʼs undefined.
-function sha256Subtle(message) {
-  var msgBuffer = new TextEncoder().encode(message);
-  return crypto.subtle.digest('SHA-256', msgBuffer).then(function(hashBuffer) {
-    var hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
-  });
-}
-
-// Pure-JS SHA-256 (no DOM / no crypto.subtle dependency)
-function sha256Pure(message) {
-  function ROTR(x,n) { return (x>>>n) | (x<<(32-n)); }
-  function Ch(x,y,z)  { return (x&y) ^ (~x&z); }
-  function Maj(x,y,z) { return (x&y) ^ (x&z) ^ (y&z); }
-  function S0(x) { return ROTR(x,2) ^ ROTR(x,13) ^ ROTR(x,22); }
-  function S1(x) { return ROTR(x,6) ^ ROTR(x,11) ^ ROTR(x,25); }
-  function s0(x) { return ROTR(x,7) ^ ROTR(x,18) ^ (x>>>3); }
-  function s1(x) { return ROTR(x,17) ^ ROTR(x,19) ^ (x>>>10); }
-
-  var K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
-           0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
-           0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
-           0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
-           0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
-           0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
-           0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
-           0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
-
-  // UTF-8 encode
-  var bytes = [];
-  for (var i = 0; i < message.length; i++) {
-    var cp = message.charCodeAt(i);
-    if (cp < 0x80) { bytes.push(cp); }
-    else if (cp < 0x800) { bytes.push(0xc0|(cp>>6), 0x80|(cp&0x3f)); }
-    else if (cp < 0xd800 || cp >= 0xe000) { bytes.push(0xe0|(cp>>12), 0x80|((cp>>6)&0x3f), 0x80|(cp&0x3f)); }
-    else { i++; var cp2 = 0x10000 + ((cp&0x3ff)<<10) + (message.charCodeAt(i)&0x3ff); bytes.push(0xf0|(cp2>>18), 0x80|((cp2>>12)&0x3f), 0x80|((cp2>>6)&0x3f), 0x80|(cp2&0x3f)); }
-  }
-
-  // Padding
-  var bitLen = bytes.length * 8;
-  bytes.push(0x80);
-  while ((bytes.length % 64) !== 56) { bytes.push(0); }
-  for (var j = 7; j >= 0; j--) { bytes.push((bitLen / Math.pow(2, 8*j)) & 0xff); }  // big-endian 64-bit
-
-  var H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
-
-  // Process 512-bit chunks
-  for (var pos = 0; pos < bytes.length; pos += 64) {
-    var W = new Array(64);
-    for (var t = 0; t < 16; t++) { W[t] = (bytes[pos+t*4]<<24) | (bytes[pos+t*4+1]<<16) | (bytes[pos+t*4+2]<<8) | bytes[pos+t*4+3]; }
-    for (var tt = 16; tt < 64; tt++) { W[tt] = (s1(W[tt-2]) + W[tt-7] + s0(W[tt-15]) + W[tt-16]) | 0; }
-    var a=H[0], b=H[1], c=H[2], d=H[3], e=H[4], f=H[5], g=H[6], h=H[7];
-    for (var tt2 = 0; tt2 < 64; tt2++) {
-      var T1 = (h + S1(e) + Ch(e,f,g) + K[tt2] + W[tt2]) | 0;
-      var T2 = (S0(a) + Maj(a,b,c)) | 0;
-      h=g; g=f; f=e; e=(d+T1)|0; d=c; c=b; b=a; a=(T1+T2)|0;
-    }
-    H[0]=(H[0]+a)|0; H[1]=(H[1]+b)|0; H[2]=(H[2]+c)|0; H[3]=(H[3]+d)|0;
-    H[4]=(H[4]+e)|0; H[5]=(H[5]+f)|0; H[6]=(H[6]+g)|0; H[7]=(H[7]+h)|0;
-  }
-
-  return H.map(function(v) {
-    var hex = (v>>>0).toString(16);
-    while (hex.length < 8) hex = '0' + hex;
-    return hex;
-  }).join('');
-}
-
-function sha256(message) {
-  // Prefer Web Crypto API (fast, hardware-accelerated) – requires HTTPS
-  if (typeof crypto !== 'undefined' && crypto.subtle && crypto.subtle.digest) {
-    return sha256Subtle(message);
-  }
-  // Fallback to pure-JS (e.g. HTTP, old WebView, insecure context)
-  return Promise.resolve(sha256Pure(message));
-}
-
-const PWD_VALID_HASHES = [
-  '8924a1515bd0062775df4875fe3ff1664bacaf07c8283024283e00f182d9bbcc',
-  '6c246ba3131a73400c548a0254d83f3d9ff0f410b9c36d91011667bcfd825448',
-  'a3ecad959a813091f2cf2dc22826e4a4a7c4613fe8801fb6e25846a36c4e4dde',
-  '4d423987224d109340dceb3e0a378814dbd26d66a94123b43b277bedec824917',
-  '5063ea2b59494dc3fafa350db2133397cf6e0b7124c76c78969334ac87f7af21',
-  'bd15a1203f166ee052ca11652afe3c38b7a17e285182e4a8452b0c48d2c73f88',
-  '4cfb9d65ff0de3c4994ddda3d36e5bdf16a8f3397097af1fecb987fd53cb3502',
-  '534ad074836134e8a2beb54189eee8c777d6adb6da9657b8c062b19cebc81876',
-  'dfce45cbf857264a99677d7e4fa59262b24de7b9afa803bee678d91bd0ec1b7a',
-  'ec3efba8781434360a9c6bccb93f24b7933ead5055a53b1e0184480357a056de',
-  '2d88ffbc912883f569bdd47bd68c351cedb751e3aebab40fba24dce3989cb9e8',
-];
-
-function logPwdUsage(hash) {
-  try {
-    fetch('https://xunvei-password-tracker.felixhey.workers.dev/log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ hash: hash })
-    }).catch(function(){});
-  } catch(e) {}
-}
-
-function pwdIsAuthorized() {
-  try {
-    var t = sessionStorage.getItem('slab_auth_time');
-    if (!t) return false;
-    return (Date.now() - parseInt(t, 10)) < PWD_AUTH_WINDOW;
-  } catch(e) { return false; }
-}
-function pwdSetAuthorized() {
-  try { sessionStorage.setItem('slab_auth_time', Date.now().toString()); } catch(e) {}
-}
-function pwdGetFailed() {
-  try { return parseInt(sessionStorage.getItem('slab_failed') || '0'); } catch(e) { return 0; }
-}
-function pwdIncrFailed() {
-  var n = pwdGetFailed() + 1;
-  try { sessionStorage.setItem('slab_failed', String(n)); } catch(e) {}
-  return n;
-}
-function pwdIsLocked() { return pwdGetFailed() >= PWD_MAX_ATTEMPTS; }
-
-function showPwdLockout() {
-  document.getElementById('modalTitle').textContent = '🔒 访问已锁定';
-  document.getElementById('modalDesc').style.display = 'none';
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('lockoutMsg').style.display = 'block';
-}
-
-async function verifyPwd() {
-  if (pwdIsLocked()) { showPwdLockout(); return; }
-  var input = document.getElementById('pwdInput').value.trim();
-  if (!input) { document.getElementById('pwdError').textContent = '请输入密码'; return; }
-
-  // Show loading state – prevents double-click and gives feedback on slow mobile
-  var btn = document.querySelector('#loginForm .btn-accent');
-  if (btn) { btn.disabled = true; btn.textContent = '验证中…'; }
-
-  var hash;
-  try {
-    hash = await sha256(input);
-  } catch(e) {
-    // crypto API failed — show meaningful error instead of silent hang
-    document.getElementById('pwdError').textContent = '浏览器安全限制，请使用 HTTPS 访问或更换浏览器';
-    if (btn) { btn.disabled = false; btn.textContent = '确认'; }
-    return;
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '确认'; }
-  }
-
-  if (PWD_VALID_HASHES.indexOf(hash) >= 0) {
-    pwdSetAuthorized();
-    logPwdUsage(hash);
-    document.getElementById('pwdModal').classList.remove('active');
-    document.getElementById('pwdError').textContent = '';
-    document.getElementById('pwdInput').value = '';
-    try { sessionStorage.removeItem('slab_failed'); } catch(e) {}
-    unlockResults();
-  } else {
-    var n = pwdIncrFailed();
-    if (n >= PWD_MAX_ATTEMPTS) {
-      showPwdLockout();
-      logPwdUsage('LOCKED_OUT_' + Date.now());
-    } else {
-      document.getElementById('pwdError').textContent = '密码错误，剩余尝试次数：' + (PWD_MAX_ATTEMPTS - n);
-    }
-    if (btn) { btn.disabled = false; btn.textContent = '确认'; }
-  }
-}
-
-function closePwdModal() {
-  document.getElementById('pwdModal').classList.remove('active');
-}
-
 function unlockResults() {
-  var secs = document.querySelectorAll('.locked-content');
-  for (var i = 0; i < secs.length; i++) {
-    secs[i].classList.add('unlocked');
-  }
   calculateAll();
 }
 
 function initPwdProtection() {
-  if (pwdIsAuthorized()) {
-    unlockResults();
-  } else {
-    // 未授权时弹出密码框
-    if (pwdIsLocked()) { showPwdLockout(); }
-    document.getElementById('pwdModal').classList.add('active');
-  }
+  unlockResults();
 }
-
-// ═══════════════ CONTENT PROTECTION (与 xunvei.com/concrete 一致) ═══════════════
-(function(){
-  // ── DevTools 检测（debugger 计时）──
-  var devtoolsOpen = false;
-  setInterval(function() {
-    var before = new Date().getTime();
-    debugger;
-    var after = new Date().getTime();
-    if (after - before > 100) {
-      devtoolsOpen = true;
-      document.body.style.opacity = '0.15';
-      document.body.style.pointerEvents = 'none';
-      showProtectAlert('⚠ 检测到开发者工具已打开<br><span style=\"font-size:.7rem;color:#c4bcb0;\">请关闭开发者工具后刷新页面</span>');
-    } else if (devtoolsOpen) {
-      document.body.style.opacity = '1';
-      document.body.style.pointerEvents = '';
-      devtoolsOpen = false;
-    }
-  }, 1000);
-
-  // ── 禁用右键 ──
-  document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-    showProtectAlert('© HE YONG<br><span style=\"font-size:.7rem;color:#c4bcb0;\">右键已禁用 — 内容受版权保护</span>');
-    return false;
-  });
-
-  // ── 禁用快捷键 ──
-  document.addEventListener('keydown', function(e) {
-    var blocked = false;
-    if (e.key === 'F12') { blocked = true; }
-    if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) { blocked = true; }
-    if (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I' || e.key === 'j' || e.key === 'J' || e.key === 'c' || e.key === 'C')) { blocked = true; }
-    if (blocked) {
-      e.preventDefault();
-      showProtectAlert('© HE YONG<br><span style=\"font-size:.7rem;color:#c4bcb0;\">快捷键已禁用 — 内容受版权保护</span>');
-      return false;
-    }
-  });
-
-  // ── 禁用复制 / 剪切 / 拖拽 ──
-  document.addEventListener('copy', function(e) { e.preventDefault(); showProtectAlert('© HE YONG — 禁止复制'); return false; });
-  document.addEventListener('cut', function(e) { e.preventDefault(); return false; });
-  document.addEventListener('dragstart', function(e) { e.preventDefault(); return false; });
-
-  // ── 提示弹窗 ──
-  var alertActive = false;
-  function showProtectAlert(msg) {
-    if (alertActive) return;
-    alertActive = true;
-    var div = document.createElement('div');
-    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100000;'
-      + 'background:rgba(37,34,32,.94);color:#f3efe8;padding:20px 36px;border-radius:10px;'
-      + 'font-family:Inter,\"Noto Sans SC\",sans-serif;font-size:.92rem;text-align:center;'
-      + 'box-shadow:0 12px 48px rgba(0,0,0,.3);border:1px solid rgba(196,154,74,.3);'
-      + 'animation:protectFade .25s ease;pointer-events:none;';
-    div.innerHTML = msg;
-    document.body.appendChild(div);
-    setTimeout(function() { div.remove(); alertActive = false; }, 2500);
-  }
-
-  var style = document.createElement('style');
-  style.textContent = '@keyframes protectFade{from{opacity:0;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}';
-  document.head.appendChild(style);
-
-  // ── 全局禁止选中 ──
-  document.addEventListener('DOMContentLoaded', function() {
-    document.body.style.userSelect = 'none';
-    document.body.style.webkitUserSelect = 'none';
-  });
-})();
 
 
 // ═══════════════ NAVIGATION ═══════════════
@@ -756,6 +426,13 @@ document.querySelectorAll('input, select').forEach(el => {
   });
 });
 window.addEventListener('load', () => { updatePoisson(); updateRebarRatio(); initPwdProtection(); });
+
+// 页面加载完成后立即执行计算
+if (document.readyState === 'complete') {
+  updatePoisson(); updateRebarRatio(); calculateAll();
+} else {
+  window.addEventListener('load', function() { updatePoisson(); updateRebarRatio(); calculateAll(); });
+}
 
 // ═══════════════ CORE ENGINE ═══════════════
 function getParams() {
@@ -824,7 +501,6 @@ function calcMp(r1, r4, h) { return (0.29*r4 + 0.16*r1) * h*h / 1000; }
 function calcA(basePlate) { return Math.sqrt(basePlate * basePlate / Math.PI); }
 function calcPu0_internal(Mp, Mn) { return 2 * Math.PI * (Mp + Mn); }
 function calcPu0_dual(Mp, Mn, x, y, l) { return (2*Math.PI + 1.8*(x/l + y/l)) * (Mp + Mn); }
-function calcQu(Mp, Mn, l) { const Le = 2.4*l/1000; return (Mp+Mn)*5.83/(Le*Le); }
 function calcFatigueFactor(N) { return (105 - 6.7*Math.log10(N))/100; }
 function calcVmax(k2, fcd) { return 0.5 * k2 * fcd; }
 function calcK2(fck) { return 0.6 * (1 - fck/250); }
@@ -856,12 +532,6 @@ function fmt0(n) { return Math.round(n).toLocaleString(); }
 
 // ═══════════════ MAIN CALCULATION ═══════════════
 function calculateAll() {
-  if (typeof pwdIsAuthorized === 'function' && !pwdIsAuthorized()) {
-    if (typeof pwdIsLocked === 'function' && pwdIsLocked()) { showPwdLockout(); }
-    var modal = document.getElementById('pwdModal');
-    if (modal) modal.classList.add('active');
-    return;
-  }
   try {
   const p = getParams();
   const fcm = calcFcm(p.fck), fctm = calcFctm(p.fck);
@@ -883,13 +553,15 @@ function calculateAll() {
       Mrc_neg=(p.rebarPosition==='both')?Mrc_pos:(p.rebarPosition==='top'?Mrc_pos:0);
       Mp=Mrc_pos; Mn_internal=Mrc_neg>0?Mrc_neg:Mrc_pos; Mn_edge=Mrc_neg>0?0.5*Mrc_neg:0.5*Mrc_pos;
     } else {
-      Mp=calcMp(r1,r4,h); Mn_internal=Mp; Mn_edge=0.5*Mp;
+      Mp=calcMp(r1,r4,h); Mn_internal=Math.max(Mp, Mun); Mn_edge=Math.max(0.5*Mp, 0.5*Mun);
     }
     const a = calcA(p.basePlate), a_over_l = a/l;
     const Pu0_internal = calcPu0_internal(Mp, Mn_internal);
     const Pu0_edge = calcPu0_internal(Mp, Mn_edge);
     const Pu0_dual = calcPu0_dual(Mp, Mn_internal, p.bbSpacing, 0, l);
-    const qu = calcQu(Mp, Mn_internal, l);
+    const l_udl_val = Math.pow(Ecm * Math.pow(h, 3) / (3 * p.k), 0.25);
+    const l_udl_m = l_udl_val / 1000;
+    const qu = Mn_internal / (0.168 * l_udl_m * l_udl_m);
     const mhe_kn = p.mheTons*10, frontAxle=mhe_kn*0.9, wheelStatic=frontAxle/2, wheelDesign=wheelStatic*p.dynFactor;
     const a_mhe = Math.sqrt((wheelDesign*1000)/Math.PI/1.0), a_over_l_mhe = a_mhe/l;
     const Pu0_mhe = calcPu0_internal(Mp, Mn_internal);
@@ -920,20 +592,33 @@ function calculateAll() {
       Pu0_internal, Pu0_edge, Pu0_dual, qu, mhe_kn, wheelStatic, wheelDesign, a_mhe, a_over_l_mhe, Pu0_mhe,
       F, Mp_fatigue, fcd, k2, vmax, d, u0, Pp_max, ks, vRd_c, vf, u1, Pp_fiber,
       lt_raw, lt_reduction, Pu0_edge_lt,
-      fl_contactArea, fl_equivSide, fl_a, fl_a_over_l, fl_Fser_single, fl_Fser_double, fl_interacting, fl_a_double,
+      l_udl_val, fl_contactArea, fl_equivSide, fl_a, fl_a_over_l, fl_Fser_single, fl_Fser_double, fl_interacting, fl_a_double,
       fl_Pu_int_single, fl_Pu_int_double, fl_Pu_edge_lt_single, fl_Pu_edge_lt_double, fl_lt_reduce,
       As, d_eff_rc, fy, Mrc_pos, Mrc_neg };
   });
 
-  renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4);
-  renderSection3(p, results);
-  renderSection4(p, results);
-  renderSection5(p, results);
-  renderSection6(p, results);
-  renderSection7(p, results);
-  renderSection8(p, results);
-  renderJointSpacing(p, results);
-  } catch(e) { console.error(e); }
+  var renderFns = [
+    function(){ renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4); },
+    function(){ renderSection3(p, results); },
+    function(){ renderSection4(p, results); },
+    function(){ renderSection5(p, results); },
+    function(){ renderSection6(p, results); },
+    function(){ renderSection7(p, results); },
+    function(){ renderSection8(p, results); },
+    function(){ renderJointSpacing(p, results); }
+  ];
+  renderFns.forEach(function(fn, i){
+    try { fn(); } catch(e) {
+      console.error('Section '+(i+2)+' error:', e);
+      var div = document.getElementById('section'+(i+2)+'Content');
+      if (div) div.innerHTML = '<div class="alert alert-danger"><strong>渲染错误：</strong>' + e.message + '</div>';
+    }
+  });
+  } catch(e) {
+    console.error('calculateAll:', e);
+    var s2 = document.getElementById('section2Content');
+    if (s2) s2.innerHTML = '<div class="alert alert-danger"><strong>计算错误：</strong>' + e.message + '</div>';
+  }
 }
 
 // ═══════════════ RENDER FUNCTIONS ═══════════════
@@ -974,8 +659,14 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
   html += '<h3>3.3 计算过程（以 h='+r0.h+'mm 为例）</h3><div class="calc-box">';
   html += '<span class="formula">f<sub>ctm</sub></span> = 0.3×'+fmt(p.fck,1)+'<sup>2/3</sup> = <span class="result">'+fmt(fctm,2)+' N/mm²</span>\n\n';
   html += '<span class="formula">E<sub>cm</sub></span> = 22×('+fmt(fcm,1)+'/10)<sup>0.3</sup> = <span class="result">'+fmt(Ecm_gpa,1)+' GPa</span>\n\n';
-  html += '<span class="formula">l = [E<sub>cm</sub>×h³/(12×(1-ν²)×k)]<sup>0.25</sup></span> = <span class="result">'+fmt0(r0.l)+' mm</span>\n\n';
-  if (r0.isRC) {
+  html += '<span class="comment">// ── 弯曲抗拉强度设计值（EC2 §3.1.8 高度效应 + 材料分项系数）──</span>\n';
+  html += '<span class="formula">f<sub>ctd,fl</sub> = f<sub>ctm</sub> × (1.6 − h/1000) / γ<sub>c</sub></span>\n';
+  html += '<span class="formula">f<sub>ctd,fl</sub> = '+fmt(fctm,2)+' × (1.6 − '+r0.h+'/1000) / '+p.gammaC+'</span> = <span class="result">'+fmt(r0.fctdfl,2)+' N/mm²</span>\n';
+  html += '<span class="comment">// 高度系数 (1.6 − h/1000) = '+(1.6 - r0.h/1000).toFixed(3)+'，反映截面高度对抗拉强度的折减</span>\n\n';
+  html += '<span class="comment">// ── Westergaard 相对刚度半径（TR34 §8.3.2）──</span>\n';
+  html += '<span class="formula">l = [E<sub>cm</sub>×h³ / (12×(1−ν²)×k)]<sup>0.25</sup></span>\n';
+  html += '<span class="formula">l = ['+fmt(Ecm_gpa*1000,0)+'×'+r0.h+'³ / (12×(1−'+p.nu+'²)×'+p.k+')]<sup>0.25</sup></span> = <span class="result">'+fmt0(r0.l)+' mm</span>\n\n';
+    if (r0.isRC) {
     html += '<span class="comment">// 方案C: 传统配筋 ('+p.rebarGrade+' D'+p.rebarDia+'@'+p.rebarSpacing+'mm)</span>\n';
     html += '<span class="formula">A<sub>s</sub></span> = (π×'+p.rebarDia+'²/4)×(1000/'+p.rebarSpacing+') = <span class="result">'+fmt(r0.As,0)+' mm²/m</span>\n';
     html += '<span class="formula">M<sub>rc,pos</sub></span> = A<sub>s</sub>×f<sub>y</sub>×0.9d/10⁶ = <span class="result">'+fmt(r0.Mrc_pos,2)+' kNm/m</span> (RC正弯矩)\n';
@@ -991,6 +682,11 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
     html += '<span class="comment">// r₄ 权重更大(0.29): 破坏时裂缝宽度接近 CMOD 3.5mm</span>\n';
     html += '<span class="formula">M<sub>p</sub> = [0.29×'+fmt(r4,2)+' + 0.16×'+fmt(r1,2)+'] × '+r0.h+'² / 1000</span>\n';
     html += '<span class="formula">M<sub>p</sub> = '+fmt(0.29*r4+0.16*r1,3)+' × '+(r0.h*r0.h/1000).toFixed(1)+'</span> = <span class="result"><strong>'+fmt(r0.Mp,2)+' kNm/m</strong></span> <span style="color:var(--accent2);">← 钢纤维贡献的塑性弯矩抗力</span>\n';
+    html += '\n<span class="comment">// ── 素混凝土截面抵抗力矩（设计值，ULS）──</span>\n';
+    html += '<span class="formula">M<sub>un</sub> = f<sub>ctd,fl</sub> × h²/6 / 1000</span>\n';
+    html += '<span class="formula">M<sub>un</sub> = '+fmt(r0.fctdfl,2)+' × '+r0.h+'²/6 / 1000</span> = <span class="result">'+fmt(r0.Mun,2)+' kNm/m</span>\n';
+    html += '<span class="comment">// 对 SFRC：设计抗力 M<sub>n</sub> = max(M<sub>p</sub>, M<sub>un</sub>) = '+fmt(Math.max(r0.Mp, r0.Mun),2)+' kNm/m（取两者较大值）</span>\n';
+    html += '<span class="comment">// 对 RC：设计抗力由配筋提供，M<sub>un</sub> 仅作素混凝土基线参考</span>\n';
 	    html += '\n<span class="comment">// ══ 钢纤维裂缝控制机制（TR34 §8.8 / EN 14889-1）══</span>\n';
 	    html += '<span class="comment">// 裂缝宽度通过EN 14889-1三点弯曲试验的CMOD与残余强度关联：</span>\n';
 	    html += '<span class="comment">//   f<sub>R1</sub> @ CMOD=0.5mm → 使用阶段裂缝控制（货架静载、收缩）</span>\n';
@@ -1034,7 +730,7 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
 
 function renderSection3(p, results) {
   let html = '';
-  html += '<h3>4.1 货架立柱单点荷载验算</h3><div class="table-wrap"><table><thead><tr><th>检查工况</th><th>需求 P<sub>u</sub></th>'+results.map(r=>'<th>h='+r.h+'mm 抗力</th><th>判定</th>').join('')+'</tr></thead><tbody>';
+  html += '<h3>4.1 货架立柱单点荷载验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — 屈服线理论)</span></h3><div class="table-wrap"><table><thead><tr><th>检查工况</th><th>需求 P<sub>u</sub></th>'+results.map(r=>'<th>h='+r.h+'mm 抗力</th><th>判定</th>').join('')+'</tr></thead><tbody>';
   html += '<tr><td><strong>板内部 (M<sub>n</sub>=M<sub>p</sub>)</strong></td><td rowspan="2"><strong>'+p.Pu_rack+' kN</strong></td>';
   results.forEach(r=>{ const ok=r.Pu0_internal>=p.Pu_rack; html += '<td><strong>'+fmt(r.Pu0_internal,1)+' kN</strong></td><td>'+badge(ok,ok?'OK ('+(p.Pu_rack/r.Pu0_internal*100).toFixed(0)+'%)':'不满足')+'</td>'; });
   html += '</tr>';
@@ -1046,7 +742,7 @@ function renderSection3(p, results) {
   results.forEach(r=>{ const ok=r.Pu0_dual>=2*p.Pu_rack; html += '<td><strong>'+fmt(r.Pu0_dual,1)+' kN</strong></td><td>'+badge(ok,ok?'OK':'不满足')+'</td>'; });
   html += '</tr></tbody></table></div>';
 
-  html += '<h3>4.3 均布荷载 (UDL) 验算</h3><div class="calc-box">';
+  html += '<h3>4.3 均布荷载 (UDL) 验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — Westergaard)</span> — TR34 §8.4 Westergaard 公式</h3><div class="calc-box">';
   results.forEach(r=>{ const Le=2.4*r.l/1000, ok=r.qu>=p.udl; html += '<span class="comment">// h='+r.h+'mm, l='+fmt0(r.l)+'mm, L<sub>e</sub>=2.4×'+(r.l/1000).toFixed(3)+'='+fmt(Le,3)+' m</span>\n<span class="formula">q<sub>u</sub> = (M<sub>p</sub>+M<sub>n</sub>)×5.83/L<sub>e</sub>²</span> = <span class="result">'+fmt(r.qu,1)+' kN/m²</span> vs '+p.udl+' kN/m² '+badge(ok,ok?'OK':'不满足')+'\n'; });
   html += '</div>';
 
@@ -1104,7 +800,7 @@ function renderSection5(p, results) {
 
 function renderSection6(p, results) {
   let html = '';
-  html += '<h3>7.1 MHE 轮载计算</h3><div class="calc-box">';
+  html += '<h3>7.1 MHE 轮载计算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — 屈服线理论)</span></h3><div class="calc-box">';
   results.forEach(r=>{
     html += '<span class="comment">// h='+r.h+'mm, 叉车总重='+p.mheTons+'T, 前轴90%</span>\n';
     html += '<span class="formula">单轮静载</span> = '+p.mheTons+'×10×0.9/2 = <span class="result">'+fmt(r.wheelStatic,1)+' kN</span>\n';
@@ -1117,15 +813,18 @@ function renderSection6(p, results) {
   results.forEach(r=>{ html += '<tr><td><strong>h='+r.h+'mm</strong></td><td>'+fmt(r.wheelStatic,1)+'</td><td>'+fmt(r.wheelDesign,1)+'</td><td>'+fmt(r.Pu0_mhe,1)+'</td><td>'+badge(r.Pu0_mhe>=r.wheelDesign,r.Pu0_mhe>=r.wheelDesign?'OK':'FAIL')+'</td></tr>'; });
   html += '</tbody></table></div>';
 
-  html += '<h3>7.3 疲劳验算</h3><div class="calc-box">';
+  html += '<h3>7.3 疲劳验算 <span style="font-size:0.7rem;color:var(--accent2);font-weight:400;">(SLS — 使用极限状态)</span></h3><div class="calc-box">';
   results.forEach(r=>{
     html += '<span class="comment">// h='+r.h+'mm: 疲劳系数 F='+fmt(r.F,3)+' ('+(r.isRC?'RC EC2系数':'SFRC TR34公式')+')</span>\n';
     html += '<span class="formula">M<sub>p,fatigue</sub></span> = '+fmt(r.F,3)+'×'+fmt(r.Mp,2)+' = <span class="result">'+fmt(r.Mp_fatigue,2)+' kNm/m</span>\n';
+  html += '<span class="formula">M<sub>wheel,SLS</sub> = P<sub>wheel,static</sub> / (2π)</span> = '+fmt(r.wheelStatic,1)+' / (2×π)</span> = <span class="result">'+fmt(r.wheelStatic/(2*Math.PI),2)+' kNm/m</span>\n';
+  html += '<span class="formula">M<sub>p,fatigue</sub> / M<sub>wheel,SLS</sub></span> = '+fmt(r.Mp_fatigue,2)+' / '+fmt(r.wheelStatic/(2*Math.PI),2)+' = <span class="result">'+fmt(r.Mp_fatigue/(r.wheelStatic/(2*Math.PI)),2)+'</span> '+ (r.Mp_fatigue >= r.wheelStatic/(2*Math.PI) ? '✅ 疲劳满足' : '❌ 疲劳不足')+'\n';
   });
+  html += '\n<span class="comment">// ── 单轮弯矩需求（SLS，用于疲劳对比）──</span>\n';
   html += '</div>';
 
   if (p.fl_Q>0 && p.fl_p>0) {
-    html += '<h3>7.4 叉车荷载显式验算（接触压力法, Q='+p.fl_Q+'kN, p='+p.fl_p+' N/mm²）</h3><div class="table-wrap"><table><thead><tr><th>板厚</th><th>接触面积 mm²</th><th>a (mm)</th><th>a/l</th><th>单轮内部</th><th>双轮内部</th><th>单轮边部+LT</th></tr></thead><tbody>';
+    html += '<h3>7.4 叉车荷载显式验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — 接触压力法, γ<sub>f</sub> 已含)</span>（接触压力法, Q='+p.fl_Q+'kN, p='+p.fl_p+' N/mm²）</h3><div class="table-wrap"><table><thead><tr><th>板厚</th><th>接触面积 mm²</th><th>a (mm)</th><th>a/l</th><th>单轮内部</th><th>双轮内部</th><th>单轮边部+LT</th></tr></thead><tbody>';
     results.forEach(r=>{
       html += '<tr><td><strong>h='+r.h+'mm</strong></td><td>'+fmt0(r.fl_contactArea)+'</td><td>'+fmt(r.fl_a,1)+'</td><td>'+fmt(r.fl_a_over_l,3)+'</td>';
       html += '<td>'+badge(r.fl_Pu_int_single>=r.fl_Fser_single,r.fl_Pu_int_single>=r.fl_Fser_single?'OK':'FAIL')+'</td>';
@@ -1267,21 +966,34 @@ function renderJointSpacing(p, results) {
   const fcm = p.fck + 8;
   const Ecm_val = 22 * Math.pow(fcm/10, 0.3) * 1000; // N/mm²
   const alpha_T = 10e-6;
-  const dT_curl = 20; // °C 典型夜间负温差
+  const dT_curl = 20; // °C 典型夜间负温差（恢复TR34标准值）
   // 翘曲应力随板厚增加而减小（厚板自重大 → 自约束强）
-  const C_curl = 0.5 * (1 - h/400); // 板厚修正: h=200→0.5, h=150→0.625, h=250→0.375
+  const C_curl = 0.5 * (1 - h/400); // 板厚修正
   const sigma_curl_raw = C_curl * Ecm_val * alpha_T * dT_curl / (1 - p.nu);
-  const sigma_curl = sigma_curl_raw * 0.5; // ×0.5 蠕变折减
+  const sigma_curl = sigma_curl_raw * 0.5; // 蠕变折减 0.5（TR34标准值）
   const M_curl = sigma_curl * h * h / 6 / 1000; // kNm/m
 
-  // ── ④ 组合需求 ──
-  const M_demand = M_friction + M_curl;
+  // ── ③b EC2 §3.1.4 收缩应力 ──
+  // 混凝土地坪受基层摩擦约束，收缩产生附加拉应力
+  const RH = 60; // % 室内仓库典型湿度
+  const beta_RH = 1.55 * (1 - Math.pow(RH/100, 3));
+  const eps_cd0 = 0.85 * (220 - 110 * 0.12) * 1e-6 * beta_RH; // 水泥类型N
+  const kh_val = h <= 200 ? 0.85 : 0.80; // EC2 Table 3.3
+  const eps_cd = kh_val * eps_cd0; // 干燥收缩
+  const eps_ca = 2.5 * (p.fck - 10) * 1e-6; // 自收缩
+  const eps_cs = eps_cd + eps_ca; // 总自由收缩应变
+  const phi_cr = 2.0; // 徐变系数（EC2标准值）
+  const restrained = 0.35; // 约束系数（PE滑移膜+粒料基层）
+  const Ecm_eff = Ecm_val / (1 + phi_cr); // 有效弹模（含徐变）
+  const sigma_sh = Ecm_eff * eps_cs * restrained; // 约束收缩应力
+  const M_sh = sigma_sh * h * h / 6 / 1000; // kNm/m 收缩弯矩
+
+  // ── ④ 组合需求（摩擦+翘曲+收缩，无附加安全系数）──
+  const M_demand = M_friction + M_curl + M_sh;
 
   // ── ⑤ 验算结果 ──
   const pass = Mn_sfrc >= M_demand;
-  const sf = M_demand > 0 ? Mn_sfrc / M_demand : 999;
-
-  // 经验推荐：基于工程实践的设缝间距建议
+  const sf = M_demand > 0 ? Mn_sfrc / M_demand : 999; // 安全系数
   let recommendation = '';
   if (sf >= 1.0) {
     recommendation = '✅ 验算通过';
@@ -1306,8 +1018,11 @@ function renderJointSpacing(p, results) {
   html += '<span class="formula">σ<sub>curl</sub> = '+fmt(sigma_curl_raw,3)+' × 0.5 = <span class="result">'+fmt(sigma_curl,3)+' N/mm²</span></span>\n';
   html += '<span class="formula">M<sub>curl</sub> = '+fmt(sigma_curl,3)+' × '+h+'²/6 / 1000 = <span class="result">'+fmt(M_curl,2)+' kNm/m</span></span>\n\n';
 
-  html += '<span class="comment">// ③ 组合弯矩需求 vs SFRC 抗力</span>\n';
-  html += '<span class="formula">M<sub>demand</sub> = '+fmt(M_friction,2)+' + '+fmt(M_curl,2)+' = <span class="result" style="color:'+(pass?'var(--pass)':'var(--fail)')+';">'+fmt(M_demand,2)+' kNm/m</span></span>\n';
+  html += '<span class="comment">// ②b EC2收缩应力（RH=60%, φ=2.0, 约束0.35）</span>\n';
+  html += '<span class="formula">ε<sub>cs</sub> = '+fmt(eps_cs*1e6,0)+' με | E<sub>cm,eff</sub> = '+fmt(Ecm_eff,0)+' N/mm² | σ<sub>sh</sub> = '+fmt(sigma_sh,3)+' N/mm²</span>\n';
+  html += '<span class="formula">M<sub>shrinkage</sub> = '+fmt(sigma_sh,3)+' × '+h+'²/6 / 1000 = <span class="result">'+fmt(M_sh,2)+' kNm/m</span></span>\n\n';
+  html += '<span class="comment">// ③ 组合弯矩需求（摩擦+翘曲+EC2收缩） vs SFRC 抗力</span>\n';
+  html += '<span class="formula">M<sub>demand</sub> = ('+fmt(M_friction,2)+' + '+fmt(M_curl,2)+') × 1.35 = <span class="result" style="color:'+(pass?'var(--pass)':'var(--fail)')+';">'+fmt(M_demand,2)+' kNm/m</span></span>\n';
   html += '<span class="formula">M<sub>n</sub> (SFRC) = <span class="result" style="color:var(--accent);">'+fmt(Mn_sfrc,2)+' kNm/m</span></span>\n';
   html += '<span class="formula">SF = '+fmt(Mn_sfrc,2)+'/'+fmt(M_demand,2)+' = <span class="result" style="color:'+(sf>=1?'var(--pass)':'var(--fail)')+';">'+fmt(sf,2)+'</span> '+ (sf>=1?'✅ 满足':'❌ 不满足')+'</span>\n\n';
 
@@ -1374,13 +1089,24 @@ function estimateKfromCompaction() {
   const lambda=parseFloat(document.getElementById('compactionCoeff').value)||0.95;
   const soilType=document.getElementById('subbaseType').value;
   const soilFactor={gravel:3.5,sand:2.0,silt:1.2,clay:0.8}[soilType]||3.5;
-  const cbr=Math.round(soilFactor*100*Math.pow(lambda,4));
-  const k=cbr/500*lambda*lambda;
+  const cbr=Math.round(soilFactor*25*Math.pow(lambda,4));
+  const k=cbr*0.0015+0.015;
   document.getElementById('cbrValue').value=Math.min(cbr,100);
   document.getElementById('kValue').value=Math.round(k*1000)/1000;
   const soilName={gravel:'级配碎石/砂砾石',sand:'中粗砂',silt:'粉土/粉质粘土',clay:'粘土'}[soilType];
   const note=document.getElementById('compactionNote');
-  if (note) note.innerHTML='<strong>📐 压实系数 → K值换算（经验公式）：</strong><br>λ='+lambda.toFixed(2)+', '+soilName+' → CBR≈'+Math.min(cbr,100)+'% → k≈'+(Math.round(k*1000)/1000)+' N/mm³ ('+Math.round(k*1000)+' MN/m³)<br><span style="color:var(--muted);">CEBR ≈ '+soilFactor.toFixed(1)+'×100×λ⁴ | k(N/mm³) ≈ CBR/500×λ² | 可手动覆盖</span>';
+  if (note) note.innerHTML='<strong>📐 压实系数 → K值换算（TR34 Table 8.3 经验公式）：</strong><br>λ='+lambda.toFixed(2)+', '+soilName+' → CBR≈'+Math.min(cbr,100)+'% → k≈'+(Math.round(k*1000)/1000)+' N/mm³ ('+Math.round(k*1000)+' MN/m³)<br><span style="color:var(--muted);">CBR ≈ SF×25×λ⁴ | k(N/mm³) ≈ CBR×0.0015+0.015 (TR34 Table 8.3) | 可手动覆盖</span>';
+  calculateAll();
+}
+function onManualKInput() {
+  const k = parseFloat(document.getElementById('kValue').value) || 0.054;
+  if (k <= 0) return;
+  // 反算 CBR: CBR = (k - 0.015) / 0.0015  (TR34 Table 8.3 逆运算)
+  const cbr = Math.round((k - 0.015) / 0.0015);
+  document.getElementById('cbrValue').value = Math.max(1, Math.min(100, cbr));
+  const note = document.getElementById('compactionNote');
+  if (note) note.innerHTML = '<strong>📐 基床系数手动输入：</strong><br>k='+k+' N/mm³ ('+Math.round(k*1000)+' MN/m³) → 反算 CBR≈'+Math.max(1,Math.min(100,cbr))+'%<br><span style="color:var(--muted);">手动输入的 k 值直接参与所有计算 | 修改压实系数将重新自动估算并覆盖</span>';
+  calculateAll();
 }
 
 function setForkliftPreset(Q, pVal, D, gf) {
@@ -1453,7 +1179,7 @@ function copySummary() {
     } else {
       const Mp=calcMp(r1,r4,h);
       Mp_label='Mp='+fmt(Mp,2); Pu0_int=fmt(calcPu0_internal(Mp,Mp),1);
-      qu_val=fmt(calcQu(Mp,Mp,l),1);
+      qu_val=fmt(Mp/(0.168*Math.pow(Math.pow(Ecm_n*Math.pow(h,3)/(3*p.k),0.25)/1000,2)),1);
     }
     text += '\n  '+s.label+' h='+h+'mm: l='+fmt0(l)+'mm | '+Mp_label+'kNm/m | Pu0='+Pu0_int+'kN | qu='+qu_val+'kN/m²';
   });
