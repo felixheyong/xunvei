@@ -1212,7 +1212,7 @@ function renderSection8(p, results) {
     ? passingS9.reduce((a,b) => a.h <= b.h ? a : b)
     : results.reduce((a,b) => a.h <= b.h ? a : b);
   const bestPassesAll = passingS9.length > 0 && passingS9.includes(best);
-  html += '<div class="final-banner"><h2>🏆 最终推荐方案 '+(bestPassesAll?'':'<span style=\"color:var(--fail);font-size:0.85rem;\">（⚠️ 不满足全部验算，以下为最优候选）</span>')+'</h2><div class="table-wrap" style="margin-top:16px;"><table><tbody>';
+  html += '<div class="final-banner"><h2>🏆 推荐方案 '+(bestPassesAll?'':'<span style=\"color:var(--fail);font-size:0.85rem;\">（⚠️ 不满足全部验算，以下为最优候选）</span>')+'</h2><div class="table-wrap" style="margin-top:16px;"><table><tbody>';
   html += '<tr><td style="width:40%"><strong>方案类型</strong></td><td><strong>'+(best.isRC?'传统RC配筋 (无钢纤维)':'SFRC 钢纤维混凝土')+'</strong></td></tr>';
   html += '<tr><td><strong>板厚</strong></td><td><strong>'+best.h+' mm</strong></td></tr>';
   html += '<tr><td><strong>混凝土</strong></td><td><strong>C'+p.fckcube+' (立方体) / C'+p.fck+' (圆柱体)</strong></td></tr>';
@@ -1240,8 +1240,7 @@ function renderSection8(p, results) {
 	    })();
   }
   html += '<tr><td><strong>基床系数 k (Winkler地基)</strong></td><td><strong>≥ '+p.k+' N/mm³</strong></td></tr>';
-  html += '<tr><td><strong>地坪等级</strong></td><td><strong>'+p.floorCategory+'</strong> (±'+p.propertyE+'mm / 3m)</td></tr>';
-  html += '</tbody></table></div></div>';
+    html += '</tbody></table></div></div>';
   document.getElementById('section8Content').innerHTML = html;
 }
 
@@ -1431,7 +1430,7 @@ function exportJSON() {
 function copySummary() {
   const p=getParams(), fctm=calcFctm(p.fck), Ecm_gpa=22*Math.pow(calcFcm(p.fck)/10,0.3);
   const r1=0.45*p.fR1, r4=0.37*p.fR4;
-  let text='地基承载混凝土地坪计算汇总\n项目：'+p.projectName+' | 地点：'+p.projectLocation+'\n地坪等级：'+p.floorCategory+' | 面积：'+p.warehouseArea+' m²\n\n── 设计参数 ──\n';
+  let text='地基承载混凝土地坪计算汇总\n项目：'+p.projectName+' | 地点：'+p.projectLocation+'\n面积：'+p.warehouseArea+' m²\n\n── 设计参数 ──\n';
   text += '混凝土：C'+p.fckcube+'/'+p.fck+' | fctm='+fmt(fctm,2)+' N/mm² | Ecm='+fmt(Ecm_gpa,1)+' GPa\n';
   text += '钢纤维：'+p.fiberLabel+' | fR1='+p.fR1+' fR4='+p.fR4+' | r1='+fmt(r1,2)+' r4='+fmt(r4,2)+'\n';
   text += '地基：k='+p.k+' N/mm³ | CBR≥'+p.cbr+'%\n荷载：立柱='+p.Pu_rack+'kN | UDL='+p.udl+'kN/m² | 叉车='+p.mheTons+'T\n';
