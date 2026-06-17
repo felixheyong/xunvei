@@ -80,6 +80,8 @@ tbody tr:hover { background: #f2f6f4; }
 .btn { padding: 7px 15px; border-radius: 6px; font-size: 0.82rem; font-weight: 500; cursor: pointer; border: none; transition: 0.15s; font-family: inherit; }
 .btn-accent { background: var(--accent2); color: #fff; }
 .btn-accent:hover { background: #8a5e3f; }
+.btn-accent:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .btn-outline { background: #fefefc; color: var(--accent2); border: 1px solid var(--accent); }
 .btn-outline:hover { background: #f2f6f4; }
 .btn-primary { background: var(--accent); color: #fff; }
@@ -273,10 +275,10 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
     <h3 id="modalTitle">🔐 访问验证</h3>
     <p class="modal-desc" id="modalDesc">板厚设计计算及后续内容需输入访问密码（每次有效 30 分钟）</p>
     <div id="loginForm">
-      <input type="password" id="pwdInput" placeholder="请输入密码" autocomplete="off" onkeydown="if(event.key==='Enter')verifyPwd()">
+      <input type="password" id="pwdInput" placeholder="请输入密码" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();verifyPwd();}">
       <div class="modal-error" id="pwdError"></div>
-      <button class="btn btn-accent" onclick="verifyPwd()">确认</button>
-      <button class="btn btn-outline" onclick="closePwdModal()">取消</button>
+      <button type="button" class="btn btn-accent" onclick="verifyPwd()">确认</button>
+      <button type="button" class="btn btn-outline" onclick="closePwdModal()">取消</button>
     </div>
     <div id="lockoutMsg" style="display:none;">
       <p style="font-size:.85rem;color:var(--fail);margin:12px 0;"><strong>🚫 密码错误次数过多</strong></p>
@@ -307,8 +309,8 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 <h3>1.2 钢纤维参数 <span style="font-size:0.78rem; font-weight:400; color:var(--accent2);">（请输入依据EN14889-1标准试验数据填写）</span></h3>
 <div class="input-grid">
 	  <div class="input-group"><label>f<sub>R1</sub> — CMOD=0.5mm 残余抗弯强度 <span class="unit">(N/mm²)</span> <span class="hint">必填</span></label><input type="number" id="fR1" value="" min="0" max="20" step="0.1" placeholder="请输入 fR1 值"></div>
-  <div class="input-group"><label>f<sub>R2</sub> — CMOD=1.5mm 残余抗弯强度 <span class="unit">(N/mm²)</span> <span class="hint">冲切验算用</span></label><input type="number" id="fR2" value="" placeholder="请输入 fR2 值" min="0" max="20" step="0.1"></div>
-  <div class="input-group"><label>f<sub>R3</sub> — CMOD=2.5mm 残余抗弯强度 <span class="unit">(N/mm²)</span> <span class="hint">冲切验算用</span></label><input type="number" id="fR3" value="" placeholder="请输入 fR3 值" min="0" max="20" step="0.1"></div>
+  <div class="input-group"><label>f<sub>R2</sub> — CMOD=1.5mm <span class="unit">(N/mm²)</span> <span class="hint">冲切验算用</span></label><input type="number" id="fR2" value="" placeholder="请输入 fR2 值" min="0" max="20" step="0.1"></div>
+  <div class="input-group"><label>f<sub>R3</sub> — CMOD=2.5mm <span class="unit">(N/mm²)</span> <span class="hint">冲切验算用</span></label><input type="number" id="fR3" value="" placeholder="请输入 fR3 值" min="0" max="20" step="0.1"></div>
   <div class="input-group"><label>f<sub>R4</sub> — CMOD=3.5mm 残余抗弯强度 <span class="unit">(N/mm²)</span></label><input type="number" id="fR4" value="" placeholder="请输入 fR4 值" min="0" max="20" step="0.1"></div>
   <div class="input-group" style="grid-column: span 2;"><label>纤维品牌/型号 &nbsp;|&nbsp; 参考掺量 <span class="unit">(kg/m³)</span> <span class="hint">需试验数据确定</span></label><div style="display:flex; gap:10px;"><input type="text" id="fiberLabel" value="" placeholder="例: AFT+ 高性能钢纤维" style="flex:2;"><input type="text" id="fiberDosage" value="" placeholder="由纤维类型与掺量试验确定" style="flex:1;"></div></div>
 </div>
@@ -454,11 +456,82 @@ document.addEventListener('click', (e) => {
 const PWD_MAX_ATTEMPTS = 3;
 const PWD_AUTH_WINDOW = 30 * 60 * 1000; // 30 min
 
-async function sha256(message) {
-  const msgBuffer = new TextEncoder().encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+// ── SHA-256: Web Crypto API (preferred) with pure-JS fallback ──
+// crypto.subtle requires HTTPS; on HTTP (common in LAN/old mobile) itʼs undefined.
+function sha256Subtle(message) {
+  var msgBuffer = new TextEncoder().encode(message);
+  return crypto.subtle.digest('SHA-256', msgBuffer).then(function(hashBuffer) {
+    var hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+  });
+}
+
+// Pure-JS SHA-256 (no DOM / no crypto.subtle dependency)
+function sha256Pure(message) {
+  function ROTR(x,n) { return (x>>>n) | (x<<(32-n)); }
+  function Ch(x,y,z)  { return (x&y) ^ (~x&z); }
+  function Maj(x,y,z) { return (x&y) ^ (x&z) ^ (y&z); }
+  function S0(x) { return ROTR(x,2) ^ ROTR(x,13) ^ ROTR(x,22); }
+  function S1(x) { return ROTR(x,6) ^ ROTR(x,11) ^ ROTR(x,25); }
+  function s0(x) { return ROTR(x,7) ^ ROTR(x,18) ^ (x>>>3); }
+  function s1(x) { return ROTR(x,17) ^ ROTR(x,19) ^ (x>>>10); }
+
+  var K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+           0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+           0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+           0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+           0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+           0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+           0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+           0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+
+  // UTF-8 encode
+  var bytes = [];
+  for (var i = 0; i < message.length; i++) {
+    var cp = message.charCodeAt(i);
+    if (cp < 0x80) { bytes.push(cp); }
+    else if (cp < 0x800) { bytes.push(0xc0|(cp>>6), 0x80|(cp&0x3f)); }
+    else if (cp < 0xd800 || cp >= 0xe000) { bytes.push(0xe0|(cp>>12), 0x80|((cp>>6)&0x3f), 0x80|(cp&0x3f)); }
+    else { i++; var cp2 = 0x10000 + ((cp&0x3ff)<<10) + (message.charCodeAt(i)&0x3ff); bytes.push(0xf0|(cp2>>18), 0x80|((cp2>>12)&0x3f), 0x80|((cp2>>6)&0x3f), 0x80|(cp2&0x3f)); }
+  }
+
+  // Padding
+  var bitLen = bytes.length * 8;
+  bytes.push(0x80);
+  while ((bytes.length % 64) !== 56) { bytes.push(0); }
+  for (var j = 7; j >= 0; j--) { bytes.push((bitLen / Math.pow(2, 8*j)) & 0xff); }  // big-endian 64-bit
+
+  var H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+
+  // Process 512-bit chunks
+  for (var pos = 0; pos < bytes.length; pos += 64) {
+    var W = new Array(64);
+    for (var t = 0; t < 16; t++) { W[t] = (bytes[pos+t*4]<<24) | (bytes[pos+t*4+1]<<16) | (bytes[pos+t*4+2]<<8) | bytes[pos+t*4+3]; }
+    for (var tt = 16; tt < 64; tt++) { W[tt] = (s1(W[tt-2]) + W[tt-7] + s0(W[tt-15]) + W[tt-16]) | 0; }
+    var a=H[0], b=H[1], c=H[2], d=H[3], e=H[4], f=H[5], g=H[6], h=H[7];
+    for (var tt2 = 0; tt2 < 64; tt2++) {
+      var T1 = (h + S1(e) + Ch(e,f,g) + K[tt2] + W[tt2]) | 0;
+      var T2 = (S0(a) + Maj(a,b,c)) | 0;
+      h=g; g=f; f=e; e=(d+T1)|0; d=c; c=b; b=a; a=(T1+T2)|0;
+    }
+    H[0]=(H[0]+a)|0; H[1]=(H[1]+b)|0; H[2]=(H[2]+c)|0; H[3]=(H[3]+d)|0;
+    H[4]=(H[4]+e)|0; H[5]=(H[5]+f)|0; H[6]=(H[6]+g)|0; H[7]=(H[7]+h)|0;
+  }
+
+  return H.map(function(v) {
+    var hex = (v>>>0).toString(16);
+    while (hex.length < 8) hex = '0' + hex;
+    return hex;
+  }).join('');
+}
+
+function sha256(message) {
+  // Prefer Web Crypto API (fast, hardware-accelerated) – requires HTTPS
+  if (typeof crypto !== 'undefined' && crypto.subtle && crypto.subtle.digest) {
+    return sha256Subtle(message);
+  }
+  // Fallback to pure-JS (e.g. HTTP, old WebView, insecure context)
+  return Promise.resolve(sha256Pure(message));
 }
 
 const PWD_VALID_HASHES = [
@@ -516,7 +589,23 @@ async function verifyPwd() {
   if (pwdIsLocked()) { showPwdLockout(); return; }
   var input = document.getElementById('pwdInput').value.trim();
   if (!input) { document.getElementById('pwdError').textContent = '请输入密码'; return; }
-  var hash = await sha256(input);
+
+  // Show loading state – prevents double-click and gives feedback on slow mobile
+  var btn = document.querySelector('#loginForm .btn-accent');
+  if (btn) { btn.disabled = true; btn.textContent = '验证中…'; }
+
+  var hash;
+  try {
+    hash = await sha256(input);
+  } catch(e) {
+    // crypto API failed — show meaningful error instead of silent hang
+    document.getElementById('pwdError').textContent = '浏览器安全限制，请使用 HTTPS 访问或更换浏览器';
+    if (btn) { btn.disabled = false; btn.textContent = '确认'; }
+    return;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '确认'; }
+  }
+
   if (PWD_VALID_HASHES.indexOf(hash) >= 0) {
     pwdSetAuthorized();
     logPwdUsage(hash);
@@ -533,6 +622,7 @@ async function verifyPwd() {
     } else {
       document.getElementById('pwdError').textContent = '密码错误，剩余尝试次数：' + (PWD_MAX_ATTEMPTS - n);
     }
+    if (btn) { btn.disabled = false; btn.textContent = '确认'; }
   }
 }
 
