@@ -544,14 +544,25 @@ function calculateAll() {
     const l = calcL(Ecm, h, p.nu, p.k);
     const Mun = calcMun(fctdfl, h);
     let Mp, Mn_internal, Mn_edge, fy=0, As=0, d_eff_rc=0, Mrc_pos=0, Mrc_neg=0;
-    if (isRC) {
-      const fy_map = {'HRB400':360,'HRB500':435,'HPB300':270}; fy=fy_map[p.rebarGrade]||360;
-      As=(Math.PI*p.rebarDia*p.rebarDia/4)*(1000/p.rebarSpacing);
-      const cover=(p.rebarPosition==='top')?25:40;
-      d_eff_rc=h-cover-p.rebarDia/2;
-      Mrc_pos=As*fy*0.9*d_eff_rc/1e6;
-      Mrc_neg=(p.rebarPosition==='both')?Mrc_pos:(p.rebarPosition==='top'?Mrc_pos:0);
-      Mp=Mrc_pos; Mn_internal=Mrc_neg>0?Mrc_neg:Mrc_pos; Mn_edge=Mrc_neg>0?0.5*Mrc_neg:0.5*Mrc_pos;
+	    if (isRC) {
+	      const fy_map = {"HRB400":360,"HRB500":435,"HPB300":270}; fy=fy_map[p.rebarGrade]||360;
+	      As=(Math.PI*p.rebarDia*p.rebarDia/4)*(1000/p.rebarSpacing);
+	      const d_pos = h - 40 - p.rebarDia/2;
+	      const d_neg = h - 25 - p.rebarDia/2;
+	      const Mrc = As*fy*0.9/1e6;
+	      if (p.rebarPosition === "top") {
+	        Mrc_neg = Mrc * d_neg; Mrc_pos = 0;
+	        Mn_internal = Math.max(Mrc_neg, Mun); Mp = Mun;
+	        Mn_edge = Math.max(0.5*Mrc_neg, 0.5*Mun); d_eff_rc = d_neg;
+	      } else if (p.rebarPosition === "bottom") {
+	        Mrc_pos = Mrc * d_pos; Mrc_neg = 0;
+	        Mp = Mrc_pos; Mn_internal = Mun;
+	        Mn_edge = 0.5 * Mun; d_eff_rc = d_pos;
+	      } else {
+	        Mrc_pos = Mrc * d_pos; Mrc_neg = Mrc * d_neg;
+	        Mp = Mrc_pos; Mn_internal = Mrc_neg;
+	        Mn_edge = 0.5 * Mrc_neg; d_eff_rc = d_pos;
+	      }
     } else {
       Mp=calcMp(r1,r4,h); Mn_internal=Math.max(Mp, Mun); Mn_edge=Math.max(0.5*Mp, 0.5*Mun);
     }
@@ -561,7 +572,7 @@ function calculateAll() {
     const Pu0_dual = calcPu0_dual(Mp, Mn_internal, p.bbSpacing, 0, l);
     const l_udl_val = Math.pow(Ecm * Math.pow(h, 3) / (3 * p.k), 0.25);
     const l_udl_m = l_udl_val / 1000;
-    const qu = Mn_internal / (0.168 * l_udl_m * l_udl_m);
+    const qu = Mp / (0.168 * l_udl_m * l_udl_m);
     const mhe_kn = p.mheTons*10, frontAxle=mhe_kn*0.9, wheelStatic=frontAxle/2, wheelDesign=wheelStatic*p.dynFactor;
     const a_mhe = Math.sqrt((wheelDesign*1000)/Math.PI/1.0), a_over_l_mhe = a_mhe/l;
     const Pu0_mhe = calcPu0_internal(Mp, Mn_internal);
@@ -667,10 +678,27 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
   html += '<span class="formula">l = [E<sub>cm</sub>×h³ / (12×(1−ν²)×k)]<sup>0.25</sup></span>\n';
   html += '<span class="formula">l = ['+fmt(Ecm_gpa*1000,0)+'×'+r0.h+'³ / (12×(1−'+p.nu+'²)×'+p.k+')]<sup>0.25</sup></span> = <span class="result">'+fmt0(r0.l)+' mm</span>\n\n';
     if (r0.isRC) {
-    html += '<span class="comment">// 方案C: 传统配筋 ('+p.rebarGrade+' D'+p.rebarDia+'@'+p.rebarSpacing+'mm)</span>\n';
-    html += '<span class="formula">A<sub>s</sub></span> = (π×'+p.rebarDia+'²/4)×(1000/'+p.rebarSpacing+') = <span class="result">'+fmt(r0.As,0)+' mm²/m</span>\n';
-    html += '<span class="formula">M<sub>rc,pos</sub></span> = A<sub>s</sub>×f<sub>y</sub>×0.9d/10⁶ = <span class="result">'+fmt(r0.Mrc_pos,2)+' kNm/m</span> (RC正弯矩)\n';
-    html += '<span class="formula">M<sub>rc,neg</sub></span> = <span class="result">'+fmt(r0.Mrc_neg,2)+' kNm/m</span> (RC负弯矩)\n';
+      html += '<span class="comment">// 方案C: 传统配筋 ('+p.rebarGrade+' D'+p.rebarDia+'@'+p.rebarSpacing+'mm — '+p.rebarPosition+'钢筋)</span>\n';
+      html += '<span class="formula">A<sub>s</sub></span> = (π×'+p.rebarDia+'²/4)×(1000/'+p.rebarSpacing+') = <span class="result">'+fmt(r0.As,0)+' mm²/m</span>\n';
+      if (p.rebarPosition==='top' || p.rebarPosition==='both') {
+        html += '<span class="formula">d<sub>neg</sub> (顶部有效高度)</span> = '+r0.h+' − 25 − '+p.rebarDia+'/2 = <span class="result">'+fmt(r0.h-25-p.rebarDia/2,0)+' mm</span>\n';
+      }
+      if (p.rebarPosition==='bottom' || p.rebarPosition==='both') {
+        html += '<span class="formula">d<sub>pos</sub> (底部有效高度)</span> = '+r0.h+' − 40 − '+p.rebarDia+'/2 = <span class="result">'+fmt(r0.h-40-p.rebarDia/2,0)+' mm</span>\n';
+      }
+      html += '<span class="formula">M<sub>rc,pos</sub> (底部钢筋)</span> = <span class="result">'+fmt(r0.Mrc_pos,2)+' kNm/m</span> (正弯矩 — 底板受拉)\n';
+      html += '<span class="formula">M<sub>rc,neg</sub> (顶部钢筋)</span> = <span class="result">'+fmt(r0.Mrc_neg,2)+' kNm/m</span> (负弯矩 — 顶板受拉)\n';
+      html += '<span class="formula">M<sub>un</sub> (素混凝土)</span> = <span class="result">'+fmt(r0.Mun,2)+' kNm/m</span> (无钢筋方向的抵抗力矩)\n';
+      html += '<span class="comment">// TR34: M<sub>p</sub> = 底部钢筋或素混凝土取较大值</span>\n';
+      html += '<span class="formula">M<sub>p</sub></span> = '+fmt(r0.Mp,2)+' kNm/m (正弯矩抗力)\n';
+      html += '<span class="comment">// UDL 由正弯矩 M<sub>p</sub> 控制（底板受拉 — sagging）：</span>\n';
+      html += '<span class="formula">M<sub>p</sub></span> = '+fmt(r0.Mn_internal,2)+' kNm/m (负弯矩抗力 → 用于 UDL 计算)\n';
+      if (p.rebarPosition==='top') {
+        html += '<span class="comment" style="color:var(--warn);">// ⚠️ 面层钢筋无底部配筋 → M<sub>p</sub>=M<sub>un</sub> → UDL 由素混凝土控制！</span>\n';
+      }
+      if (p.rebarPosition==='bottom') {
+        html += '<span class="comment" style="color:var(--pass);">// ✓ 底层钢筋提供正弯矩 → UDL 由配筋控制</span>\n';
+      }
   } else {
     html += '<span class="comment">// ── SFRC 塑性弯矩承载力（TR34 §8.3.1 屈服线理论）──</span>\n';
     html += '<span class="comment">// 钢纤维混凝土开裂后仍能传递拉应力，形成塑性铰</span>\n';
@@ -743,7 +771,7 @@ function renderSection3(p, results) {
   html += '</tr></tbody></table></div>';
 
   html += '<h3>4.3 均布荷载 (UDL) 验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — Westergaard)</span> — TR34 §8.4 Westergaard 公式</h3><div class="calc-box">';
-      results.forEach(r=>{ const l_udl_m=r.l_udl_val/1000, ok=r.qu>=p.udl; html += '<span class="comment">// h='+r.h+'mm, l<sub>UDL</sub>='+fmt0(r.l_udl_val)+'mm ('+fmt(l_udl_m,3)+' m)</span>\n<span class="comment">// l<sub>UDL</sub> = [E<sub>cm</sub>\u00d7h\u00b3/(3\u00d7k)]<sup>0.25</sup> (\u2260 l<sub>Westergaard</sub>)</span>\n<span class="formula">q<sub>u</sub> = M<sub>n</sub> / (0.168 \u00d7 l<sub>UDL</sub>\u00b2)</span>\n<span class="formula">q<sub>u</sub> = '+fmt(r.Mn_internal,2)+' / (0.168 \u00d7 '+fmt(l_udl_m,3)+'\u00b2)</span> = <span class="result">'+fmt(r.qu,1)+' kN/m\u00b2</span> vs '+p.udl+' kN/m\u00b2 '+badge(ok,ok?'OK':'不满足')+'\n'; });
+      results.forEach(r=>{ const l_udl_m=r.l_udl_val/1000, ok=r.qu>=p.udl; html += '<span class="comment">// h='+r.h+'mm, l<sub>UDL</sub>='+fmt0(r.l_udl_val)+'mm ('+fmt(l_udl_m,3)+' m)</span>\n<span class="comment">// l<sub>UDL</sub> = [E<sub>cm</sub>\u00d7h\u00b3/(3\u00d7k)]<sup>0.25</sup> (\u2260 l<sub>Westergaard</sub>)</span>\n<span class="formula">q<sub>u</sub> = M<sub>p</sub> / (0.168 \u00d7 l<sub>UDL</sub>\u00b2)</span>\n<span class="formula">q<sub>u</sub> = '+fmt(r.Mp,2)+' / (0.168 \u00d7 '+fmt(l_udl_m,3)+'\u00b2)</span> = <span class="result">'+fmt(r.qu,1)+' kN/m\u00b2</span> vs '+p.udl+' kN/m\u00b2 '+badge(ok,ok?'OK':'不满足')+'\n'; });
   html += '</div>';
 
   const allPassSection4 = results.some(r=>{
