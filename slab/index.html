@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="copyright" content="HE YONG — Twintec Freeplan® SFRC 技术整合和汉化">
+<meta name="copyright" content="HE YONG — SFRC 技术整合和汉化">
 <meta name="author" content="HE YONG">
 <meta name="robots" content="noarchive">
 <title>地基承载混凝土地坪通用设计计算工具</title>
@@ -267,7 +267,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 <main><!-- ════════════ HEADER ════════════ -->
 <div class="report-header">
   <h1>🏗️ 地基承载混凝土地坪通用设计计算工具</h1>
-  <div class="subtitle">基于 Twintec Freeplan® 技术 · TR34 第4版 (2016) &amp; Eurocode 2 | SFRC 钢纤维 + 传统RC配筋双体系 | 仅作参考，工程决策请以专业工程师判断为准<br>技术整合和汉化 HE YONG <span style="display:inline-block;margin-left:8px;font-size:.62rem;padding:2px 8px;border-radius:50px;border:1px solid rgba(44,95,138,.3);color:var(--accent);vertical-align:middle;">© 版权所有</span></div>
+  <div class="subtitle">基于 TR34 第4版 (2016) &amp; Eurocode 2 | SFRC 钢纤维 + 传统RC配筋双体系 | 仅作参考，工程决策请以专业工程师判断为准<br>技术整合和汉化 HE YONG <span style="display:inline-block;margin-left:8px;font-size:.62rem;padding:2px 8px;border-radius:50px;border:1px solid rgba(44,95,138,.3);color:var(--accent);vertical-align:middle;">© 版权所有</span></div>
 </div>
 <!-- ===== 密码弹窗 ===== -->
 <div class="modal-overlay" id="pwdModal">
@@ -365,13 +365,13 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 	
 
 
-	<h4 style="font-size:0.92rem; color: var(--accent2); margin:16px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">1.4d 最大设缝间距（Freeplan / 不切缝设计）</h4>
+	<h4 style="font-size:0.92rem; color: var(--accent2); margin:16px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">1.4d 最大设缝间距（不切缝设计）</h4>
 		<div class="alert alert-info" style="font-size:0.82rem; margin-top:4px;">
-		  <strong>📐 原理（Freeplan / TR34）：</strong>不切缝钢纤维地坪的最大设缝间距由 SFRC 负弯矩承载力 M<sub>n</sub> 控制。基层摩擦约束 + 温度翘曲的组合弯矩需求必须 ≤ M<sub>n</sub>（钢纤维提供）。M<sub>n</sub> 越大，可实现的设缝间距越大。典型值 25–40m。
+		  <strong>📐 原理（TR34）：</strong>不切缝钢纤维地坪的最大设缝间距由 SFRC 负弯矩承载力 M<sub>n</sub> 控制。基层摩擦约束 + 温度翘曲的组合弯矩需求必须 ≤ M<sub>n</sub>（钢纤维提供）。M<sub>n</sub> 越大，可实现的设缝间距越大。典型值 25–40m。
 		</div>
 		<div class="input-grid">
 		  <div class="input-group"><label>设计设缝间距 L<sub>j</sub> <span class="unit">(m)</span> </label><input type="number" id="jointSpacing" value="30" min="5" max="60" step="1" onchange="calculateAll()"></div>
-		  <div class="input-group"><label>板/基层摩擦系数 μ</label><select id="jointMu" onchange="calculateAll()"><option value="0.5" selected>μ=0.5 — PE滑移膜 + 级配碎石（标准/Freeplan推荐）</option><option value="0.8">μ=0.8 — 单层PE膜 + 碎石基层</option><option value="1.0">μ=1.0 — 直接浇筑在基层上（无滑移膜）</option><option value="1.5">μ=1.5 — 粗糙基层 / 粘结界面的保守取值</option></select></div>
+		  <div class="input-group"><label>板/基层摩擦系数 μ</label><select id="jointMu" onchange="calculateAll()"><option value="0.5" selected>μ=0.5 — PE滑移膜 + 级配碎石（标准推荐）</option><option value="0.8">μ=0.8 — 单层PE膜 + 碎石基层</option><option value="1.0">μ=1.0 — 直接浇筑在基层上（无滑移膜）</option><option value="1.5">μ=1.5 — 粗糙基层 / 粘结界面的保守取值</option></select></div>
 		</div>
 		<div id="jointSpacingResult" style="margin-top:8px; font-size:0.85rem;"></div>
 
@@ -1245,7 +1245,7 @@ function renderSection8(p, results) {
   document.getElementById('section8Content').innerHTML = html;
 }
 
-// ═══════════════ MAX JOINT SPACING (Freeplan) ═══════════════
+// ═══════════════ MAX JOINT SPACING ═══════════════
 function renderJointSpacing(p, results) {
   const r0 = results[0];  // 方案A
   if (!r0 || r0.isRC) return; // 仅SFRC适用
@@ -1282,7 +1282,7 @@ function renderJointSpacing(p, results) {
   const pass = Mn_sfrc >= M_demand;
   const sf = M_demand > 0 ? Mn_sfrc / M_demand : 999;
 
-  // Freeplan 经验推荐：基于工程实践的设缝间距建议
+  // 经验推荐：基于工程实践的设缝间距建议
   let recommendation = '';
   if (sf >= 1.0) {
     recommendation = '✅ 验算通过';
@@ -1295,7 +1295,7 @@ function renderJointSpacing(p, results) {
   let html = '';
   html += '<div class="calc-box" style="margin-top:8px;">';
 
-  html += '<span class="comment">// ══ 最大设缝间距验算（Freeplan Joint-Free Method）══</span>\n';
+  html += '<span class="comment">// ══ 最大设缝间距验算（Joint-Free Method）══</span>\n';
   html += '<span class="comment">// SFRC 负弯矩承载力 M<sub>n</sub> = '+fmt(Mn_sfrc,2)+' kNm/m（来自 f<sub>R1</sub>/f<sub>R4</sub>）</span>\n\n';
 
   html += '<span class="comment">// ① 基层摩擦约束弯矩（半板长 L/2 = '+fmt(p.jointSpacing/2,1)+'m）</span>\n';
@@ -1318,11 +1318,11 @@ function renderJointSpacing(p, results) {
   html += '</div>';
 
   html += '<div class="alert '+(pass?'alert-success':'alert-warning')+'" style="font-size:0.85rem;">';
-  html += '<strong>'+(pass?'✅ 设缝间距验算通过（Freeplan® Joint-Free）':'⚠️ 设缝间距验算不通过（Freeplan®）')+'</strong><br>';
+  html += '<strong>'+(pass?'✅ 设缝间距验算通过（Joint-Free）':'⚠️ 设缝间距验算不通过')+'</strong><br>';
   html += 'M<sub>demand</sub>='+fmt(M_demand,2)+' ≤ M<sub>n</sub>='+fmt(Mn_sfrc,2)+' kNm/m  |  SF='+fmt(sf,2);
   html += '  |  设计L<sub>j</sub>='+p.jointSpacing+'m';
   if (!pass) html += '<br>'+recommendation;
-  html += '<br><span style="font-size:0.78rem; color:var(--muted);">依据: TR34 §8.8 + Freeplan® 工程实践，非精确计算，需要调整混凝土配合比以实现设缝间距</span>';
+  html += '<br><span style="font-size:0.78rem; color:var(--muted);">依据: TR34 §8.8 工程实践，非精确计算，需要调整混凝土配合比以实现设缝间距</span>';
   html += '</div>';
 
   document.getElementById('jointSpacingResult').innerHTML = html;
