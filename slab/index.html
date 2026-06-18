@@ -1113,6 +1113,7 @@ function renderSection4(p, results) {
   html += '<tr><td>纤维剪应力</td><td>v<sub>f</sub></td>'+results.map(r=>'<td>'+(r.isRC?'<em>0</em>':'<strong>'+fmt(r.vf,3)+'</strong>')+'</td>').join('')+'<td>N/mm²</td></tr>';
   html += '<tr><td>临界截面抗力</td><td>P<sub>p</sub> = (v<sub>Rd,c</sub>+v<sub>f</sub>)·u<sub>1</sub>·d</td>'+results.map(r=>'<td><strong>'+fmt(r.Pp_fiber,1)+'</strong> '+badge(r.Pp_fiber>=p.Pu_rack,r.Pp_fiber>=p.Pu_rack?'OK':'FAIL')+'</td>').join('')+'<td>kN</td></tr>';
   html += '</tbody></table></div>';
+  html += '<div class="alert alert-info" style="font-size:0.78rem;margin-top:4px;"><strong>📐 公式：</strong>P<sub>p,max</sub> = v<sub>max</sub>·u<sub>0</sub>·d (加载面) &nbsp;|&nbsp; P<sub>p</sub> = (v<sub>Rd,c</sub>+v<sub>f</sub>)·u<sub>1</sub>·d (2d临界截面) &nbsp;|&nbsp; v<sub>max</sub> = 0.5k<sub>2</sub>f<sub>cd</sub> &nbsp;|&nbsp; k<sub>2</sub>=0.6(1−f<sub>ck</sub>/250)</div>';
   const allOk=results.every(r=>r.Pp_fiber>=p.Pu_rack&&r.Pp_max>=p.Pu_rack);
   html += '<div class="alert '+(allOk?'alert-success':'alert-danger')+'"><strong>'+(allOk?'✅ 冲切验算全部通过':'❌ 部分板厚冲切不满足')+'</strong></div>';
   document.getElementById('section4Content').innerHTML = html;
