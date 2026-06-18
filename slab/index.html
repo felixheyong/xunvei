@@ -884,7 +884,7 @@ function calculateAll() {
 function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
   let html = '';
   html += '<h3>2.1 材料参数汇总</h3><div class="table-wrap"><table><thead><tr><th>参数</th><th>符号</th><th>公式/来源</th><th>值</th><th>单位</th></tr></thead><tbody>';
-  html += '<tr><td>圆柱体特征抗压强度</td><td>f<sub>ck</sub></td><td>输入</td><td><strong>'+fmt(p.fck,1)+'</strong></td><td>N/mm²</td></tr>';
+  html += '<tr><td>圆柱体特征抗压强度</td><td>f<sub>ck</sub></td><td>—</td><td><strong>'+fmt(p.fck,1)+'</strong></td><td>N/mm²</td></tr>';
   html += '<tr><td>平均抗压强度</td><td>f<sub>cm</sub></td><td>f<sub>ck</sub>+8</td><td><strong>'+fmt(fcm,1)+'</strong></td><td>N/mm²</td></tr>';
   html += '<tr><td>平均轴心抗拉强度</td><td>f<sub>ctm</sub></td><td>0.3×f<sub>ck</sub><sup>2/3</sup></td><td><strong>'+fmt(fctm,2)+'</strong></td><td>N/mm²</td></tr>';
   html += '<tr><td>弹性模量</td><td>E<sub>cm</sub></td><td>22×(f<sub>cm</sub>/10)<sup>0.3</sup></td><td><strong>'+fmt(Ecm_gpa,1)+' GPa</strong></td><td>N/mm²</td></tr>';
@@ -1130,12 +1130,12 @@ function renderSection5(p, results) {
 
   // 传力板参数 + 承载力计算
   html += '<div class="table-wrap"><table><thead><tr><th>参数</th><th>符号</th><th>公式</th><th>结果</th><th>单位</th></tr></thead><tbody>';
-  html += '<tr><td>钢板宽度</td><td>W</td><td>输入</td><td>'+p.dw_W+'</td><td>mm</td></tr>';
-  html += '<tr><td>钢板长度</td><td>L</td><td>输入</td><td>'+p.dw_L+'</td><td>mm</td></tr>';
-  html += '<tr><td>嵌入深度</td><td>Emb</td><td>输入</td><td>'+p.dw_Emb+'</td><td>mm</td></tr>';
-  html += '<tr><td>钢板厚度</td><td>T</td><td>输入</td><td>'+p.dw_T+'</td><td>mm</td></tr>';
-  html += '<tr><td>钢板间距</td><td>S</td><td>输入</td><td>'+p.dw_S+'</td><td>mm</td></tr>';
-  html += '<tr><td>设计强度</td><td>f<sub>y</sub></td><td>输入</td><td>'+p.dw_ds+'</td><td>N/mm²</td></tr>';
+  html += '<tr><td>钢板宽度</td><td>W</td><td>—</td><td>'+p.dw_W+'</td><td>mm</td></tr>';
+  html += '<tr><td>钢板长度</td><td>L</td><td>—</td><td>'+p.dw_L+'</td><td>mm</td></tr>';
+  html += '<tr><td>嵌入深度</td><td>Emb</td><td>—</td><td>'+p.dw_Emb+'</td><td>mm</td></tr>';
+  html += '<tr><td>钢板厚度</td><td>T</td><td>—</td><td>'+p.dw_T+'</td><td>mm</td></tr>';
+  html += '<tr><td>钢板间距</td><td>S</td><td>—</td><td>'+p.dw_S+'</td><td>mm</td></tr>';
+  html += '<tr><td>设计强度</td><td>f<sub>y</sub></td><td>—</td><td>'+p.dw_ds+'</td><td>N/mm²</td></tr>';
   html += '<tr><td>钢板剪切承载力</td><td>P<sub>sh</sub></td><td>0.6f<sub>y</sub>·T·W×0.9 / 1000</td><td><strong>'+fmt(d0.Psh,1)+'</strong></td><td>kN</td></tr>';
   html += '<tr><td>混凝土承压承载力</td><td>P<sub>max</sub></td><td>0.5(√(b₁²+c₁)−b₁)/1000</td><td><strong>'+fmt(d0.Pmax,1)+'</strong></td><td>kN</td></tr>';
   html += '<tr><td>混凝土冲切承载力</td><td>P<sub>burst</sub></td><td>u₁·d₂·v<sub>Rd,ct</sub>/1000</td><td><strong>'+fmt(d0.Pburst_unreinf,1)+'</strong></td><td>kN</td></tr>';
