@@ -277,8 +277,8 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 </div>
 
 <!-- ════════════ SECTION 2 ════════════ -->
-<section id="s1"><h2><span class="sec-num">1</span>材料与荷载设计参数</h2>
-
+<section id="s1">
+<h2><span class="sec-num">1</span>材料与荷载设计参数</h2>
 <h3>1.1 混凝土等级（GB 国标预设）</h3>
 <div class="preset-row" id="concretePresets">
   <button class="preset-btn" data-fck="20" data-fckcube="25">GB C25</button>
@@ -294,16 +294,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   <div class="input-group"><label>长期系数 α<sub>cc</sub></label><input type="number" id="alphaCC" value="0.85" min="0.5" max="1.0" step="0.05"></div>
 </div>
 
-<h3>1.2 钢纤维参数 <span style="font-size:0.78rem; font-weight:400; color:var(--accent2);">（请输入依据EN14889-1标准试验数据填写）</span></h3>
-<div class="input-grid">
-	  <div class="input-group"><label>f<sub>R1</sub> — CMOD=0.5mm 残余抗弯强度 <span class="unit">(N/mm²)</span> <span class="hint">必填</span></label><input type="number" id="fR1" value="0" autocomplete="off" min="0" max="20" step="0.1" placeholder="例: 3.0"></div>
-  <div class="input-group"><label>f<sub>R2</sub> — CMOD=1.5mm <span class="unit">(N/mm²)</span> <span class="hint">冲切验算用</span></label><input type="number" id="fR2" value="0" autocomplete="off" placeholder="0 = 素混凝土冲切" min="0" max="20" step="0.1"></div>
-  <div class="input-group"><label>f<sub>R3</sub> — CMOD=2.5mm <span class="unit">(N/mm²)</span> <span class="hint">冲切验算用</span></label><input type="number" id="fR3" value="0" autocomplete="off" placeholder="0 = 素混凝土冲切" min="0" max="20" step="0.1"></div>
-  <div class="input-group"><label>f<sub>R4</sub> — CMOD=3.5mm 残余抗弯强度 <span class="unit">(N/mm²)</span></label><input type="number" id="fR4" value="0" autocomplete="off" placeholder="例: 3.0" min="0" max="20" step="0.1"></div>
-  <div class="input-group" style="grid-column: span 2;"><label>纤维品牌/型号 &nbsp;|&nbsp; 参考掺量 <span class="unit">(kg/m³)</span> <span class="hint">需试验数据确定</span></label><div style="display:flex; gap:10px;"><input type="text" id="fiberLabel" value="" placeholder="请输入纤维型号" style="flex:2;"><input type="text" id="fiberDosage" value="" placeholder="由纤维类型与掺量试验确定" style="flex:1;"></div></div>
-</div>
-
-<h3>1.3 地基参数</h3>
+<h3>1.2 地基参数</h3>
 <div class="input-grid">
   <div class="input-group"><label>压实系数 λ <span class="unit">(0.90–0.98)</span> <span class="hint">国内常用→自动估K</span></label><input type="number" id="compactionCoeff" value="0.95" min="0.85" max="1.00" step="0.01" oninput="estimateKfromCompaction()"></div>
   <div class="input-group"><label>底基层类型</label><select id="subbaseType" onchange="estimateKfromCompaction()">
@@ -321,9 +312,9 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   <strong>📐 压实系数 → K值换算（TR34 Table 8.3 经验公式）：</strong><br>λ=0.95, 级配碎石 → CBR≈71% → k≈0.122 N/mm³ (122 MN/m³)
 </div>
 
-<h3>1.4 设计荷载</h3>
+<h3>1.3 设计荷载</h3>
 
-	<h4 style="font-size:0.92rem; color: var(--accent2); margin:12px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">1.4a 静荷载</h4>
+	<h4 style="font-size:0.92rem; color: var(--accent2); margin:12px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">1.3a 静荷载</h4>
 	<div class="input-grid">
 	  <div class="input-group"><label>均布荷载 UDL <span class="unit">(kN/m²)</span></label><input type="number" id="udl" value="50" min="0" step="1"></div>
 	  <div class="input-group"><label>点荷载 / 货架立柱荷载 P<sub>u</sub> <span class="unit">(kN)</span></label><input type="number" id="rackingLoad" value="80" min="0" step="0.1"></div>
@@ -331,7 +322,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 	  <div class="input-group"><label>背对背立柱间距 <span class="unit">(mm)</span></label><input type="number" id="backToBackSpacing" value="300" min="0" step="10"></div>
 	</div>
 
-	<h4 style="font-size:0.92rem; color: var(--accent2); margin:12px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">1.4b 动荷载（叉车 / MHE）</h4>
+	<h4 style="font-size:0.92rem; color: var(--accent2); margin:12px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">1.3b 动荷载（叉车 / MHE）</h4>
 	<div class="input-grid">
 	  <div class="input-group"><label>叉车总重 <span class="unit">(吨)</span></label><input type="number" id="mheWeight" value="7" min="0" step="0.5"></div>
 	  <div class="input-group"><label>叉车轮荷载 Q <span class="unit">(kN)</span> <span class="hint">接触压力法</span></label><input type="number" id="fl_Q" value="30" min="0" step="0.5"></div>
@@ -353,7 +344,24 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 	
 
 
-	<h4 style="font-size:0.92rem; color: var(--accent2); margin:16px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">1.4d 最大设缝间距（不切缝设计）</h4>
+	<h3>1.4 候选板厚</h3>
+<div class="input-grid">
+  <div class="input-group"><label>方案 A 板厚 <span class="unit">(mm)</span> <span class="hint">SFRC 钢纤维</span></label><input type="number" id="hA" value="180" min="80" max="500" step="5"></div>
+  <div class="input-group"><label>方案 B 板厚 <span class="unit">(mm)</span> <span class="hint">传统配筋方案</span></label><input type="number" id="hB" value="180" min="80" max="500" step="5" placeholder="传统RC方案板厚" onchange="updateRebarRatio()"></div>
+  <div class="input-group"><label>方案 C 板厚 <span class="unit">(mm)</span> <span class="hint" style="color:var(--accent3);">⭐ 组合配筋 SFRC+RC</span></label><input type="number" id="hC" value="180" min="80" max="500" step="5" onchange="updateRebarBRatio()"></div>
+</div>
+
+
+<h3>1.5 钢纤维参数 <span style="font-size:0.78rem; font-weight:400; color:var(--accent2);">（EN14889-1 试验数据，应用于方案A和方案C）</span></h3>
+<div class="input-grid">
+	  <div class="input-group"><label>f<sub>R1</sub> — CMOD=0.5mm 残余抗弯强度 <span class="unit">(N/mm²)</span> <span class="hint">必填</span></label><input type="number" id="fR1" value="0" autocomplete="off" min="0" max="20" step="0.1" placeholder="例: 3.0"></div>
+  <div class="input-group"><label>f<sub>R2</sub> — CMOD=1.5mm <span class="unit">(N/mm²)</span> <span class="hint">冲切验算用</span></label><input type="number" id="fR2" value="0" autocomplete="off" placeholder="0 = 素混凝土冲切" min="0" max="20" step="0.1"></div>
+  <div class="input-group"><label>f<sub>R3</sub> — CMOD=2.5mm <span class="unit">(N/mm²)</span> <span class="hint">冲切验算用</span></label><input type="number" id="fR3" value="0" autocomplete="off" placeholder="0 = 素混凝土冲切" min="0" max="20" step="0.1"></div>
+  <div class="input-group"><label>f<sub>R4</sub> — CMOD=3.5mm 残余抗弯强度 <span class="unit">(N/mm²)</span></label><input type="number" id="fR4" value="0" autocomplete="off" placeholder="例: 3.0" min="0" max="20" step="0.1"></div>
+  <div class="input-group" style="grid-column: span 2;"><label>纤维品牌/型号 &nbsp;|&nbsp; 参考掺量 <span class="unit">(kg/m³)</span> <span class="hint">需试验数据确定</span></label><div style="display:flex; gap:10px;"><input type="text" id="fiberLabel" value="" placeholder="请输入纤维型号" style="flex:2;"><input type="text" id="fiberDosage" value="" placeholder="由纤维类型与掺量试验确定" style="flex:1;"></div></div>
+</div>
+
+<h4 style="font-size:0.92rem; color: var(--accent2); margin:16px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">1.5a 最大设缝间距（不切缝设计 — 方案A SFRC）</h4>
 		<div class="alert alert-info" style="font-size:0.82rem; margin-top:4px;">
 		  <strong>📐 原理（TR34）：</strong>不切缝钢纤维地坪的最大设缝间距由 SFRC 负弯矩承载力 M<sub>n</sub> 控制。基层摩擦约束 + 温度翘曲的组合弯矩需求必须 ≤ M<sub>n</sub>（钢纤维提供）。M<sub>n</sub> 越大，可实现的设缝间距越大。典型值 25–40m。
 		</div>
@@ -363,24 +371,16 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 		</div>
 		<div id="jointSpacingResult" style="margin-top:8px; font-size:0.85rem;"></div>
 
-		<h3>1.5 候选板厚（可填1-3个方案进行比选）</h3>
-<div class="input-grid">
-  <div class="input-group"><label>方案 A 板厚 <span class="unit">(mm)</span> <span class="hint">推荐值</span></label><input type="number" id="hA" value="180" min="80" max="500" step="5"></div>
-  <div class="input-group"><label>方案 B 板厚 <span class="unit">(mm)</span> <span class="hint">传统配筋方案</span></label><input type="number" id="hB" value="180" min="80" max="500" step="5" placeholder="传统RC方案板厚" onchange="updateRebarRatio()"></div>
-  <div class="input-group"><label>方案 C 板厚 <span class="unit">(mm)</span> <span class="hint" style="color:var(--accent3);">⭐ 组合配筋 SFRC+RC</span></label><input type="number" id="hC" value="180" min="80" max="500" step="5" onchange="updateRebarBRatio()"></div>
-</div>
-
-
-<h3>1.5a 方案B — 传统配筋参数 <span style="font-size:0.78rem;font-weight:400;color:var(--muted);">（纯RC，无钢纤维）</span></h3>
+		<h3>1.5b 方案B — 传统配筋参数 <span style="font-size:0.78rem;font-weight:400;color:var(--muted);">（纯RC，无钢纤维）</span></h3>
 <div class="input-grid">
   <div class="input-group"><label>钢筋等级</label><select id="rebarGrade"><option value="HRB400" selected>HRB400 (fy=360N/mm²)</option><option value="HRB500">HRB500 (fy=435N/mm²)</option><option value="HPB300">HPB300 (fy=270N/mm²)</option></select></div>
-  <div class="input-group"><label>钢筋直径 <span class="unit">(mm)</span></label><input type="number" id="rebarDia" value="12" min="6" max="32" step="1" onchange="updateRebarRatio()"></div>
+  <div class="input-group"><label>钢筋直径 <span class="unit">(mm)</span></label><input type="number" id="rebarDia" value="10" min="6" max="32" step="1" onchange="updateRebarRatio()"></div>
   <div class="input-group"><label>钢筋间距 <span class="unit">(mm)</span></label><input type="number" id="rebarSpacing" value="200" min="50" max="400" step="10" onchange="updateRebarRatio()"></div>
   <div class="input-group"><label>钢筋位置</label><select id="rebarPosition" onchange="updateRebarRatio()"><option value="top">面层钢筋 (顶部)</option><option value="bottom" selected>底层钢筋 (底部)</option><option value="both">双层双向钢筋</option></select></div>
   <div class="input-group"><label>截面配筋率 ρ <span class="unit">(%)</span> <span class="hint">自动计算</span></label><input type="text" id="rebarRatio" value="—" readonly></div>
 </div>
 
-<h3>1.5b 方案C — 组合配筋参数 <span style="font-size:0.78rem;font-weight:400;color:var(--accent);">钢纤维(f<sub>R1</sub>–f<sub>R4</sub>) + 传统钢筋 协同工作</span></h3>
+<h3>1.5c 方案C — 组合配筋参数 <span style="font-size:0.78rem;font-weight:400;color:var(--accent);">钢纤维(f<sub>R1</sub>–f<sub>R4</sub>) + 传统钢筋 协同工作</span></h3>
 <div class="combined-box" style="margin-bottom:12px;">
 <div class="alert alert-info" style="font-size:0.8rem;margin-bottom:12px;">
 <strong>📐 组合设计依据：</strong>fib Model Code 2010 §7.7.2 允许钢纤维残余抗拉强度与钢筋贡献叠加。纤维控制微裂缝(CMOD&lt;0.5mm)，钢筋控制宏观裂缝——两者在不同裂缝宽度区间发挥作用，可全叠加 (λ=1.0)。
@@ -409,6 +409,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   <button class="btn btn-accent" id="calcBtn" onclick="calculateAll()">🔄 计算 / 重新计算</button>
   <button class="btn btn-outline" onclick="resetToDefaults()">↩ 恢复默认值</button>
 </div>
+</section>
 </section>
 
 <!-- ════════════ SECTIONS 3–9 (results — populated by JS) ════════════ -->
@@ -673,7 +674,7 @@ function getParams() {
   p.rebarBPosition = document.getElementById('rebarBPosition').value || 'bottom';
   // 方案C rebar
   p.rebarGrade = document.getElementById('rebarGrade').value || 'HRB400';
-  p.rebarDia = parseFloat(document.getElementById('rebarDia').value) || 12;
+  p.rebarDia = parseFloat(document.getElementById('rebarDia').value) || 10;
   p.rebarSpacing = parseFloat(document.getElementById('rebarSpacing').value) || 200;
   p.rebarPosition = document.getElementById('rebarPosition').value || 'bottom';
   p.schemes = [];
@@ -1321,7 +1322,7 @@ function toggleFlatness() {
 
 function updateRebarRatio() {
   const h=parseFloat(document.getElementById('hB').value)||0;
-  const dia=parseFloat(document.getElementById('rebarDia').value)||12;
+  const dia=parseFloat(document.getElementById('rebarDia').value)||10;
   const s=parseFloat(document.getElementById('rebarSpacing').value)||200;
   const pos=document.getElementById('rebarPosition').value;
   const cover=(pos==='top')?25:40;
@@ -1395,7 +1396,7 @@ function resetToDefaults() {
   document.getElementById('fl_Q').value='30'; document.getElementById('fl_p').value='4.0';
   document.getElementById('fl_D').value='1100'; document.getElementById('fl_gf').value='1.6';
   document.getElementById('hA').value='180'; document.getElementById('hB').value='180'; document.getElementById('hC').value='180';
-  document.getElementById('rebarBGrade').value='HRB400'; document.getElementById('rebarBDia').value='10'; document.getElementById('rebarBSpacing').value='200'; document.getElementById('rebarBPosition').value='bottom'; document.getElementById('rebarGrade').value='HRB400'; document.getElementById('rebarDia').value='12';
+  document.getElementById('rebarBGrade').value='HRB400'; document.getElementById('rebarBDia').value='10'; document.getElementById('rebarBSpacing').value='200'; document.getElementById('rebarBPosition').value='bottom'; document.getElementById('rebarGrade').value='HRB400'; document.getElementById('rebarDia').value='10';
   document.getElementById('rebarSpacing').value='200'; document.getElementById('rebarPosition').value='bottom';
   document.getElementById('dw_W').value='150'; document.getElementById('dw_L').value='135';
   document.getElementById('dw_Emb').value='45'; document.getElementById('dw_T').value='6';
