@@ -1348,6 +1348,89 @@ function copySummary() {
   });
   navigator.clipboard.writeText(text).then(()=>alert('✅ 汇总文本已复制！')).catch(()=>alert('复制失败'));
 }
+
+// ═══════════════ 安全防护（同 xunvei.com/concrete） ═══════════════
+(function() {
+  // ── DevTools 检测 ──
+  var devtoolsOpen = false;
+  setInterval(function() {
+    var before = new Date().getTime();
+    debugger;
+    var after = new Date().getTime();
+    if (after - before > 100) {
+      devtoolsOpen = true;
+      document.body.style.opacity = '0.15';
+      document.body.style.pointerEvents = 'none';
+      showProtectAlert('⚠ 检测到开发者工具已打开<br><span style="font-size:.7rem;color:#c4bcb0;">请关闭开发者工具后刷新页面</span>');
+    } else if (devtoolsOpen) {
+      document.body.style.opacity = '1';
+      document.body.style.pointerEvents = '';
+      devtoolsOpen = false;
+    }
+  }, 1000);
+
+  // ── 禁用右键 ──
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    showProtectAlert('© HE YONG<br><span style="font-size:.7rem;color:#c4bcb0;">右键已禁用 — 内容受版权保护</span>');
+    return false;
+  });
+
+  // ── 禁用快捷键 (F12 / Ctrl+U / Ctrl+S / Ctrl+P / Ctrl+Shift+I/J/C) ──
+  document.addEventListener('keydown', function(e) {
+    var blocked = false;
+    if (e.key === 'F12') { blocked = true; }
+    if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) { blocked = true; }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I' || e.key === 'j' || e.key === 'J' || e.key === 'c' || e.key === 'C')) { blocked = true; }
+    if (blocked) {
+      e.preventDefault();
+      showProtectAlert('© HE YONG<br><span style="font-size:.7rem;color:#c4bcb0;">快捷键已禁用 — 内容受版权保护</span>');
+      return false;
+    }
+  });
+
+  // ── 禁用复制 / 剪切 / 拖拽 ──
+  document.addEventListener('copy', function(e) { e.preventDefault(); showProtectAlert('© HE YONG — 禁止复制'); return false; });
+  document.addEventListener('cut', function(e) { e.preventDefault(); return false; });
+  document.addEventListener('dragstart', function(e) { e.preventDefault(); return false; });
+
+  // ── 保护提示弹窗 ──
+  var alertActive = false;
+  function showProtectAlert(msg) {
+    if (alertActive) return;
+    alertActive = true;
+    var div = document.createElement('div');
+    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100000;'
+      + 'background:rgba(37,34,32,.94);color:#f3efe8;padding:20px 36px;border-radius:10px;'
+      + 'font-family:Inter,"Noto Sans SC",sans-serif;font-size:.92rem;text-align:center;'
+      + 'box-shadow:0 12px 48px rgba(0,0,0,.3);border:1px solid rgba(196,154,74,.3);'
+      + 'animation:protectFade .25s ease;pointer-events:none;';
+    div.innerHTML = msg;
+    document.body.appendChild(div);
+    setTimeout(function() { div.remove(); alertActive = false; }, 2500);
+  }
+
+  // ── 动画 CSS ──
+  var style = document.createElement('style');
+  style.textContent = '@keyframes protectFade{from{opacity:0;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}';
+  document.head.appendChild(style);
+
+  // ── 全局禁止文本选中 ──
+  document.addEventListener('DOMContentLoaded', function() {
+    var blocks = document.querySelectorAll('section, .report-header, table, .calc-box, .card, .final-banner, h2, h3, h4, .alert');
+    blocks.forEach(function(el) {
+      el.style.userSelect = 'none';
+      el.style.webkitUserSelect = 'none';
+      el.style.msUserSelect = 'none';
+    });
+    // Allow selection in input fields
+    var inputs = document.querySelectorAll('input, select, textarea');
+    inputs.forEach(function(el) {
+      el.style.userSelect = 'text';
+      el.style.webkitUserSelect = 'text';
+    });
+  });
+})();
 </script>
 </body>
 </html>
