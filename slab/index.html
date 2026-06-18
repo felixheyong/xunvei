@@ -1145,31 +1145,27 @@ function renderSection5(p, results) {
 
 function renderSection6(p, results) {
   let html = '';
-  html += '<h3>6.1 MHE 轮载计算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — 屈服线理论)</span></h3><div class="calc-box">';
-  results.forEach(r=>{
-    html += '<span class="comment">// h='+r.h+'mm, 叉车总重='+p.mheTons+'T, 前轴90%</span>\n';
-    html += '<span class="formula">单轮静载</span> = '+p.mheTons+'×10×0.9/2 = <span class="result">'+fmt(r.wheelStatic,1)+' kN</span>\n';
-    html += '<span class="formula">单轮设计载</span> = '+fmt(r.wheelStatic,1)+'×'+fmt(p.dynFactor,2)+' = <span class="result">'+fmt(r.wheelDesign,1)+' kN</span>\n';
-    html += '<span class="formula">P<sub>u,MHE</sub></span> = <span class="result">'+fmt(r.Pu0_mhe,1)+' kN</span> '+badge(r.Pu0_mhe>=r.wheelDesign,r.Pu0_mhe>=r.wheelDesign?'OK':'FAIL')+'\n\n';
-  });
-  html += '</div>';
-
-  html += '<h3>6.2 轮载验算</h3><div class="table-wrap"><table><thead><tr><th>方案</th><th>静载 (kN)</th><th>设计载 (kN)</th><th>P<sub>u,MHE</sub> (kN)</th><th>判定</th></tr></thead><tbody>';
-  results.forEach(r=>{ html += '<tr><td><strong>'+r.schemeLabel+'<br>h='+r.h+'mm</strong></td><td>'+fmt(r.wheelStatic,1)+'</td><td>'+fmt(r.wheelDesign,1)+'</td><td>'+fmt(r.Pu0_mhe,1)+'</td><td>'+badge(r.Pu0_mhe>=r.wheelDesign,r.Pu0_mhe>=r.wheelDesign?'OK':'FAIL')+'</td></tr>'; });
+  html += '<h3>6.1 MHE 轮载验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — 屈服线理论)</span></h3>';
+  html += '<div class="table-wrap"><table><thead><tr><th>参数</th>'+results.map(r=>'<th>'+r.schemeLabel+'<br>h='+r.h+'mm</th>').join('')+'<th>单位</th></tr></thead><tbody>';
+  html += '<tr><td>叉车总重</td>'+results.map(r=>'<td>'+p.mheTons+'</td>').join('')+'<td>吨</td></tr>';
+  html += '<tr><td>单轮静载</td>'+results.map(r=>'<td>'+fmt(r.wheelStatic,1)+'</td>').join('')+'<td>kN</td></tr>';
+  html += '<tr><td>动载系数</td>'+results.map(r=>'<td>'+fmt(p.dynFactor,2)+'</td>').join('')+'<td>—</td></tr>';
+  html += '<tr><td>单轮设计载</td>'+results.map(r=>'<td>'+fmt(r.wheelDesign,1)+'</td>').join('')+'<td>kN</td></tr>';
+  html += '<tr><td>板内部抗力 P<sub>u,MHE</sub></td>'+results.map(r=>'<td><strong>'+fmt(r.Pu0_mhe,1)+'</strong> '+badge(r.Pu0_mhe>=r.wheelDesign,r.Pu0_mhe>=r.wheelDesign?'OK':'FAIL')+'</td>').join('')+'<td>kN</td></tr>';
   html += '</tbody></table></div>';
 
-  html += '<h3>6.3 疲劳验算 <span style="font-size:0.7rem;color:var(--accent2);font-weight:400;">(SLS — 使用极限状态)</span></h3><div class="calc-box">';
-  results.forEach(r=>{
-    html += '<span class="comment">// h='+r.h+'mm: 疲劳系数 F='+fmt(r.F,3)+' ('+(r.isRC?'RC EC2系数':r.isCombined?'SFRC+RC 混合系数':'SFRC TR34公式')+')</span>\n';
-    html += '<span class="formula">M<sub>p,fatigue</sub></span> = '+fmt(r.F,3)+'×'+fmt(r.Mp,2)+' = <span class="result">'+fmt(r.Mp_fatigue,2)+' kNm/m</span>\n';
-  html += '<span class="formula">M<sub>wheel,SLS</sub> = P<sub>wheel,static</sub> / (2π)</span> = '+fmt(r.wheelStatic,1)+' / (2×π)</span> = <span class="result">'+fmt(r.wheelStatic/(2*Math.PI),2)+' kNm/m</span>\n';
-  html += '<span class="formula">M<sub>p,fatigue</sub> / M<sub>wheel,SLS</sub></span> = '+fmt(r.Mp_fatigue,2)+' / '+fmt(r.wheelStatic/(2*Math.PI),2)+' = <span class="result">'+fmt(r.Mp_fatigue/(r.wheelStatic/(2*Math.PI)),2)+'</span> '+ (r.Mp_fatigue >= r.wheelStatic/(2*Math.PI) ? '✅ 疲劳满足' : '❌ 疲劳不足')+'\n';
-  });
-  html += '\n<span class="comment">// ── 单轮弯矩需求（SLS，用于疲劳对比）──</span>\n';
-  html += '</div>';
+  html += '<h3>6.2 疲劳验算 <span style="font-size:0.7rem;color:var(--accent2);font-weight:400;">(SLS — 使用极限状态)</span></h3>';
+  html += '<div class="table-wrap"><table><thead><tr><th>参数</th>'+results.map(r=>'<th>'+r.schemeLabel+'<br>h='+r.h+'mm</th>').join('')+'<th>单位</th></tr></thead><tbody>';
+  html += '<tr><td>疲劳系数 F</td>'+results.map(r=>'<td>'+fmt(r.F,3)+'</td>').join('')+'<td>—</td></tr>';
+  html += '<tr><td>正弯矩抗力 M<sub>p</sub></td>'+results.map(r=>'<td>'+fmt(r.Mp,2)+'</td>').join('')+'<td>kNm/m</td></tr>';
+  html += '<tr><td>疲劳折减后 M<sub>p,fatigue</sub></td>'+results.map(r=>'<td><strong>'+fmt(r.Mp_fatigue,2)+'</strong></td>').join('')+'<td>kNm/m</td></tr>';
+  html += '<tr><td>轮载使用弯矩 M<sub>wheel,SLS</sub></td>'+results.map(r=>'<td>'+fmt(r.wheelStatic/(2*Math.PI),2)+'</td>').join('')+'<td>kNm/m</td></tr>';
+  html += '<tr><td>疲劳安全系数</td>'+results.map(r=>'<td><strong>'+fmt(r.Mp_fatigue/(r.wheelStatic/(2*Math.PI)),2)+'</strong> '+(r.Mp_fatigue>=r.wheelStatic/(2*Math.PI)?'✅ 满足':'❌ 不足')+'</td>').join('')+'<td>—</td></tr>';
+  html += '</tbody></table></div>';
+  html += '<div class="alert alert-info" style="font-size:0.78rem;margin-top:4px;"><strong>📐 公式：</strong>M<sub>wheel,SLS</sub> = P<sub>static</sub>/(2π) &nbsp;|&nbsp; M<sub>p,fatigue</sub> = F×M<sub>p</sub> &nbsp;|&nbsp; SFRC: F=(105−6.7logN)/100, RC: F=0.7</div>';
 
   if (p.fl_Q>0 && p.fl_p>0) {
-    html += '<h3>6.4 叉车荷载显式验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — 接触压力法, Q='+p.fl_Q+'kN, p='+p.fl_p+' N/mm²)</span></h3><div class="table-wrap"><table><thead><tr><th>方案</th><th>接触面积 mm²</th><th>a (mm)</th><th>a/l</th><th>单轮内部</th><th>双轮内部</th><th>单轮边部+LT</th></tr></thead><tbody>';
+    html += '<h3>6.3 叉车荷载显式验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — 接触压力法, Q='+p.fl_Q+'kN, p='+p.fl_p+' N/mm²)</span></h3><div class="table-wrap"><table><thead><tr><th>方案</th><th>接触面积 mm²</th><th>a (mm)</th><th>a/l</th><th>单轮内部</th><th>双轮内部</th><th>单轮边部+LT</th></tr></thead><tbody>';
     results.forEach(r=>{
       html += '<tr><td><strong>'+r.schemeLabel+'<br>h='+r.h+'mm</strong></td><td>'+fmt0(r.fl_contactArea)+'</td><td>'+fmt(r.fl_a,1)+'</td><td>'+fmt(r.fl_a_over_l,3)+'</td>';
       html += '<td>'+badge(r.fl_Pu_int_single>=r.fl_Fser_single,r.fl_Pu_int_single>=r.fl_Fser_single?'OK':'FAIL')+'</td>';
