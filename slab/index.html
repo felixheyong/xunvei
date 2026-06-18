@@ -1048,7 +1048,7 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
 
 function renderSection3(p, results) {
   let html = '';
-  html += '<h3>3.1 货架立柱单点荷载验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — TR34 屈服线理论)</span></h3><div class="table-wrap"><table><thead><tr><th>检查工况</th><th>需求 P<sub>u</sub></th>'+results.map(r=>'<th>h='+r.h+'mm 抗力</th><th>判定</th>').join('')+'</tr></thead><tbody>';
+  html += '<h3>3.1 货架立柱单点荷载验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — TR34 屈服线理论)</span></h3><div class="table-wrap"><table><thead><tr><th>检查工况</th><th>需求 P<sub>u</sub></th>'+results.map(r=>'<th>'+r.schemeLabel+'<br>h='+r.h+'mm</th><th>判定</th>').join('')+'</tr></thead><tbody>';
   html += '<tr><td><strong>板内部</strong></td><td rowspan="2"><strong>'+p.Pu_rack+' kN</strong></td>';
   results.forEach(r=>{ const ok=r.Pu0_internal>=p.Pu_rack; html += '<td><strong>'+fmt(r.Pu0_internal,1)+' kN</strong></td><td>'+badge(ok,ok?'OK ('+(p.Pu_rack/r.Pu0_internal*100).toFixed(0)+'%)':'不满足')+'</td>'; });
   html += '</tr>';
@@ -1056,7 +1056,7 @@ function renderSection3(p, results) {
   results.forEach(r=>{ const cap=p.lt>0?r.Pu0_edge_lt:r.Pu0_edge; const ok=cap>=p.Pu_rack; html += '<td><strong>'+fmt(cap,1)+' kN</strong>'+(p.lt>0?' <small style="color:var(--muted);">+LT</small>':'')+'</td><td>'+badge(ok,ok?'OK ('+(p.Pu_rack/cap*100).toFixed(0)+'%)':'不满足')+'</td>'; });
   html += '</tr></tbody></table></div>';
 
-  html += '<h3>3.2 双立柱荷载（背对背间距='+p.bbSpacing+'mm）</h3><div class="table-wrap"><table><thead><tr><th>需求</th>'+results.map(r=>'<th>h='+r.h+'mm 抗力</th><th>判定</th>').join('')+'</tr></thead><tbody><tr><td><strong>2×'+p.Pu_rack+'='+(2*p.Pu_rack)+' kN</strong></td>';
+  html += '<h3>3.2 双立柱荷载（背对背间距='+p.bbSpacing+'mm）</h3><div class="table-wrap"><table><thead><tr><th>需求</th>'+results.map(r=>'<th>'+r.schemeLabel+'<br>h='+r.h+'mm</th><th>判定</th>').join('')+'</tr></thead><tbody><tr><td><strong>2×'+p.Pu_rack+'='+(2*p.Pu_rack)+' kN</strong></td>';
   results.forEach(r=>{ const ok=r.Pu0_dual>=2*p.Pu_rack; html += '<td><strong>'+fmt(r.Pu0_dual,1)+' kN</strong></td><td>'+badge(ok,ok?'OK':'不满足')+'</td>'; });
   html += '</tr></tbody></table></div>';
 
@@ -1066,7 +1066,7 @@ function renderSection3(p, results) {
 
   // ── 挠度估算 ──
   html += '<h3>3.4 挠度估算 <span style="font-size:0.7rem;color:var(--accent2);font-weight:400;">(SLS — Westergaard 弹性解)</span></h3>';
-  html += '<div class="table-wrap"><table><thead><tr><th>荷载</th><th>位置</th>'+results.map(r=>'<th>h='+r.h+'mm</th>').join('')+'</tr></thead><tbody>';
+  html += '<div class="table-wrap"><table><thead><tr><th>荷载</th><th>位置</th>'+results.map(r=>'<th>'+r.schemeLabel+'<br>h='+r.h+'mm</th>').join('')+'</tr></thead><tbody>';
   html += '<tr><td rowspan="2"><strong>立柱静载 '+p.Pu_rack+' kN</strong></td><td>板中心 δ<sub>c</sub></td>';
   results.forEach(r=>{ html += '<td>'+fmt(r.defl_center,3)+' mm</td>'; });
   html += '</tr><tr><td>自由边 δ<sub>e</sub></td>';
@@ -1095,7 +1095,7 @@ function renderSection4(p, results) {
   html += '<h3>4.1 最大冲切抗力 (EC2 §6.5)</h3><div class="calc-box">';
   results.forEach(r=>{ html += '<span class="comment">// h='+r.h+'mm: v<sub>max</sub>='+fmt(r.vmax,2)+' N/mm², u<sub>0</sub>='+r.u0+'mm, d='+fmt(r.d,0)+'mm</span>\n<span class="formula">P<sub>p,max</sub></span> = '+fmt(r.vmax,2)+'×'+r.u0+'×'+fmt(r.d,0)+'/1000 = <span class="result">'+fmt(r.Pp_max,1)+' kN</span>\n'; });
   html += '</div>';
-  html += '<h3>4.2 各板厚冲切验算</h3><div class="table-wrap"><table><thead><tr><th>参数</th>'+results.map(r=>'<th>h='+r.h+'mm</th>').join('')+'</tr></thead><tbody>';
+  html += '<h3>4.2 各板厚冲切验算</h3><div class="table-wrap"><table><thead><tr><th>参数</th>'+results.map(r=>'<th>'+r.schemeLabel+'<br>h='+r.h+'mm</th>').join('')+'</tr></thead><tbody>';
   const r0=results[0];
   html += '<tr><td>P<sub>p,max</sub> (面)</td>'+results.map(r=>'<td><strong>'+fmt(r.Pp_max,1)+' kN</strong></td>').join('')+'</tr>';
   html += '<tr><td>v<sub>Rd,c</sub></td>'+results.map(r=>'<td>'+fmt(r.vRd_c,3)+' N/mm²</td>').join('')+'</tr>';
@@ -1125,7 +1125,7 @@ function renderSection5(p, results) {
     html += '<div class="table-wrap"><table><thead><tr><th>板厚</th><th>LT需求 (kN/m)</th><th>传力杆提供 (kN/m)</th><th>判定</th></tr></thead><tbody>';
     results.forEach(r=>{
       const dd=calculateDowel({dw_W:p.dw_W,dw_L:p.dw_L,dw_Emb:p.dw_Emb,dw_T:p.dw_T,dw_S:p.dw_S,dw_ds:p.dw_ds,dw_e:p.dw_e,fck:p.fck,h:r.h});
-      html += '<tr><td><strong>h='+r.h+'mm</strong></td><td>'+fmt(p.lt,1)+'</td><td>'+fmt(dd.ULS_per_m,1)+'</td><td>'+badge(dd.ULS_per_m>=p.lt,dd.ULS_per_m>=p.lt?'OK':'传力不足')+'</td></tr>';
+      html += '<tr><td><strong>'+r.schemeLabel+'<br>h='+r.h+'mm</strong></td><td>'+fmt(p.lt,1)+'</td><td>'+fmt(dd.ULS_per_m,1)+'</td><td>'+badge(dd.ULS_per_m>=p.lt,dd.ULS_per_m>=p.lt?'OK':'传力不足')+'</td></tr>';
     });
     html += '</tbody></table></div>';
   } else {
@@ -1145,8 +1145,8 @@ function renderSection6(p, results) {
   });
   html += '</div>';
 
-  html += '<h3>6.2 轮载验算</h3><div class="table-wrap"><table><thead><tr><th>板厚</th><th>静载 (kN)</th><th>设计载 (kN)</th><th>P<sub>u,MHE</sub> (kN)</th><th>判定</th></tr></thead><tbody>';
-  results.forEach(r=>{ html += '<tr><td><strong>h='+r.h+'mm</strong></td><td>'+fmt(r.wheelStatic,1)+'</td><td>'+fmt(r.wheelDesign,1)+'</td><td>'+fmt(r.Pu0_mhe,1)+'</td><td>'+badge(r.Pu0_mhe>=r.wheelDesign,r.Pu0_mhe>=r.wheelDesign?'OK':'FAIL')+'</td></tr>'; });
+  html += '<h3>6.2 轮载验算</h3><div class="table-wrap"><table><thead><tr><th>方案</th><th>静载 (kN)</th><th>设计载 (kN)</th><th>P<sub>u,MHE</sub> (kN)</th><th>判定</th></tr></thead><tbody>';
+  results.forEach(r=>{ html += '<tr><td><strong>'+r.schemeLabel+'<br>h='+r.h+'mm</strong></td><td>'+fmt(r.wheelStatic,1)+'</td><td>'+fmt(r.wheelDesign,1)+'</td><td>'+fmt(r.Pu0_mhe,1)+'</td><td>'+badge(r.Pu0_mhe>=r.wheelDesign,r.Pu0_mhe>=r.wheelDesign?'OK':'FAIL')+'</td></tr>'; });
   html += '</tbody></table></div>';
 
   html += '<h3>6.3 疲劳验算 <span style="font-size:0.7rem;color:var(--accent2);font-weight:400;">(SLS — 使用极限状态)</span></h3><div class="calc-box">';
@@ -1160,9 +1160,9 @@ function renderSection6(p, results) {
   html += '</div>';
 
   if (p.fl_Q>0 && p.fl_p>0) {
-    html += '<h3>6.4 叉车荷载显式验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — 接触压力法, Q='+p.fl_Q+'kN, p='+p.fl_p+' N/mm²)</span></h3><div class="table-wrap"><table><thead><tr><th>板厚</th><th>接触面积 mm²</th><th>a (mm)</th><th>a/l</th><th>单轮内部</th><th>双轮内部</th><th>单轮边部+LT</th></tr></thead><tbody>';
+    html += '<h3>6.4 叉车荷载显式验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — 接触压力法, Q='+p.fl_Q+'kN, p='+p.fl_p+' N/mm²)</span></h3><div class="table-wrap"><table><thead><tr><th>方案</th><th>接触面积 mm²</th><th>a (mm)</th><th>a/l</th><th>单轮内部</th><th>双轮内部</th><th>单轮边部+LT</th></tr></thead><tbody>';
     results.forEach(r=>{
-      html += '<tr><td><strong>h='+r.h+'mm</strong></td><td>'+fmt0(r.fl_contactArea)+'</td><td>'+fmt(r.fl_a,1)+'</td><td>'+fmt(r.fl_a_over_l,3)+'</td>';
+      html += '<tr><td><strong>'+r.schemeLabel+'<br>h='+r.h+'mm</strong></td><td>'+fmt0(r.fl_contactArea)+'</td><td>'+fmt(r.fl_a,1)+'</td><td>'+fmt(r.fl_a_over_l,3)+'</td>';
       html += '<td>'+badge(r.fl_Pu_int_single>=r.fl_Fser_single,r.fl_Pu_int_single>=r.fl_Fser_single?'OK':'FAIL')+'</td>';
       html += '<td>'+badge(r.fl_Pu_int_double>=r.fl_Fser_double,r.fl_Pu_int_double>=r.fl_Fser_double?'OK':'FAIL')+'</td>';
       html += '<td>'+badge(r.fl_Pu_edge_lt_single>=r.fl_Fser_single,r.fl_Pu_edge_lt_single>=r.fl_Fser_single?'OK':(p.lt>0?'LT不足':'需传力杆'))+'</td>';
@@ -1176,7 +1176,7 @@ function renderSection6(p, results) {
 function renderSection8(p, results) {
   let html = '';
   const wheelDesign = p.mheTons*10*0.9/2*p.dynFactor;
-  html += '<h3>7.1 荷载验算汇总表</h3><div class="table-wrap"><table><thead><tr><th>验算项</th>'+results.map(r=>'<th>h='+r.h+'mm ('+(r.isCombined?'SFRC+RC':r.isRC?'RC':'SFRC')+')</th>').join('')+'</tr></thead><tbody>';
+  html += '<h3>7.1 荷载验算汇总表</h3><div class="table-wrap"><table><thead><tr><th>验算项</th>'+results.map(r=>'<th>'+r.schemeLabel+'<br>h='+r.h+'mm</th>').join('')+'</tr></thead><tbody>';
   html += '<tr><td>立柱内部</td>'+results.map(r=>'<td>'+badge(r.Pu0_internal>=p.Pu_rack,r.Pu0_internal>=p.Pu_rack?'OK':'FAIL')+'</td>').join('')+'</tr>';
   html += '<tr><td>立柱边部'+(p.lt>0?'+LT':'')+'</td>'+results.map(r=>{const cap=p.lt>0?r.Pu0_edge_lt:r.Pu0_edge;return'<td>'+badge(cap>=p.Pu_rack,cap>=p.Pu_rack?'OK':'FAIL')+'</td>';}).join('')+'</tr>';
   html += '<tr><td>双立柱</td>'+results.map(r=>'<td>'+badge(r.Pu0_dual>=2*p.Pu_rack,r.Pu0_dual>=2*p.Pu_rack?'OK':'FAIL')+'</td>').join('')+'</tr>';
