@@ -1185,56 +1185,6 @@ function renderSection8(p, results) {
   html += '<tr><td>冲切</td>'+results.map(r=>'<td>'+badge(r.Pp_fiber>=p.Pu_rack,r.Pp_fiber>=p.Pu_rack?'OK':'FAIL')+'</td>').join('')+'</tr>';
   html += '</tbody></table></div>';
 
-  // 筛选全部通过的方案，取板厚最小者；若均不通过，取板厚最小者并标注
-  const passingS9 = results.filter(r=>{
-    const wheelDesign = p.mheTons*10*0.9/2*p.dynFactor;
-    return r.Pu0_internal>=p.Pu_rack && (p.lt>0?r.Pu0_edge_lt:r.Pu0_edge)>=p.Pu_rack && r.Pu0_dual>=2*p.Pu_rack && r.qu>=p.udl && r.Pu0_mhe>=wheelDesign && r.Pp_fiber>=p.Pu_rack;
-  });
-  const best = passingS9.length > 0
-    ? passingS9.reduce((a,b) => a.h <= b.h ? a : b)
-    : results.reduce((a,b) => a.h <= b.h ? a : b);
-  const bestPassesAll = passingS9.length > 0 && passingS9.includes(best);
-  html += '<div class="final-banner"><h2>🏆 推荐方案 '+(bestPassesAll?'':'<span style=\"color:var(--fail);font-size:0.85rem;\">（⚠️ 不满足全部验算，以下为最优候选）</span>')+'</h2><div class="table-wrap" style="margin-top:16px;"><table><tbody>';
-  html += '<tr><td style="width:40%"><strong>方案类型</strong></td><td><strong>'+(best.isCombined?'SFRC+RC 组合配筋':best.isRC?'传统RC配筋 (无钢纤维)':'SFRC 钢纤维混凝土')+'</strong></td></tr>';
-  html += '<tr><td><strong>板厚</strong></td><td><strong>'+best.h+' mm</strong></td></tr>';
-  html += '<tr><td><strong>混凝土</strong></td><td><strong>C'+p.fckcube+' (立方体) / C'+p.fck+' (圆柱体)</strong></td></tr>';
-  if (best.isCombined) {
-    html += '<tr><td><strong>钢纤维</strong></td><td><strong>'+p.fiberLabel+' (f<sub>R1</sub>='+fmt(p.fR1,1)+', f<sub>R4</sub>='+fmt(p.fR4,1)+' N/mm²)</strong></td></tr>';
-    html += '<tr><td><strong>钢纤维贡献 M<sub>fib</sub></strong></td><td><strong>'+fmt(best.M_fiber,2)+' kNm/m</strong></td></tr>';
-    html += '<tr><td><strong>钢筋等级</strong></td><td><strong>'+p.rebarBGrade+' (fy='+best.fy+' N/mm²)</strong></td></tr>';
-    html += '<tr><td><strong>配筋</strong></td><td><strong>D'+p.rebarBDia+'@'+p.rebarBSpacing+'mm — '+(p.rebarBPosition==='top'?'面层':p.rebarBPosition==='bottom'?'底层':'双层双向')+'</strong></td></tr>';
-    html += '<tr><td><strong>配筋面积 A<sub>s</sub></strong></td><td><strong>'+fmt(best.As,0)+' mm²/m</strong></td></tr>';
-    (function(){
-      var factor=(p.rebarBPosition==='both')?4:2;
-      html += '<tr><td><strong>钢筋用量</strong></td><td><strong>'+fmt(best.As*7850/1e6*factor,2)+' kg/m²</strong></td></tr>';
-      var dosage=parseFloat(p.fiberDosage)||0;
-      if(dosage>0)html += '<tr><td><strong>钢纤维用量</strong></td><td><strong>'+fmt(dosage*best.h/1000,2)+' kg/m²</strong></td></tr>';
-    })();
-  } else if (best.isRC) {
-    html += '<tr><td><strong>钢筋等级</strong></td><td><strong>'+p.rebarGrade+' (fy='+best.fy+' N/mm²)</strong></td></tr>';
-    html += '<tr><td><strong>配筋</strong></td><td><strong>D'+p.rebarDia+'@'+p.rebarSpacing+'mm — '+(p.rebarPosition==='top'?'面层':p.rebarPosition==='bottom'?'底层':'双层双向')+'</strong></td></tr>';
-    html += '<tr><td><strong>配筋面积 A<sub>s</sub></strong></td><td><strong>'+fmt(best.As,0)+' mm²/m</strong></td></tr>';
-	    (function(){
-	      var factor = (p.rebarPosition === 'both') ? 4 : 2;  // 单层双向×2, 双层双向×4（As为单向面积）
-	      var rebarKgPerM2 = best.As * 7850 / 1e6 * factor;
-	      html += '<tr><td><strong>钢筋用量</strong></td><td><strong>'+fmt(rebarKgPerM2,2)+' kg/m²</strong></td></tr>';
-	    })();
-    html += '<tr><td><strong>正弯矩 M<sub>rc,pos</sub></strong></td><td><strong>'+fmt(best.Mrc_pos,2)+' kNm/m</strong></td></tr>';
-  } else {
-    html += '<tr><td><strong>钢纤维</strong></td><td><strong>'+p.fiberLabel+'</strong></td></tr>';
-    html += '<tr><td><strong>f<sub>R1</sub> (CMOD 0.5mm)</strong></td><td><strong>'+fmt(p.fR1,1)+' N/mm²</strong></td></tr>';
-    html += '<tr><td><strong>f<sub>R4</sub> (CMOD 3.5mm)</strong></td><td><strong>'+fmt(p.fR4,1)+' N/mm²</strong></td></tr>';
-    html += // (Mp row already shown)
-	    (function(){
-	      var dosage = parseFloat(p.fiberDosage) || 0;
-	      if (dosage > 0) {
-	        var fiberPerM2 = dosage * best.h / 1000;
-	        html += '<tr><td><strong>钢纤维用量</strong></td><td><strong>'+fmt(fiberPerM2,2)+' kg/m²</strong></td></tr>';
-	      }
-	    })();
-  }
-  html += '<tr><td><strong>基床系数 k (Winkler地基)</strong></td><td><strong>≥ '+p.k+' N/mm³</strong></td></tr>';
-    html += '</tbody></table></div></div>';
   document.getElementById('section8Content').innerHTML = html;
 }
 
