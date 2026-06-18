@@ -795,9 +795,11 @@ function calculateAll() {
     const Pu0_dual = calcPu0_dual(Mp, Mn_internal, p.bbSpacing, 0, l);
     const l_udl_val = Math.pow(Ecm * Math.pow(h, 3) / (3 * p.k), 0.25);
     const l_udl_m = l_udl_val / 1000;
-    // TR34 §8.4: Westergaard UDL = sagging moment check (Mp, bottom tension)
-    // Mn < Mp is a separate hogging concern → flagged in joint spacing check
-    const qu = Mp / (0.168 * l_udl_m * l_udl_m);
+    // UDL 同时产生正弯矩(sagging,板底受拉)和负弯矩(hogging,板顶受拉)
+    // 对 Mp≠Mn 的截面(如单面配筋RC)，弱方向控制承载力
+    // 参考 TR34 §8.4 Westergaard + 屈服线理论 (Pu=2π(Mp+Mn))
+    // 工程保守取 min(Mp, Mn_internal)
+    const M_udl = Math.min(Mp, Mn_internal); const qu = M_udl / (0.168 * l_udl_m * l_udl_m);
     const mhe_kn = p.mheTons*10, frontAxle=mhe_kn*0.9, wheelStatic=frontAxle/2, wheelDesign=wheelStatic*p.dynFactor;
     const a_mhe = Math.sqrt((wheelDesign*1000)/Math.PI/1.0), a_over_l_mhe = a_mhe/l;
     const Pu0_mhe = calcPu0_internal(Mp, Mn_internal);
@@ -1015,8 +1017,9 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
         html+='<span class="formula">M<sub>n</sub> = M<sub>un</sub> = <span class="result"><strong>'+fmt(combinedR.Mn_internal,2)+' kNm/m</strong></span> (素混凝土开裂控制)</span>\n';
       }
     }
-    if(combinedR.Mn_internal<combinedR.Mp){
-      html+='<span class="comment">// ⚠ M<sub>n</sub>='+fmt(combinedR.Mn_internal,2)+' < M<sub>p</sub>='+fmt(combinedR.Mp,2)+' → UDL按正弯矩(sagging)验算通过，但接缝/边部负弯矩偏弱，需关注设缝间距</span>\n';
+    if(combinedR.Mn_internal!==combinedR.Mp){
+      const weakDir=combinedR.Mn_internal<combinedR.Mp?'M<sub>n</sub> (负弯矩·板顶受拉)':'M<sub>p</sub> (正弯矩·板底受拉)';
+      html+='<span class="comment">// ⚠ M<sub>p</sub>='+fmt(combinedR.Mp,2)+' ≠ M<sub>n</sub>='+fmt(combinedR.Mn_internal,2)+' → UDL 由弱方向 '+weakDir+' 控制</span>\n';
     }
     html+='</div></div>';
   }
@@ -1038,7 +1041,7 @@ function renderSection3(p, results) {
   html += '</tr></tbody></table></div>';
 
   html += '<h3>4.3 均布荷载 (UDL) 验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — Westergaard)</span> — TR34 §8.4 Westergaard 公式</h3><div class="calc-box">';
-      results.forEach(r=>{ const l_udl_m=r.l_udl_val/1000, ok=r.qu>=p.udl; const sagNote=r.Mn_internal<r.Mp?'<span class="comment">// ⚠ M<sub>n</sub>='+fmt(r.Mn_internal,2)+' < M<sub>p</sub>='+fmt(r.Mp,2)+' → 负弯矩偏弱，接缝/边部需单独验算（见设缝间距）</span>\n':''; html += sagNote+'<span class="comment">// h='+r.h+'mm, l<sub>UDL</sub>='+fmt0(r.l_udl_val)+'mm ('+fmt(l_udl_m,3)+' m)</span>\n<span class="comment">// Westergaard 正弯矩(sagging)控制 UDL：M<sub>p</sub> = '+fmt(r.Mp,2)+' kNm/m</span>\n<span class="formula">q<sub>u</sub> = M<sub>p</sub> / (0.168 × l<sub>UDL</sub>²)</span>\n<span class="formula">q<sub>u</sub> = '+fmt(r.Mp,2)+' / (0.168 × '+fmt(l_udl_m,3)+'²) = <span class="result">'+fmt(r.qu,1)+' kN/m²</span> vs '+p.udl+' kN/m² '+badge(ok,ok?'OK':'不满足')+'\n'; });
+      results.forEach(r=>{const l_udl_m=r.l_udl_val/1000,ok=r.qu>=p.udl;const M_udl=Math.min(r.Mp,r.Mn_internal);const ctrlDir=M_udl===r.Mp?"M<sub>p</sub> (正弯矩·板底受拉)":"M<sub>n</sub> (负弯矩·板顶受拉)";let note="";if(r.Mp!==r.Mn_internal){note="<span class=\"comment\">// M<sub>p</sub>="+fmt(r.Mp,2)+" | M<sub>n</sub>="+fmt(r.Mn_internal,2)+" kNm/m → 弱方向("+ctrlDir+")控制 UDL</span>\n";}html+=note+"<span class=\"comment\">// h="+r.h+"mm, l<sub>UDL</sub>="+fmt0(r.l_udl_val)+"mm ("+fmt(l_udl_m,3)+" m)</span>\n";html+="<span class=\"formula\">q<sub>u</sub> = min(M<sub>p</sub>, M<sub>n</sub>) / (0.168 × l<sub>UDL</sub>²)</span>\n";html+="<span class=\"formula\">q<sub>u</sub> = "+fmt(M_udl,2)+" / (0.168 × "+fmt(l_udl_m,3)+"²) = <span class=\"result\">"+fmt(r.qu,1)+" kN/m²</span> vs "+p.udl+" kN/m² "+badge(ok,ok?"OK":"不满足")+"\n";html+="<span class=\"comment\">// 注：UDL产生交替正负弯矩区（荷载下板底受拉，荷载间板顶受拉），取弱方向 min(Mp,Mn) 控制</span>\n";});
   html += '</div>';
 
   const allPassSection4 = results.some(r=>{
