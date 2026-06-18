@@ -1186,42 +1186,34 @@ function renderSection8(p, results) {
   html += '</tbody></table></div>';
 
   // ── TR34 §8.11.1 公式48 — 最小板厚验算 ──
-  // h_min = √(3 × F_ser / f_ctm,fl)  (迭代求解，f_ctm,fl 含高度效应)
-  // 板厚不足时截面连扩散荷载的能力都没有，配筋/纤维均无效
-  const fcm78 = calcFcm(p.fck), fctm78 = calcFctm(p.fck);
+  // h_min = √(3 × F_ser / f_ctm,fl,eff)  (f_ctm,fl,eff 由截面实际抵抗力矩反推)
+  // 素混凝土用 f_ctd,fl，SFRC/RC 用实际 Mp 反算的有效弯拉强度
   const rackF = p.Pu_rack, wheelF = p.mheTons > 0 ? p.mheTons * 10 * 0.9 / 2 : 0;
-  const Fser_max = Math.max(rackF, wheelF, p.udl * Math.pow(parseFloat(p.basePlateSize) || 150, 2) / 1e6);
-  html += '<h3>7.2 最小板厚验算 <span style="font-size:0.7rem;color:var(--accent2);font-weight:400;">TR34 §8.11.1 公式48 — 脆性冲切下限</span></h3>';
-  html += '<div class="alert alert-info" style="font-size:0.82rem;"><strong>📐 原理：</strong>h<sub>min</sub> = √(3F<sub>ser</sub> / f<sub>ctm,fl</sub>) — 板厚低于此值时混凝土截面无法将荷载扩散到钢筋/纤维，发生脆性冲切。与配筋无关，是绝对几何下限。</div>';
-  html += '<div class="table-wrap"><table><thead><tr><th>方案</th><th>实际 h (mm)</th><th>h<sub>min</sub> (mm)</th><th>最大使用荷载 (kN)</th><th>判定</th></tr></thead><tbody>';
+  const Fser_max = Math.max(rackF, wheelF);
+  html += '<h3>7.2 最小板厚验算 <span style="font-size:0.7rem;color:var(--accent2);font-weight:400;">TR34 §8.11.1 公式48 — 脆性破坏下限</span></h3>';
+  html += '<div class="alert alert-info" style="font-size:0.82rem;"><strong>📐 原理：</strong>h<sub>min</sub> = √(F<sub>ser</sub> / f<sub>ctm,fl,eff</sub>)，其中 f<sub>ctm,fl,eff</sub> 由截面实际抵抗力矩 M<sub>p</sub> 反推（= 6M<sub>p</sub>/h²）。素混凝土取 f<sub>ctd,fl</sub>，SFRC/RC 取实际有效值。板厚低于此限时截面连荷载扩散能力都不足。</div>';
+  html += '<div class="table-wrap"><table><thead><tr><th>方案</th><th>实际 h (mm)</th><th>M<sub>p</sub> (kNm/m)</th><th>f<sub>eff</sub> (N/mm²)</th><th>h<sub>min</sub> (mm)</th><th>判定</th></tr></thead><tbody>';
   results.forEach(function(r) {
-    // 迭代求解 h_min（因 f_ctm,fl 含高度效应 (1.6-h/1000)）
-    var hMin = 100;
-    for (var iter = 0; iter < 5; iter++) {
-      const fctdfl_iter = fctm78 * (1.6 - hMin / 1000) / p.gammaC;
-      if (fctdfl_iter <= 0) { hMin = 999; break; }
-      hMin = Math.sqrt(3 * Fser_max * 1000 / fctdfl_iter);
-    }
+    // 由截面实际正弯矩抗力 Mp 反推有效弯拉强度
+    // Mp = f_eff × h²/6 → f_eff = 6Mp×1000/h²  (MPa)
+    const f_eff = r.Mp > 0 ? 6 * r.Mp * 1000 / (r.h * r.h) : r.fctdfl;
+    const hMin = f_eff > 0 ? Math.sqrt(Fser_max * 1000 / f_eff) : 999;
     const okMin = r.h >= hMin;
     html += '<tr>';
     html += '<td><strong>' + r.schemeLabel + '</strong></td>';
     html += '<td>' + r.h + '</td>';
+    html += '<td>' + fmt(r.Mp, 2) + '</td>';
+    html += '<td>' + fmt(f_eff, 2) + '</td>';
     html += '<td><strong>' + fmt(hMin, 0) + '</strong></td>';
-    html += '<td>' + fmt(Fser_max, 1) + '</td>';
     html += '<td>' + badge(okMin, okMin ? 'OK' : '板厚不足!') + '</td>';
     html += '</tr>';
   });
   html += '</tbody></table></div>';
   const allMinOk = results.every(function(r) {
-    var hm = 100;
-    for (var i = 0; i < 5; i++) {
-      const fd = fctm78 * (1.6 - hm / 1000) / p.gammaC;
-      if (fd <= 0) return false;
-      hm = Math.sqrt(3 * Fser_max * 1000 / fd);
-    }
-    return r.h >= hm;
+    const fe = r.Mp > 0 ? 6 * r.Mp * 1000 / (r.h * r.h) : r.fctdfl;
+    return r.h >= (fe > 0 ? Math.sqrt(Fser_max * 1000 / fe) : 999);
   });
-  html += '<div class="alert ' + (allMinOk ? 'alert-success' : 'alert-danger') + '" style="font-size:0.85rem;"><strong>' + (allMinOk ? '✅ 最小板厚验算全部通过' : '❌ 存在板厚不足的方案 — 脆性冲切风险') + '</strong></div>';
+  html += '<div class="alert ' + (allMinOk ? 'alert-success' : 'alert-danger') + '" style="font-size:0.85rem;"><strong>' + (allMinOk ? '✅ 最小板厚验算全部通过' : '❌ 存在板厚不足的方案 — 脆性破坏风险') + '</strong></div>';
 
   document.getElementById('section8Content').innerHTML = html;
 }
