@@ -140,7 +140,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   width: 100%; height: 100%;
 }
 .watermark-text {
-  font-size: 48px;
+  font-size: 36px;
   fill: rgba(46,42,37,.04);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
   font-weight: 700;
@@ -195,7 +195,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 @media print {
   @page { size: A3 landscape; margin: 10mm; }
   body { background: #fff; color: #000; display: block !important; }
-  nav#toc, #toc-toggle, .btn, #cookie-settings-btn, footer, .btn-row, .watermark-layer, .modal-overlay { display: none !important; }
+  nav#toc, #toc-toggle, .btn, #cookie-settings-btn, footer, .btn-row, .modal-overlay { display: none !important; }
   main { display: block !important; max-width: 100%; width: 100%; padding: 0; margin: 0; }
   .report-header { background: #fff; border: 1px solid #000; border-top: 3px solid #000; padding: 8px 12px; margin-bottom: 8px; box-shadow: none; font-size: 0.9rem; }
   section { background: #fff; border: 1px solid #ccc; box-shadow: none; padding: 8px 12px; margin-bottom: 8px; page-break-inside: auto; }
@@ -205,6 +205,9 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   thead { background: #eee !important; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   thead th { color: #000; }
   .calc-box { background: #fafafa; border-left: 2px solid #000; font-size: 0.65rem; }
+  .watermark-layer { display: block !important; z-index: 9999 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .watermark-layer svg { width: 100% !important; height: 100% !important; }
+  .watermark-text { fill: rgba(0,0,0,.12) !important; font-size: 42px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .table-wrap { border: 1px solid #000; overflow-x: visible; }
   table { font-size: 0.62rem; }
   table td, table th { padding: 3px 5px; }
@@ -231,9 +234,9 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 <div class="watermark-layer">
   <svg xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <pattern id="wm" x="0" y="0" width="520" height="180" patternUnits="userSpaceOnUse">
-        <text x="260" y="90" text-anchor="middle" dominant-baseline="middle"
-              class="watermark-text" transform="rotate(-25, 260, 90)">HE YONG</text>
+      <pattern id="wm" x="0" y="0" width="720" height="200" patternUnits="userSpaceOnUse">
+        <text x="360" y="100" text-anchor="middle" dominant-baseline="middle"
+              class="watermark-text" transform="rotate(-25, 360, 100)">技术整合和汉化 HE YONG</text>
       </pattern>
     </defs>
     <rect width="100%" height="100%" fill="url(#wm)"/>
