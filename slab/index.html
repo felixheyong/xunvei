@@ -1267,14 +1267,16 @@ function renderSection8(p, results) {
 // ═══════════════ MAX JOINT SPACING ═══════════════
 function renderJointSpacing(p, results) {
   const r0 = results[0];  // 方案A
-  if (!r0 || r0.isRC) return; // 仅SFRC适用
+  if (!r0 || r0.isRC) return; // RC无纤维，不适用设缝间距验算
 
   const h = r0.h;
   const rho_c = 24; // kN/m³
   const slabWt = rho_c * h / 1000; // kN/m²
 
-  // ── ① SFRC 负弯矩承载力 Mn ──
-  const Mn_sfrc = r0.Mn_internal; // = Mp for SFRC internal
+  // ── ① 开裂后负弯矩承载力（设缝间距依赖残余强度，不用 Mun 托底）──
+  // Mun 是开裂前素混凝土强度，接缝处混凝土必然开裂 → 必须用纤维/钢筋残余强度
+  const Mn_post_crack = r0.isCombined ? Math.max(r0.M_fiber, r0.Mrc_neg) : r0.Mp;
+  const noFiber = (p.fR1 === 0 && p.fR4 === 0);
 
   // ── ② 摩擦约束弯矩需求 ──
   // 半板长摩擦约束力: F_drag = μ × w × L/2 (kN/m)
@@ -1313,8 +1315,8 @@ function renderJointSpacing(p, results) {
   const M_demand = M_friction + M_curl + M_sh;
 
   // ── ⑤ 验算结果 ──
-  const pass = Mn_sfrc >= M_demand;
-  const sf = M_demand > 0 ? Mn_sfrc / M_demand : 999; // 安全系数
+  const pass = Mn_post_crack >= M_demand;
+  const sf = M_demand > 0 ? Mn_post_crack / M_demand : 999;
   let recommendation = '';
   if (sf >= 1.0) {
     recommendation = '✅ 验算通过';
@@ -1328,7 +1330,8 @@ function renderJointSpacing(p, results) {
   html += '<div class="calc-box" style="margin-top:8px;">';
 
   html += '<span class="comment">// ══ 最大设缝间距验算（Joint-Free Method）══</span>\n';
-  html += '<span class="comment">// SFRC 负弯矩承载力 M<sub>n</sub> = '+fmt(Mn_sfrc,2)+' kNm/m（来自 f<sub>R1</sub>/f<sub>R4</sub>）</span>\n\n';
+  if(noFiber){ html += '<span class="comment" style="color:var(--fail);">// ⚠ 未输入钢纤维 f<sub>R1</sub>/f<sub>R4</sub> 参数 → 开裂后残余强度 = 0</span>\n'; html += '<span class="comment" style="color:var(--fail);">// 不切缝地坪必须依赖钢纤维提供开裂后桥接强度，请填写 f<sub>R1</sub>/f<sub>R4</sub></span>\n\n'; }
+  html += '<span class="comment">// 开裂后负弯矩承载力 M<sub>n,post-crack</sub> = '+fmt(Mn_post_crack,2)+' kNm/m（纤维残余强度，不含 Mun 托底）</span>\n\n';
 
   html += '<span class="comment">// ① 基层摩擦约束弯矩（半板长 L/2 = '+fmt(p.jointSpacing/2,1)+'m）</span>\n';
   html += '<span class="formula">F<sub>drag</sub> = μ×w×L/2 = '+p.jointMu+'×'+slabWt.toFixed(2)+'×'+fmt(p.jointSpacing/2,1)+' = '+fmt(F_drag,2)+' kN/m</span>\n';
@@ -1344,8 +1347,8 @@ function renderJointSpacing(p, results) {
   html += '<span class="formula">M<sub>shrinkage</sub> = '+fmt(sigma_sh,3)+' × '+h+'²/6 / 1000 = <span class="result">'+fmt(M_sh,2)+' kNm/m</span></span>\n\n';
   html += '<span class="comment">// ③ 组合弯矩需求（摩擦+翘曲+EC2收缩） vs SFRC 抗力</span>\n';
   html += '<span class="formula">M<sub>demand</sub> = ('+fmt(M_friction,2)+' + '+fmt(M_curl,2)+') × 1.35 = <span class="result" style="color:'+(pass?'var(--pass)':'var(--fail)')+';">'+fmt(M_demand,2)+' kNm/m</span></span>\n';
-  html += '<span class="formula">M<sub>n</sub> (SFRC) = <span class="result" style="color:var(--accent);">'+fmt(Mn_sfrc,2)+' kNm/m</span></span>\n';
-  html += '<span class="formula">SF = '+fmt(Mn_sfrc,2)+'/'+fmt(M_demand,2)+' = <span class="result" style="color:'+(sf>=1?'var(--pass)':'var(--fail)')+';">'+fmt(sf,2)+'</span> '+ (sf>=1?'✅ 满足':'❌ 不满足')+'</span>\n\n';
+  html += '<span class="formula">M<sub>n,post-crack</sub> = <span class="result" style="color:var(--accent);">'+fmt(Mn_post_crack,2)+' kNm/m</span></span>\n';
+  html += '<span class="formula">SF = '+fmt(Mn_post_crack,2)+'/'+fmt(M_demand,2)+' = <span class="result" style="color:'+(sf>=1?'var(--pass)':'var(--fail)')+';">'+fmt(sf,2)+'</span> '+ (sf>=1?'✅ 满足':'❌ 不满足')+'</span>\n\n';
 
   html += '<span class="comment">// ④ 设缝建议</span>\n';
   html += '<span class="formula"><strong>'+recommendation+'</strong></span>\n';
@@ -1354,7 +1357,7 @@ function renderJointSpacing(p, results) {
 
   html += '<div class="alert '+(pass?'alert-success':'alert-warning')+'" style="font-size:0.85rem;">';
   html += '<strong>'+(pass?'✅ 设缝间距验算通过（Joint-Free）':'⚠️ 设缝间距验算不通过')+'</strong><br>';
-  html += 'M<sub>demand</sub>='+fmt(M_demand,2)+' ≤ M<sub>n</sub>='+fmt(Mn_sfrc,2)+' kNm/m  |  SF='+fmt(sf,2);
+  html += 'M<sub>demand</sub>='+fmt(M_demand,2)+' ≤ M<sub>n</sub>='+fmt(Mn_post_crack,2)+' kNm/m  |  SF='+fmt(sf,2);
   html += '  |  设计L<sub>j</sub>='+p.jointSpacing+'m';
   if (!pass) html += '<br>'+recommendation;
   html += '<br><span style="font-size:0.78rem; color:var(--muted);">依据: TR34 §8.8 工程实践，非精确计算，需要调整混凝土配合比以实现设缝间距</span>';
