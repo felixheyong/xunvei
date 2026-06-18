@@ -1060,9 +1060,25 @@ function renderSection3(p, results) {
   results.forEach(r=>{ const ok=r.Pu0_dual>=2*p.Pu_rack; html += '<td><strong>'+fmt(r.Pu0_dual,1)+' kN</strong></td><td>'+badge(ok,ok?'OK':'不满足')+'</td>'; });
   html += '</tr></tbody></table></div>';
 
-  html += '<h3>3.3 均布荷载 (UDL) 验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — Westergaard)</span> — TR34 §8.4 Westergaard 公式</h3><div class="calc-box">';
-      results.forEach(r=>{const l_udl_m=r.l_udl_val/1000,ok=r.qu>=p.udl;const M_udl=Math.min(r.Mp,r.Mn_internal);const ctrlDir=M_udl===r.Mp?"M<sub>p</sub> (正弯矩·板底受拉)":"M<sub>n</sub> (负弯矩·板顶受拉)";let note="";if(r.Mp!==r.Mn_internal){note="<span class=\"comment\">// M<sub>p</sub>="+fmt(r.Mp,2)+" | M<sub>n</sub>="+fmt(r.Mn_internal,2)+" kNm/m → 弱方向("+ctrlDir+")控制 UDL</span>\n";}html+=note+"<span class=\"comment\">// h="+r.h+"mm, l<sub>UDL</sub>="+fmt0(r.l_udl_val)+"mm ("+fmt(l_udl_m,3)+" m)</span>\n";html+="<span class=\"formula\">q<sub>u</sub> = min(M<sub>p</sub>, M<sub>n</sub>) / (0.168 × l<sub>UDL</sub>²)</span>\n";html+="<span class=\"formula\">q<sub>u</sub> = "+fmt(M_udl,2)+" / (0.168 × "+fmt(l_udl_m,3)+"²) = <span class=\"result\">"+fmt(r.qu,1)+" kN/m²</span> vs "+p.udl+" kN/m² "+badge(ok,ok?"OK":"不满足")+"\n";html+="<span class=\"comment\">// 注：UDL产生交替正负弯矩区（荷载下板底受拉，荷载间板顶受拉），取弱方向 min(Mp,Mn) 控制</span>\n";});
-  html += '</div>';
+  html += '<h3>3.3 均布荷载 (UDL) 验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — Westergaard §8.4)</span></h3>';
+  html += '<div class="table-wrap"><table><thead><tr><th>方案</th><th>h</th><th>l<sub>UDL</sub> (mm)</th><th>M<sub>p</sub></th><th>M<sub>n</sub></th><th>控制 M</th><th>q<sub>u</sub> (kN/m²)</th><th>需求</th><th>判定</th></tr></thead><tbody>';
+  results.forEach(r=>{
+    const l_udl_m=r.l_udl_val/1000, ok=r.qu>=p.udl;
+    const M_udl=Math.min(r.Mp, r.Mn_internal);
+    html += '<tr>';
+    html += '<td><strong>'+r.schemeLabel+'</strong></td>';
+    html += '<td>'+r.h+'</td>';
+    html += '<td>'+fmt0(r.l_udl_val)+'</td>';
+    html += '<td>'+fmt(r.Mp,2)+'</td>';
+    html += '<td>'+fmt(r.Mn_internal,2)+'</td>';
+    html += '<td>'+fmt(M_udl,2)+'</td>';
+    html += '<td><strong>'+fmt(r.qu,1)+'</strong></td>';
+    html += '<td>'+p.udl+'</td>';
+    html += '<td>'+badge(ok,ok?'OK':'不满足')+'</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  html += '<div class="alert alert-info" style="font-size:0.78rem; margin-top:4px;"><strong>📐 公式：</strong>q<sub>u</sub> = min(M<sub>p</sub>, M<sub>n</sub>) / (0.168 × l<sub>UDL</sub>²) &nbsp;|&nbsp; l<sub>UDL</sub> = [E·h³/(3·k)]<sup>0.25</sup> &nbsp;|&nbsp; UDL产生交替正负弯矩区，取弱方向控制</div>';
 
   // ── 挠度估算 ──
   html += '<h3>3.4 挠度估算 <span style="font-size:0.7rem;color:var(--accent2);font-weight:400;">(SLS — Westergaard 弹性解)</span></h3>';
