@@ -916,132 +916,124 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
   html += '</tbody></table></div>';
 
   const r0 = results[0];
-  html += '<h3>2.3 计算过程（以 h='+r0.h+'mm 为例）</h3><div class="calc-box">';
-  html += '<span class="formula">f<sub>ctm</sub></span> = 0.3×'+fmt(p.fck,1)+'<sup>2/3</sup> = <span class="result">'+fmt(fctm,2)+' N/mm²</span>\n\n';
-  html += '<span class="formula">E<sub>cm</sub></span> = 22×('+fmt(fcm,1)+'/10)<sup>0.3</sup> = <span class="result">'+fmt(Ecm_gpa,1)+' GPa</span>\n\n';
-  html += '<span class="comment">// ── 弯曲抗拉强度设计值（EC2 §3.1.8 高度效应 + 材料分项系数）──</span>\n';
-  html += '<span class="formula">f<sub>ctd,fl</sub> = f<sub>ctm</sub> × (1.6 − h/1000) / γ<sub>c</sub></span>\n';
-  html += '<span class="formula">f<sub>ctd,fl</sub> = '+fmt(fctm,2)+' × (1.6 − '+r0.h+'/1000) / '+p.gammaC+'</span> = <span class="result">'+fmt(r0.fctdfl,2)+' N/mm²</span>\n';
-  html += '<span class="comment">// 高度系数 (1.6 − h/1000) = '+(1.6 - r0.h/1000).toFixed(3)+'，反映截面高度对抗拉强度的折减</span>\n\n';
-  html += '<span class="comment">// ── Westergaard 相对刚度半径（TR34 §8.3.2）──</span>\n';
-  html += '<span class="formula">l = [E<sub>cm</sub>×h³ / (12×(1−ν²)×k)]<sup>0.25</sup></span>\n';
-  html += '<span class="formula">l = ['+fmt(Ecm_gpa*1000,0)+'×'+r0.h+'³ / (12×(1−'+p.nu+'²)×'+p.k+')]<sup>0.25</sup></span> = <span class="result">'+fmt0(r0.l)+' mm</span>\n\n';
-    if (r0.isRC) {
-      html += '<span class="comment">// 方案B: 传统配筋 ('+p.rebarGrade+' D'+p.rebarDia+'@'+p.rebarSpacing+'mm — '+p.rebarPosition+'钢筋)</span>\n';
-      html += '<span class="formula">A<sub>s</sub></span> = (π×'+p.rebarDia+'²/4)×(1000/'+p.rebarSpacing+') = <span class="result">'+fmt(r0.As,0)+' mm²/m</span>\n';
-      if (p.rebarPosition==='top' || p.rebarPosition==='both') {
-        html += '<span class="formula">d<sub>neg</sub> (顶部有效高度)</span> = '+r0.h+' − 25 − '+p.rebarDia+'/2 = <span class="result">'+fmt(r0.h-25-p.rebarDia/2,0)+' mm</span>\n';
-      }
-      if (p.rebarPosition==='bottom' || p.rebarPosition==='both') {
-        html += '<span class="formula">d<sub>pos</sub> (底部有效高度)</span> = '+r0.h+' − 40 − '+p.rebarDia+'/2 = <span class="result">'+fmt(r0.h-40-p.rebarDia/2,0)+' mm</span>\n';
-      }
-      html += '<span class="formula">M<sub>rc,pos</sub> (底部钢筋)</span> = <span class="result">'+fmt(r0.Mrc_pos,2)+' kNm/m</span> (正弯矩 — 底板受拉)\n';
-      html += '<span class="formula">M<sub>rc,neg</sub> (顶部钢筋)</span> = <span class="result">'+fmt(r0.Mrc_neg,2)+' kNm/m</span> (负弯矩 — 顶板受拉)\n';
-      html += '<span class="formula">M<sub>un</sub> (素混凝土)</span> = <span class="result">'+fmt(r0.Mun,2)+' kNm/m</span> (无钢筋方向的抵抗力矩)\n';
-      html += '<span class="comment">// TR34: M<sub>p</sub> = 底部钢筋或素混凝土取较大值</span>\n';
-      html += '<span class="formula">M<sub>p</sub></span> = '+fmt(r0.Mp,2)+' kNm/m (正弯矩抗力)\n';
-      html += '<span class="comment">// UDL 由正弯矩 M<sub>p</sub> 控制（底板受拉 — sagging）：</span>\n';
-      html += '<span class="formula">M<sub>p</sub></span> = '+fmt(r0.Mn_internal,2)+' kNm/m (负弯矩抗力 → 用于 UDL 计算)\n';
-      if (p.rebarPosition==='top') {
-        html += '<span class="comment" style="color:var(--warn);">// ⚠️ 面层钢筋无底部配筋 → M<sub>p</sub>=M<sub>un</sub> → UDL 由素混凝土控制！</span>\n';
-      }
-      if (p.rebarPosition==='bottom') {
-        html += '<span class="comment" style="color:var(--pass);">// ✓ 底层钢筋提供正弯矩 → UDL 由配筋控制</span>\n';
-      }
+  html += '<h3>2.3 计算过程（以 '+r0.schemeLabel+' h='+r0.h+'mm 为例）</h3>';
+
+  // ── 核心参数速查表 ──
+  html += '<div class="table-wrap"><table><thead><tr><th>参数</th><th>符号</th><th>公式</th><th>结果</th><th>单位</th></tr></thead><tbody>';
+  html += '<tr><td>平均轴心抗拉强度</td><td>f<sub>ctm</sub></td><td>0.3 × f<sub>ck</sub><sup>2/3</sup></td><td><strong>'+fmt(fctm,2)+'</strong></td><td>N/mm²</td></tr>';
+  html += '<tr><td>弹性模量</td><td>E<sub>cm</sub></td><td>22 × (f<sub>cm</sub>/10)<sup>0.3</sup></td><td><strong>'+fmt(Ecm_gpa,1)+' GPa</strong></td><td>—</td></tr>';
+  html += '<tr><td>弯拉强度设计值</td><td>f<sub>ctd,fl</sub></td><td>f<sub>ctm</sub> × (1.6−h/1000) / γ<sub>c</sub></td><td><strong>'+fmt(r0.fctdfl,2)+'</strong></td><td>N/mm²</td></tr>';
+  html += '<tr><td>相对刚度半径</td><td>l</td><td>[E·h³/(12(1−ν²)k)]<sup>0.25</sup></td><td><strong>'+fmt0(r0.l)+'</strong></td><td>mm</td></tr>';
+  html += '<tr><td>素混凝土抵抗力矩</td><td>M<sub>un</sub></td><td>f<sub>ctd,fl</sub> × h²/6</td><td><strong>'+fmt(r0.Mun,2)+'</strong></td><td>kNm/m</td></tr>';
+
+  if (r0.isRC) {
+    html += '<tr><td>配筋面积</td><td>A<sub>s</sub></td><td>π×D²/4 × 1000/S</td><td><strong>'+fmt(r0.As,0)+'</strong></td><td>mm²/m</td></tr>';
+    html += '<tr><td>RC 正弯矩抗力</td><td>M<sub>rc,pos</sub></td><td>A<sub>s</sub> × f<sub>y</sub> × 0.9d / 10⁶</td><td><strong>'+fmt(r0.Mrc_pos,2)+'</strong></td><td>kNm/m</td></tr>';
+    html += '<tr><td>RC 负弯矩抗力</td><td>M<sub>rc,neg</sub></td><td>A<sub>s</sub> × f<sub>y</sub> × 0.9d / 10⁶</td><td><strong>'+fmt(r0.Mrc_neg,2)+'</strong></td><td>kNm/m</td></tr>';
   } else {
-    html += '<span class="comment">// ── SFRC 塑性弯矩承载力（TR34 §8.3.1 屈服线理论）──</span>\n';
-    html += '<span class="comment">// 钢纤维混凝土开裂后仍能传递拉应力，形成塑性铰</span>\n';
-    html += '<span class="comment">// r₁ = 0.45×f<sub>R1</sub> (CMOD=0.5mm 小裂缝阶段残余强度)</span>\n';
-    html += '<span class="formula">r₁ = 0.45 × '+fmt(p.fR1,1)+'</span> = <span class="result">'+fmt(r1,2)+' N/mm²</span>\n';
-    html += '<span class="comment">// r₄ = 0.37×f<sub>R4</sub> (CMOD=3.5mm 大裂缝阶段残余强度)</span>\n';
-    html += '<span class="formula">r₄ = 0.37 × '+fmt(p.fR4,1)+'</span> = <span class="result">'+fmt(r4,2)+' N/mm²</span>\n';
-    html += '<span class="comment">// 系数 0.29/0.16: TR34 应力块积分系数 — 受压区高度≈0.5h</span>\n';
-    html += '<span class="comment">// r₄ 权重更大(0.29): 破坏时裂缝宽度接近 CMOD 3.5mm</span>\n';
-    html += '<span class="formula">M<sub>p</sub> = [0.29×'+fmt(r4,2)+' + 0.16×'+fmt(r1,2)+'] × '+r0.h+'² / 1000</span>\n';
-    html += '<span class="formula">M<sub>p</sub> = '+fmt(0.29*r4+0.16*r1,3)+' × '+(r0.h*r0.h/1000).toFixed(1)+'</span> = <span class="result"><strong>'+fmt(r0.Mp,2)+' kNm/m</strong></span> <span style="color:var(--accent2);">← 钢纤维贡献的塑性弯矩抗力</span>\n';
-    html += '\n<span class="comment">// ── 素混凝土截面抵抗力矩（设计值，ULS）──</span>\n';
-    html += '<span class="formula">M<sub>un</sub> = f<sub>ctd,fl</sub> × h²/6 / 1000</span>\n';
-    html += '<span class="formula">M<sub>un</sub> = '+fmt(r0.fctdfl,2)+' × '+r0.h+'²/6 / 1000</span> = <span class="result">'+fmt(r0.Mun,2)+' kNm/m</span>\n';
-    html += '<span class="comment">// 对 SFRC：M<sub>p</sub> = '+fmt(r0.Mp,2)+' kNm/m（正弯矩·标准 TR34 公式）</span>\n';
-    html += '<span class="comment">// M<sub>n,SFRC</sub> = M<sub>p</sub> × 1.05 = '+fmt(r0.Mp*1.05,2)+' kNm/m（负弯矩·顶面抹面纤维定向，+5%）</span>\n';
-    html += '<span class="comment">// 设计抗力 M<sub>n</sub> = max(M<sub>n,SFRC</sub>, M<sub>un</sub>) = '+fmt(Math.max(r0.Mn_internal, r0.Mun),2)+' kNm/m</span>\n';
-    html += '<span class="comment">// 对 RC：设计抗力由配筋提供，M<sub>un</sub> 仅作素混凝土基线参考</span>\n';
-	    html += '\n<span class="comment">// ══ 钢纤维裂缝控制机制（TR34 §8.8 / EN 14889-1）══</span>\n';
-	    html += '<span class="comment">// 裂缝宽度通过EN 14889-1三点弯曲试验的CMOD与残余强度关联：</span>\n';
-	    html += '<span class="comment">//   f<sub>R1</sub> @ CMOD=0.5mm → 使用阶段裂缝控制（货架静载、收缩）</span>\n';
-	    html += '<span class="comment">//   f<sub>R4</sub> @ CMOD=3.5mm → 极限阶段裂缝控制（叉车冲击、超载）</span>\n';
-	    const Mcr = fctm * r0.h * r0.h / 6 / 1000;
-	    html += '<span class="comment">//</span>\n';
-	    html += '<span class="comment">// ① 素混凝土开裂弯矩（无纤维贡献）：</span>\n';
-	    html += '<span class="formula">M<sub>cr</sub> = f<sub>ctm</sub> × h²/6 = '+fmt(fctm,2)+' × '+r0.h+'²/6 / 1000</span> = <span class="result">'+fmt(Mcr,2)+' kNm/m</span>\n';
-	    html += '<span class="comment">//    M<sub>service</sub> < M<sub>cr</sub> → 截面不裂，混凝土自身满足裂缝控制</span>\n';
-	    html += '<span class="comment">//    M<sub>service</sub> > M<sub>cr</sub> → 截面开裂，由钢纤维桥接裂缝控制宽度</span>\n';
-	    html += '<span class="comment">//</span>\n';
-	    html += '<span class="comment">// ② CMOD—残余强度—裂缝宽度对应关系：</span>\n';
-	    html += '<span class="comment">//   CMOD 0.5mm → f<sub>R1</sub>='+fmt(p.fR1,1)+' → r<sub>1</sub>=0.45×f<sub>R1</sub>='+fmt(0.45*p.fR1,2)+' N/mm²</span>\n';
-	    html += '<span class="comment">//   CMOD 1.5mm → f<sub>R2</sub>='+fmt(p.fR2,1)+' (冲切控制)</span>\n';
-	    html += '<span class="comment">//   CMOD 2.5mm → f<sub>R3</sub>='+fmt(p.fR3,1)+' (冲切控制)</span>\n';
-	    html += '<span class="comment">//   CMOD 3.5mm → f<sub>R4</sub>='+fmt(p.fR4,1)+' → r<sub>4</sub>=0.37×f<sub>R4</sub>='+fmt(r4,2)+' N/mm²</span>\n';
-	    html += '<span class="comment">//</span>\n';
-	    html += '<span class="comment">// ③ 裂缝宽度验收分级（TR34 地坪板）：</span>\n';
-	    html += '<span class="comment">//   CMOD ≤ 0.5mm → 表面裂缝 < 0.3mm（常规仓储/FM2可接受）</span>\n';
-	    html += '<span class="comment">//   CMOD ≤ 1.5mm → 局部裂缝 < 1.0mm（货架区可接受）</span>\n';
-	    html += '<span class="comment">//   CMOD ≤ 3.5mm → 裂缝 < 2.5mm，纤维仍桥接传力（极限状态）</span>\n';
-	    html += '<span class="comment">//</span>\n';
-	    html += '<span class="comment">// ④ 关键结论：</span>\n';
-	    html += '<span class="comment">//   SFRC不依赖"控制单条裂缝宽度"（如RC的0.3mm限值），</span>\n';
-	    html += '<span class="comment">//   而是依赖纤维三维乱向分布形成"分散微裂缝网络"——</span>\n';
-	    html += '<span class="comment">//   裂缝数量多但每条宽度极小，整体抗裂性能优于RC。</span>\n';
+    html += '<tr><td>纤维残余强度 r<sub>1</sub></td><td>r<sub>1</sub></td><td>0.45 × f<sub>R1</sub></td><td><strong>'+fmt(r1,2)+'</strong></td><td>N/mm²</td></tr>';
+    html += '<tr><td>纤维残余强度 r<sub>4</sub></td><td>r<sub>4</sub></td><td>0.37 × f<sub>R4</sub></td><td><strong>'+fmt(r4,2)+'</strong></td><td>N/mm²</td></tr>';
+    html += '<tr><td>SFRC 正弯矩抗力</td><td>M<sub>p</sub></td><td>(0.29r₄+0.16r₁) × h²/1000</td><td><strong>'+fmt(r0.Mp,2)+'</strong></td><td>kNm/m</td></tr>';
+    html += '<tr><td>SFRC 负弯矩抗力</td><td>M<sub>n,SFRC</sub></td><td>M<sub>p</sub> × 1.05</td><td><strong>'+fmt(r0.Mp*1.05,2)+'</strong></td><td>kNm/m</td></tr>';
   }
-  html += '</div>';
+  html += '<tr><td>设计正弯矩</td><td>M<sub>p</sub></td><td>max(抗力, M<sub>un</sub>)</td><td><strong>'+fmt(r0.Mp,2)+'</strong></td><td>kNm/m</td></tr>';
+  html += '<tr><td>设计负弯矩</td><td>M<sub>n</sub></td><td>max(抗力, M<sub>un</sub>)</td><td><strong>'+fmt(r0.Mn_internal,2)+'</strong></td><td>kNm/m</td></tr>';
+  html += '</tbody></table></div>';
+
+  // ── 裂缝控制说明（SFRC / Combined 专用，可折叠）──
+  if (!r0.isRC) {
+    const Mcr = fctm * r0.h * r0.h / 6 / 1000;
+    const Mser_rack = p.Pu_rack / (2 * Math.PI);  // 立柱使用弯矩 (SLS)
+    const Mser_wheel = p.mheTons > 0 ? (p.mheTons * 10 * 0.9 / 2) / (2 * Math.PI) : 0;  // 叉车使用弯矩
+    const Mser_max = Math.max(Mser_rack, Mser_wheel);
+    const crack_status = Mser_max < Mcr ? '✅ 不裂' : '⚠️ 开裂（由纤维桥接）';
+    html += '<details open style="margin-top:10px;"><summary style="cursor:pointer;color:var(--accent);font-weight:600;font-size:0.9rem;">📐 钢纤维裂缝控制机制（TR34 §8.8 / EN 14889-1）</summary>';
+    html += '<div class="alert alert-info" style="font-size:0.82rem;margin-top:8px;line-height:1.8;">';
+    html += '<strong>使用荷载弯矩（SLS）：</strong><br>';
+    html += '• 立柱静载 M<sub>ser,rack</sub> = P<sub>ser</sub>/(2π) = '+p.Pu_rack+'/(2π) = <strong>'+fmt(Mser_rack,2)+' kNm/m</strong><br>';
+    if (p.mheTons > 0) html += '• 叉车轮静载 M<sub>ser,wheel</sub> = '+fmt(p.mheTons*10*0.9/2,1)+'/(2π) = <strong>'+fmt(Mser_wheel,2)+' kNm/m</strong><br>';
+    html += '• 最不利使用弯矩 M<sub>ser,max</sub> = <strong>'+fmt(Mser_max,2)+' kNm/m</strong> | 开裂弯矩 M<sub>cr</sub> = <strong>'+fmt(Mcr,2)+' kNm/m</strong> → '+crack_status+'<br><br>';
+    html += '<strong>CMOD — 残余强度 — 裂缝宽度对应：</strong><br>';
+    html += '• CMOD 0.5mm → f<sub>R1</sub>='+fmt(p.fR1,1)+' N/mm² → 使用阶段裂缝控制（货架静载、收缩）<br>';
+    html += '• CMOD 1.5mm → f<sub>R2</sub>='+fmt(p.fR2,1)+' N/mm² → 冲切验算用<br>';
+    html += '• CMOD 2.5mm → f<sub>R3</sub>='+fmt(p.fR3,1)+' N/mm² → 冲切验算用<br>';
+    html += '• CMOD 3.5mm → f<sub>R4</sub>='+fmt(p.fR4,1)+' N/mm² → 极限阶段裂缝控制（叉车冲击、超载）<br><br>';
+    html += '<strong>裂缝宽度验收分级：</strong><br>';
+    html += 'CMOD≤0.5mm → 裂缝&lt;0.3mm（常规仓储） | CMOD≤1.5mm → &lt;1.0mm（货架区） | CMOD≤3.5mm → &lt;2.5mm（极限状态）<br><br>';
+    html += '<strong>SFRC优势：</strong>不依赖单条裂缝宽度控制（如RC的0.3mm限值），依赖纤维三维乱向分布形成分散微裂缝网络，整体抗裂性能优于RC。';
+    html += '</div></details>';
+  }
+
 
   const rcResult = results.find(r=>r.isRC);
   if (rcResult && !r0.isRC) {
-    html += '<h3>2.4 方案B — 传统RC配筋计算（h='+rcResult.h+'mm）</h3><div class="calc-box">';
-    html += '<span class="formula">A<sub>s</sub></span> = '+(Math.PI*p.rebarDia*p.rebarDia/4).toFixed(1)+' × (1000/'+p.rebarSpacing+') = <span class="result">'+fmt(rcResult.As,0)+' mm²/m</span>\n';
-    html += '<span class="formula">M<sub>rc,pos</sub></span> = <span class="result">'+fmt(rcResult.Mrc_pos,2)+' kNm/m</span>\n';
-    html += '<span class="formula">M<sub>rc,neg</sub></span> = <span class="result">'+fmt(rcResult.Mrc_neg,2)+' kNm/m</span>\n';
-    html += '<span class="comment">// 注意：方案C冲切验算使用实际配筋率，不含纤维贡献 (vf=0)</span>\n';
-    html += '</div>';
+    const d_pos_rc = rcResult.h - 40 - p.rebarDia/2;
+    const d_neg_rc = rcResult.h - 25 - p.rebarDia/2;
+    const As_one = (Math.PI*p.rebarDia*p.rebarDia/4)*(1000/p.rebarSpacing);
+    html += '<h3>2.4 方案B — 传统RC配筋计算（h='+rcResult.h+'mm）</h3>';
+    html += '<div class="table-wrap"><table><thead><tr><th>参数</th><th>符号</th><th>公式</th><th>结果</th><th>单位</th></tr></thead><tbody>';
+    html += '<tr><td>钢筋等级</td><td>—</td><td>'+p.rebarGrade+'</td><td><strong>f<sub>y</sub>='+rcResult.fy+'</strong></td><td>N/mm²</td></tr>';
+    html += '<tr><td>配筋</td><td>—</td><td>D'+p.rebarDia+'@'+p.rebarSpacing+' ('+(p.rebarPosition==='top'?'面层':p.rebarPosition==='bottom'?'底层':'双层双向')+')</td><td>—</td><td>—</td></tr>';
+    html += '<tr><td>单层配筋面积</td><td>A<sub>s</sub></td><td>π×D²/4 × 1000/S</td><td><strong>'+fmt(rcResult.As,0)+'</strong></td><td>mm²/m</td></tr>';
+    if (p.rebarPosition==='bottom' || p.rebarPosition==='both') {
+      html += '<tr><td>底部有效高度</td><td>d<sub>pos</sub></td><td>h − 40 − D/2</td><td><strong>'+fmt(d_pos_rc,0)+'</strong></td><td>mm</td></tr>';
+      html += '<tr><td>RC 正弯矩抗力</td><td>M<sub>rc,pos</sub></td><td>A<sub>s</sub> × f<sub>y</sub> × 0.9 × d<sub>pos</sub> / 10⁶</td><td><strong>'+fmt(rcResult.Mrc_pos,2)+'</strong></td><td>kNm/m</td></tr>';
+    }
+    if (p.rebarPosition==='top' || p.rebarPosition==='both') {
+      html += '<tr><td>顶部有效高度</td><td>d<sub>neg</sub></td><td>h − 25 − D/2</td><td><strong>'+fmt(d_neg_rc,0)+'</strong></td><td>mm</td></tr>';
+      html += '<tr><td>RC 负弯矩抗力</td><td>M<sub>rc,neg</sub></td><td>A<sub>s</sub> × f<sub>y</sub> × 0.9 × d<sub>neg</sub> / 10⁶</td><td><strong>'+fmt(rcResult.Mrc_neg,2)+'</strong></td><td>kNm/m</td></tr>';
+    }
+    html += '<tr><td>素混凝土抵抗力矩</td><td>M<sub>un</sub></td><td>f<sub>ctd,fl</sub> × h²/6</td><td><strong>'+fmt(rcResult.Mun,2)+'</strong></td><td>kNm/m</td></tr>';
+    html += '<tr><td>设计正弯矩</td><td>M<sub>p</sub></td><td>max(M<sub>rc,pos</sub>, M<sub>un</sub>)</td><td><strong>'+fmt(rcResult.Mp,2)+'</strong></td><td>kNm/m</td></tr>';
+    html += '<tr><td>设计负弯矩</td><td>M<sub>n</sub></td><td>max(M<sub>rc,neg</sub>, M<sub>un</sub>)</td><td><strong>'+fmt(rcResult.Mn_internal,2)+'</strong></td><td>kNm/m</td></tr>';
+    html += '</tbody></table></div>';
+    if (p.rebarPosition==='top') {
+      html += '<div class="alert alert-warning" style="font-size:0.82rem;margin-top:6px;">⚠️ 面层钢筋无底部配筋 → M<sub>p</sub>=M<sub>un</sub> → 正弯矩由素混凝土控制</div>';
+    } else if (p.rebarPosition==='bottom') {
+      html += '<div class="alert alert-success" style="font-size:0.82rem;margin-top:6px;">✅ 底层钢筋提供正弯矩抗力 → UDL 由配筋控制</div>';
+    }
   }
   // Show combined scheme calculation details
   const combinedR=results.find(r=>r.isCombined);
   if(combinedR){
-    html+='<h3>2.4 方案C — 组合配筋计算详述 (h='+combinedR.h+'mm)</h3><div class="combined-box"><div class="calc-box">';
-    html+='<span class="comment">// ══ 组合配筋：钢纤维(SFRC) + 传统钢筋(RC) 协同工作 ══</span>\n';
-    html+='<span class="comment">// 设计依据：fib Model Code 2010 §7.7.2 + DAfStB Guideline</span>\n';
-    html+='<span class="comment">// 叠加系数 λ = 1.0（地坪板小配筋率，全叠加）</span>\n\n';
-    html+='<span class="comment">// ── ① 钢纤维贡献（TR34 §6.3.5）──</span>\n';
-    html+='<span class="formula">r₁ = 0.45 × f<sub>R1</sub> = 0.45 × '+fmt(p.fR1,1)+' = '+fmt(r1,2)+' N/mm²</span>\n';
-    html+='<span class="formula">r₄ = 0.37 × f<sub>R4</sub> = 0.37 × '+fmt(p.fR4,1)+' = '+fmt(r4,2)+' N/mm²</span>\n';
-    html+='<span class="formula">M<sub>fiber</sub> = (0.29×r₄ + 0.16×r₁) × h² / 1000 = <span class="result">'+fmt(combinedR.M_fiber,2)+' kNm/m</span></span>\n\n';
-    html+='<span class="comment">// ── ② 钢筋贡献（EC2 §6.1）──</span>\n';
-    html+='<span class="formula">A<sub>s</sub> = π×'+p.rebarBDia+'²/4 × 1000/'+p.rebarBSpacing+' = '+fmt(combinedR.As,0)+' mm²/m</span>\n';
+    const d_pos_c = combinedR.h - 40 - p.rebarBDia/2;
+    const d_neg_c = combinedR.h - 25 - p.rebarBDia/2;
+    html+='<h3>2.4 方案C — 组合配筋计算详述 (h='+combinedR.h+'mm)</h3>';
+    html+='<div class="alert alert-info" style="font-size:0.8rem;margin-bottom:10px;"><strong>📐 设计依据：</strong>fib Model Code 2010 §7.7.2 允许钢纤维残余抗拉强度与钢筋贡献叠加。纤维控制微裂缝(CMOD&lt;0.5mm)，钢筋控制宏观裂缝——两者在不同裂缝宽度区间发挥作用，可全叠加 (λ=1.0)。</div>';
+
+    html+='<div class="table-wrap"><table><thead><tr><th></th><th>参数</th><th>公式</th><th>结果</th><th>单位</th></tr></thead><tbody>';
+
+    // ── ① 钢纤维 ──
+    html+='<tr style="background:#f7f3eb;"><td rowspan="3"><strong>① 钢纤维</strong><br><small>TR34 §6.3.5</small></td>';
+    html+='<td>r<sub>1</sub></td><td>0.45 × f<sub>R1</sub></td><td><strong>'+fmt(r1,2)+'</strong></td><td>N/mm²</td></tr>';
+    html+='<tr style="background:#f7f3eb;"><td>r<sub>4</sub></td><td>0.37 × f<sub>R4</sub></td><td><strong>'+fmt(r4,2)+'</strong></td><td>N/mm²</td></tr>';
+    html+='<tr style="background:#f7f3eb;"><td>M<sub>fiber</sub></td><td>(0.29r₄+0.16r₁)×h²/1000</td><td><strong>'+fmt(combinedR.M_fiber,2)+'</strong></td><td>kNm/m</td></tr>';
+
+    // ── ② 钢筋 ──
+    const rebarRows = (p.rebarBPosition==='both'?3:2);
+    html+='<tr style="background:#f2f6f4;"><td rowspan="'+rebarRows+'"><strong>② 钢筋</strong><br><small>EC2 §6.1</small></td>';
+    html+='<td>A<sub>s</sub></td><td>π×'+p.rebarBDia+'²/4×1000/'+p.rebarBSpacing+'</td><td><strong>'+fmt(combinedR.As,0)+'</strong></td><td>mm²/m</td></tr>';
     if(p.rebarBPosition==='bottom'||p.rebarBPosition==='both'){
-      html+='<span class="formula">d<sub>pos</sub> = '+combinedR.h+' − 40 − '+p.rebarBDia+'/2 = '+fmt(combinedR.h-40-p.rebarBDia/2,0)+' mm</span>\n';
-      html+='<span class="formula">M<sub>rc,pos</sub> = A<sub>s</sub>×fy×0.9×d<sub>pos</sub>/1e6 = '+fmt(combinedR.Mrc_pos,2)+' kNm/m</span>\n';
+      html+='<tr style="background:#f2f6f4;"><td>M<sub>rc,pos</sub></td><td>A<sub>s</sub>×fy×0.9×d<sub>pos</sub>/10⁶</td><td><strong>'+fmt(combinedR.Mrc_pos,2)+'</strong></td><td>kNm/m</td></tr>';
     }
     if(p.rebarBPosition==='top'||p.rebarBPosition==='both'){
-      html+='<span class="formula">d<sub>neg</sub> = '+combinedR.h+' − 25 − '+p.rebarBDia+'/2 = '+fmt(combinedR.h-25-p.rebarBDia/2,0)+' mm</span>\n';
-      html+='<span class="formula">M<sub>rc,neg</sub> = A<sub>s</sub>×fy×0.9×d<sub>neg</sub>/1e6 = '+fmt(combinedR.Mrc_neg,2)+' kNm/m</span>\n';
+      html+='<tr style="background:#f2f6f4;"><td>M<sub>rc,neg</sub></td><td>A<sub>s</sub>×fy×0.9×d<sub>neg</sub>/10⁶</td><td><strong>'+fmt(combinedR.Mrc_neg,2)+'</strong></td><td>kNm/m</td></tr>';
     }
-    html+='\n<span class="comment">// ── ③ 组合承载力 ──</span>\n';
-    html+='<span class="formula highlight">M<sub>p,combined</sub> = M<sub>rc,pos</sub> + M<sub>fiber</sub> = '+fmt(combinedR.Mrc_pos,2)+' + '+fmt(combinedR.M_fiber,2)+' = <span class="result"><strong>'+fmt(combinedR.Mp,2)+' kNm/m</strong></span></span>\n';
+
+    // ── ③ 叠加 ──
+    html+='<tr style="background:#e8f0f8;"><td rowspan="2"><strong>③ 叠加</strong></td>';
+    html+='<td>M<sub>p</sub> (正弯矩)</td><td>M<sub>rc,pos</sub> + M<sub>fiber</sub></td><td><strong>'+fmt(combinedR.Mp,2)+'</strong></td><td>kNm/m</td></tr>';
     if(combinedR.Mrc_neg>0){
-      html+='<span class="formula">M<sub>n,combined</sub> = M<sub>rc,neg</sub> + M<sub>fiber</sub> = '+fmt(combinedR.Mrc_neg,2)+' + '+fmt(combinedR.M_fiber,2)+' = <span class="result"><strong>'+fmt(combinedR.Mn_internal,2)+' kNm/m</strong></span></span>\n';
+      html+='<tr style="background:#e8f0f8;"><td>M<sub>n</sub> (负弯矩)</td><td>M<sub>rc,neg</sub> + M<sub>fiber</sub> = '+fmt(combinedR.Mrc_neg,2)+' + '+fmt(combinedR.M_fiber,2)+'</td><td><strong>'+fmt(combinedR.Mn_internal,2)+'</strong></td><td>kNm/m</td></tr>';
     }else{
-      html+='<span class="comment">// 无顶部钢筋 → M<sub>n</sub> = max(M<sub>fiber</sub>, M<sub>un</sub>)</span>\n';
-      if(combinedR.M_fiber>=combinedR.Mun){
-        html+='<span class="formula">M<sub>n</sub> = M<sub>fiber</sub> = <span class="result"><strong>'+fmt(combinedR.Mn_internal,2)+' kNm/m</strong></span> (钢纤维控制)</span>\n';
-      }else{
-        html+='<span class="formula">M<sub>n</sub> = M<sub>un</sub> = <span class="result"><strong>'+fmt(combinedR.Mn_internal,2)+' kNm/m</strong></span> (素混凝土开裂控制)</span>\n';
-      }
+      html+='<tr style="background:#e8f0f8;"><td>M<sub>n</sub> (负弯矩)</td><td>max(M<sub>fiber</sub>='+fmt(combinedR.M_fiber,2)+', M<sub>un</sub>='+fmt(combinedR.Mun,2)+')</td><td><strong>'+fmt(combinedR.Mn_internal,2)+'</strong></td><td>kNm/m</td></tr>';
     }
+    html+='</tbody></table></div>';
+
     if(combinedR.Mn_internal!==combinedR.Mp){
       const weakDir=combinedR.Mn_internal<combinedR.Mp?'M<sub>n</sub> (负弯矩·板顶受拉)':'M<sub>p</sub> (正弯矩·板底受拉)';
-      html+='<span class="comment">// ⚠ M<sub>p</sub>='+fmt(combinedR.Mp,2)+' ≠ M<sub>n</sub>='+fmt(combinedR.Mn_internal,2)+' → UDL 由弱方向 '+weakDir+' 控制</span>\n';
+      html+='<div class="alert alert-warning" style="font-size:0.82rem;margin-top:6px;">⚠️ M<sub>p</sub>='+fmt(combinedR.Mp,2)+' ≠ M<sub>n</sub>='+fmt(combinedR.Mn_internal,2)+' → UDL 由弱方向 '+weakDir+' 控制</div>';
     }
-    html+='</div></div>';
   }
   document.getElementById('section2Content').innerHTML = html;
 }
