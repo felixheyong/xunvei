@@ -914,6 +914,7 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
     html += '<td>'+row[3]+'</td></tr>';
   });
   html += '</tbody></table></div>';
+  html += '<div class="alert alert-info" style="font-size:0.78rem;margin-top:4px;"><strong>📐 公式速查：</strong>f<sub>ctm</sub>=0.3f<sub>ck</sub><sup>2/3</sup> &nbsp;|&nbsp; E<sub>cm</sub>=22(f<sub>cm</sub>/10)<sup>0.3</sup> &nbsp;|&nbsp; f<sub>ctd,fl</sub>=f<sub>ctm</sub>(1.6−h/1000)/γ<sub>c</sub> &nbsp;|&nbsp; l=[E·h³/(12(1−ν²)k)]<sup>0.25</sup> &nbsp;|&nbsp; M<sub>un</sub>=f<sub>ctd,fl</sub>·h²/6 &nbsp;|&nbsp; M<sub>p,SFRC</sub>=(0.29r₄+0.16r₁)h²/1000</div>';
 
   const r0 = results[0];
   html += '<h3>2.3 计算过程（以 '+r0.schemeLabel+' h='+r0.h+'mm 为例）</h3>';
