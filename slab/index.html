@@ -1193,16 +1193,32 @@ function renderSection8(p, results) {
   html += '<h3>7.2 最小板厚验算 <span style="font-size:0.7rem;color:var(--accent2);font-weight:400;">TR34 §8.11.1 公式48 — 脆性破坏下限</span></h3>';
   html += '<div class="alert alert-info" style="font-size:0.82rem;"><strong>📐 原理：</strong>h<sub>min</sub> = √(F<sub>ser</sub> / f<sub>ctm,fl,eff</sub>)，其中 f<sub>ctm,fl,eff</sub> 由截面实际抵抗力矩 M<sub>p</sub> 反推（= 6M<sub>p</sub>/h²）。素混凝土取 f<sub>ctd,fl</sub>，SFRC/RC 取实际有效值。板厚低于此限时截面连荷载扩散能力都不足。</div>';
   html += '<div class="table-wrap"><table><thead><tr><th>方案</th><th>实际 h (mm)</th><th>M<sub>p</sub> (kNm/m)</th><th>f<sub>eff</sub> (N/mm²)</th><th>h<sub>min</sub> (mm)</th><th>判定</th></tr></thead><tbody>';
+  // 从 fR 参数直接计算纤维等效弯拉强度（独立于板厚 h）
+  const r1_78 = 0.45 * p.fR1, r4_78 = 0.37 * p.fR4;
+  const Mp_fiber_coeff = 0.29 * r4_78 + 0.16 * r1_78;  // 纤维力矩系数
+  const f_fiber_eq = 6 * Mp_fiber_coeff;  // 等效弯拉强度增量 (MPa)，与 h 无关
+
   results.forEach(function(r) {
-    // 由截面实际正弯矩抗力 Mp 反推有效弯拉强度
-    // Mp = f_eff × h²/6 → f_eff = 6Mp×1000/h²  (MPa)
-    const f_eff = r.Mp > 0 ? 6 * r.Mp * 1000 / (r.h * r.h) : r.fctdfl;
-    const hMin = f_eff > 0 ? Math.sqrt(Fser_max * 1000 / f_eff) : 999;
+    // f_eff = f_ctd,fl (素混凝土) + 纤维/钢筋等效强度
+    var f_extra = 0;
+    if (r.isCombined) {
+      // 组合：纤维 + RC，取两者贡献
+      f_extra = f_fiber_eq + (r.Mrc_pos > 0 ? 6 * r.Mrc_pos * 1000 / (r.h * r.h) : 0);
+    } else if (r.isRC) {
+      // RC：取钢筋贡献
+      f_extra = r.Mrc_pos > 0 ? 6 * r.Mrc_pos * 1000 / (r.h * r.h) : 0;
+    } else {
+      // SFRC：纤维贡献
+      f_extra = f_fiber_eq;
+    }
+    const f_eff = r.fctdfl + f_extra;
+    const hMin = Math.sqrt(Fser_max * 1000 / f_eff);
     const okMin = r.h >= hMin;
     html += '<tr>';
     html += '<td><strong>' + r.schemeLabel + '</strong></td>';
     html += '<td>' + r.h + '</td>';
-    html += '<td>' + fmt(r.Mp, 2) + '</td>';
+    html += '<td>' + fmt(r.fctdfl, 2) + '</td>';
+    html += '<td>' + fmt(f_extra, 2) + '</td>';
     html += '<td>' + fmt(f_eff, 2) + '</td>';
     html += '<td><strong>' + fmt(hMin, 0) + '</strong></td>';
     html += '<td>' + badge(okMin, okMin ? 'OK' : '板厚不足!') + '</td>';
@@ -1210,8 +1226,12 @@ function renderSection8(p, results) {
   });
   html += '</tbody></table></div>';
   const allMinOk = results.every(function(r) {
-    const fe = r.Mp > 0 ? 6 * r.Mp * 1000 / (r.h * r.h) : r.fctdfl;
-    return r.h >= (fe > 0 ? Math.sqrt(Fser_max * 1000 / fe) : 999);
+    var fx = 0;
+    if (r.isCombined) fx = f_fiber_eq + (r.Mrc_pos > 0 ? 6 * r.Mrc_pos * 1000 / (r.h * r.h) : 0);
+    else if (r.isRC) fx = r.Mrc_pos > 0 ? 6 * r.Mrc_pos * 1000 / (r.h * r.h) : 0;
+    else fx = f_fiber_eq;
+    const fe = r.fctdfl + fx;
+    return r.h >= Math.sqrt(Fser_max * 1000 / fe);
   });
   html += '<div class="alert ' + (allMinOk ? 'alert-success' : 'alert-danger') + '" style="font-size:0.85rem;"><strong>' + (allMinOk ? '✅ 最小板厚验算全部通过' : '❌ 存在板厚不足的方案 — 脆性破坏风险') + '</strong></div>';
 
