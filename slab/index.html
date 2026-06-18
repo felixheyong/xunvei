@@ -787,7 +787,7 @@ function calculateAll() {
       if(p.rebarBPosition==='bottom') Mn_internal=Math.max(M_fiber, Mun);
       if(p.rebarBPosition==='top') Mp=Math.max(M_fiber, Mun);
     } else {
-      Mp=calcMp(r1,r4,h); Mn_internal=Math.max(Mp, Mun); Mn_edge=Math.max(0.5*Mp, 0.5*Mun);
+      Mp=calcMp(r1,r4,h); const Mn_sfrc=Mp*1.05; Mn_internal=Math.max(Mn_sfrc, Mun); Mn_edge=Math.max(0.5*Mn_sfrc, 0.5*Mun);
     }
     const a = calcA(p.basePlate), a_over_l = a/l;
     const Pu0_internal = calcPu0_internal(Mp, Mn_internal);
@@ -944,7 +944,9 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
     html += '\n<span class="comment">// ── 素混凝土截面抵抗力矩（设计值，ULS）──</span>\n';
     html += '<span class="formula">M<sub>un</sub> = f<sub>ctd,fl</sub> × h²/6 / 1000</span>\n';
     html += '<span class="formula">M<sub>un</sub> = '+fmt(r0.fctdfl,2)+' × '+r0.h+'²/6 / 1000</span> = <span class="result">'+fmt(r0.Mun,2)+' kNm/m</span>\n';
-    html += '<span class="comment">// 对 SFRC：设计抗力 M<sub>n</sub> = max(M<sub>p</sub>, M<sub>un</sub>) = '+fmt(Math.max(r0.Mp, r0.Mun),2)+' kNm/m（取两者较大值）</span>\n';
+    html += '<span class="comment">// 对 SFRC：M<sub>p</sub> = '+fmt(r0.Mp,2)+' kNm/m（正弯矩·标准 TR34 公式）</span>\n';
+    html += '<span class="comment">// M<sub>n,SFRC</sub> = M<sub>p</sub> × 1.05 = '+fmt(r0.Mp*1.05,2)+' kNm/m（负弯矩·CN23005 标定：顶面抹面纤维定向，+5% 增强）</span>\n';
+    html += '<span class="comment">// 设计抗力 M<sub>n</sub> = max(M<sub>n,SFRC</sub>, M<sub>un</sub>) = '+fmt(Math.max(r0.Mn_internal, r0.Mun),2)+' kNm/m</span>\n';
     html += '<span class="comment">// 对 RC：设计抗力由配筋提供，M<sub>un</sub> 仅作素混凝土基线参考</span>\n';
 	    html += '\n<span class="comment">// ══ 钢纤维裂缝控制机制（TR34 §8.8 / EN 14889-1）══</span>\n';
 	    html += '<span class="comment">// 裂缝宽度通过EN 14889-1三点弯曲试验的CMOD与残余强度关联：</span>\n';
