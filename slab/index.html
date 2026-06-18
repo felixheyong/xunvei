@@ -1100,15 +1100,16 @@ function renderSection3(p, results) {
 
 function renderSection4(p, results) {
   let html = '';
-  html += '<h3>4.1 最大冲切抗力 (EC2 §6.5)</h3><div class="calc-box">';
-  results.forEach(r=>{ html += '<span class="comment">// h='+r.h+'mm: v<sub>max</sub>='+fmt(r.vmax,2)+' N/mm², u<sub>0</sub>='+r.u0+'mm, d='+fmt(r.d,0)+'mm</span>\n<span class="formula">P<sub>p,max</sub></span> = '+fmt(r.vmax,2)+'×'+r.u0+'×'+fmt(r.d,0)+'/1000 = <span class="result">'+fmt(r.Pp_max,1)+' kN</span>\n'; });
-  html += '</div>';
-  html += '<h3>4.2 各板厚冲切验算</h3><div class="table-wrap"><table><thead><tr><th>参数</th>'+results.map(r=>'<th>'+r.schemeLabel+'<br>h='+r.h+'mm</th>').join('')+'</tr></thead><tbody>';
-  const r0=results[0];
-  html += '<tr><td>P<sub>p,max</sub> (面)</td>'+results.map(r=>'<td><strong>'+fmt(r.Pp_max,1)+' kN</strong></td>').join('')+'</tr>';
-  html += '<tr><td>v<sub>Rd,c</sub></td>'+results.map(r=>'<td>'+fmt(r.vRd_c,3)+' N/mm²</td>').join('')+'</tr>';
-  html += '<tr><td>v<sub>f</sub> (纤维)</td>'+results.map(r=>'<td>'+(r.isRC?'<em>0 (RC无纤维)</em>':'<strong>'+fmt(r.vf,3)+' N/mm²</strong>')+'</td>').join('')+'</tr>';
-  html += '<tr><td>P<sub>p</sub> (含纤维)</td>'+results.map(r=>'<td><strong>'+fmt(r.Pp_fiber,1)+' kN</strong> '+badge(r.Pp_fiber>=p.Pu_rack,r.Pp_fiber>=p.Pu_rack?'OK':'FAIL')+'</td>').join('')+'</tr>';
+  html += '<h3>4.1 冲切验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">EC2 §6.5</span></h3>';
+  html += '<div class="table-wrap"><table><thead><tr><th>参数</th><th>符号</th>'+results.map(r=>'<th>'+r.schemeLabel+'<br>h='+r.h+'mm</th>').join('')+'<th>单位</th></tr></thead><tbody>';
+  html += '<tr><td>有效高度</td><td>d = 0.75h</td>'+results.map(r=>'<td>'+fmt(r.d,0)+'</td>').join('')+'<td>mm</td></tr>';
+  html += '<tr><td>加载面周长</td><td>u<sub>0</sub></td>'+results.map(r=>'<td>'+r.u0+'</td>').join('')+'<td>mm</td></tr>';
+  html += '<tr><td>临界周长</td><td>u<sub>1</sub> = u<sub>0</sub>+4πd</td>'+results.map(r=>'<td>'+fmt0(r.u1)+'</td>').join('')+'<td>mm</td></tr>';
+  html += '<tr><td>最大剪应力</td><td>v<sub>max</sub></td>'+results.map(r=>'<td>'+fmt(r.vmax,2)+'</td>').join('')+'<td>N/mm²</td></tr>';
+  html += '<tr><td>面冲切抗力</td><td>P<sub>p,max</sub> = v<sub>max</sub>·u<sub>0</sub>·d</td>'+results.map(r=>'<td><strong>'+fmt(r.Pp_max,1)+'</strong></td>').join('')+'<td>kN</td></tr>';
+  html += '<tr><td>混凝土剪应力</td><td>v<sub>Rd,c</sub></td>'+results.map(r=>'<td>'+fmt(r.vRd_c,3)+'</td>').join('')+'<td>N/mm²</td></tr>';
+  html += '<tr><td>纤维剪应力</td><td>v<sub>f</sub></td>'+results.map(r=>'<td>'+(r.isRC?'<em>0</em>':'<strong>'+fmt(r.vf,3)+'</strong>')+'</td>').join('')+'<td>N/mm²</td></tr>';
+  html += '<tr><td>临界截面抗力</td><td>P<sub>p</sub> = (v<sub>Rd,c</sub>+v<sub>f</sub>)·u<sub>1</sub>·d</td>'+results.map(r=>'<td><strong>'+fmt(r.Pp_fiber,1)+'</strong> '+badge(r.Pp_fiber>=p.Pu_rack,r.Pp_fiber>=p.Pu_rack?'OK':'FAIL')+'</td>').join('')+'<td>kN</td></tr>';
   html += '</tbody></table></div>';
   const allOk=results.every(r=>r.Pp_fiber>=p.Pu_rack&&r.Pp_max>=p.Pu_rack);
   html += '<div class="alert '+(allOk?'alert-success':'alert-danger')+'"><strong>'+(allOk?'✅ 冲切验算全部通过':'❌ 部分板厚冲切不满足')+'</strong></div>';
