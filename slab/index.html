@@ -1047,10 +1047,12 @@ function renderSection3(p, results) {
   html += '<tr><td><strong>自由边/施工缝'+ (p.lt>0?' + LT':'') +'</strong></td>';
   results.forEach(r=>{ const cap=p.lt>0?r.Pu0_edge_lt:r.Pu0_edge; const ok=cap>=p.Pu_rack; html += '<td><strong>'+fmt(cap,1)+' kN</strong>'+(p.lt>0?' <small style="color:var(--muted);">+LT</small>':'')+'</td><td>'+badge(ok,ok?'OK ('+(p.Pu_rack/cap*100).toFixed(0)+'%)':'不满足')+'</td>'; });
   html += '</tr></tbody></table></div>';
+  html += '<div class="alert alert-info" style="font-size:0.78rem;margin-top:4px;"><strong>📐 公式：</strong>板内部 P<sub>u</sub> = 2π(M<sub>p</sub>+M<sub>n</sub>) &nbsp;|&nbsp; 边部 M<sub>n,edge</sub>≈0.5M<sub>n</sub> &nbsp;|&nbsp; LT贡献 = min(LT×2×0.9l, 0.5P<sub>ser</sub>) — TR34 Eq 8.4a</div>';
 
   html += '<h3>3.2 双立柱荷载（背对背间距='+p.bbSpacing+'mm）</h3><div class="table-wrap"><table><thead><tr><th>需求</th>'+results.map(r=>'<th>'+r.schemeLabel+'<br>h='+r.h+'mm</th><th>判定</th>').join('')+'</tr></thead><tbody><tr><td><strong>2×'+p.Pu_rack+'='+(2*p.Pu_rack)+' kN</strong></td>';
   results.forEach(r=>{ const ok=r.Pu0_dual>=2*p.Pu_rack; html += '<td><strong>'+fmt(r.Pu0_dual,1)+' kN</strong></td><td>'+badge(ok,ok?'OK':'不满足')+'</td>'; });
   html += '</tr></tbody></table></div>';
+  html += '<div class="alert alert-info" style="font-size:0.78rem;margin-top:4px;"><strong>📐 公式：</strong>P<sub>u,dual</sub> = (2π + 1.8(x/l))×(M<sub>p</sub>+M<sub>n</sub>) &nbsp;|&nbsp; 立柱间距 x='+p.bbSpacing+'mm &nbsp;|&nbsp; l='+fmt0(results[0].l)+'mm — Meyerhof 相互作用</div>';
 
   html += '<h3>3.3 均布荷载 (UDL) 验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — Westergaard §8.4)</span></h3>';
   html += '<div class="table-wrap"><table><thead><tr><th>方案</th><th>h</th><th>l<sub>UDL</sub> (mm)</th><th>M<sub>p</sub></th><th>M<sub>n</sub></th><th>控制 M</th><th>q<sub>u</sub> (kN/m²)</th><th>需求</th><th>判定</th></tr></thead><tbody>';
