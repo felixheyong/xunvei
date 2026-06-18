@@ -227,14 +227,14 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 
 <h3>1.1 混凝土等级（GB 国标预设）</h3>
 <div class="preset-row" id="concretePresets">
-  <button class="preset-btn" data-fck="17" data-fckcube="25">GB C25</button>
-  <button class="preset-btn" data-fck="20" data-fckcube="30">GB C30</button>
-  <button class="preset-btn selected" data-fck="20" data-fckcube="30">GB C30</button>
-  <button class="preset-btn" data-fck="27" data-fckcube="40">GB C40</button>
-  <button class="preset-btn" data-fck="30" data-fckcube="45">GB C45</button>
+  <button class="preset-btn" data-fck="20" data-fckcube="25">GB C25</button>
+  <button class="preset-btn selected" data-fck="25" data-fckcube="30">GB C30</button>
+  <button class="preset-btn" data-fck="28" data-fckcube="35">GB C35</button>
+  <button class="preset-btn" data-fck="32" data-fckcube="40">GB C40</button>
+  <button class="preset-btn" data-fck="35" data-fckcube="45">GB C45</button>
 </div>
 <div class="input-grid">
-  <div class="input-group"><label>圆柱体特征抗压强度 f<sub>ck</sub> <span class="unit">(N/mm²)</span></label><input type="number" id="fck" value="20" min="12" max="120" step="1"></div>
+  <div class="input-group"><label>圆柱体特征抗压强度 f<sub>ck</sub> <span class="unit">(N/mm²)</span></label><input type="number" id="fck" value="25" min="12" max="120" step="1"></div>
   <div class="input-group"><label>立方体特征抗压强度 f<sub>ck,cube</sub> <span class="unit">(N/mm²)</span></label><input type="number" id="fckcube" value="30" min="15" max="150" step="1"></div>
   <div class="input-group"><label>材料分项系数 γ<sub>c</sub></label><input type="number" id="gammaC" value="1.5" min="1.0" max="2.0" step="0.05"></div>
   <div class="input-group"><label>长期系数 α<sub>cc</sub></label><input type="number" id="alphaCC" value="0.85" min="0.5" max="1.0" step="0.05"></div>
@@ -456,8 +456,8 @@ if (document.readyState === 'complete') {
 // ═══════════════ CORE ENGINE ═══════════════
 function getParams() {
   const p = {};
-  p.fck = parseFloat(document.getElementById('fck').value) || 23;
-  p.fckcube = parseFloat(document.getElementById('fckcube').value) || 35;
+  p.fck = parseFloat(document.getElementById('fck').value) || 25;
+  p.fckcube = parseFloat(document.getElementById('fckcube').value) || 30;
   p.gammaC = parseFloat(document.getElementById('gammaC').value) || 1.5;
   p.alphaCC = parseFloat(document.getElementById('alphaCC').value) || 0.85;
   p.fR1 = parseFloat(document.getElementById('fR1').value) || 0;
@@ -1281,7 +1281,7 @@ function setForkliftPreset(Q, pVal, D, gf) {
 function resetToDefaults() {
      
   
-  document.getElementById('fck').value='20'; document.getElementById('fckcube').value='30';
+  document.getElementById('fck').value='25'; document.getElementById('fckcube').value='30';
   document.getElementById('gammaC').value='1.5'; document.getElementById('alphaCC').value='0.85';
   document.getElementById('fR1').value=''; document.getElementById('fR4').value='';
   document.getElementById('fR2').value=''; document.getElementById('fR3').value='';
@@ -1303,7 +1303,7 @@ function resetToDefaults() {
   document.getElementById('dw_S').value='500'; document.getElementById('dw_ds').value='275';
   document.getElementById('dw_X').value='20'; document.getElementById('dw_e').value='10';
   document.querySelectorAll('#concretePresets .preset-btn').forEach(b=>b.classList.remove('selected'));
-  document.querySelector('#concretePresets .preset-btn[data-fck="20"]').classList.add('selected');
+  document.querySelector('#concretePresets .preset-btn[data-fck="25"]').classList.add('selected');
   updateRebarBRatio();
   document.querySelectorAll('#fiberPresets .preset-btn').forEach(b=>b.classList.remove('selected'));
   // No fiber preset selected
