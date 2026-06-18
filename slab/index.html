@@ -306,7 +306,6 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   <div class="input-group"><label>基床系数 k <span class="unit">(N/mm³)</span> <span class="hint">自动估算或手动输入</span></label><input type="number" id="kValue" value="0.050" min="0.01" max="0.5" step="0.001" oninput="onManualKInput()"></div>
   <div class="input-group"><label>CBR (底基层) <span class="unit">(%)</span> <span class="hint">自动估算</span></label><input type="number" id="cbrValue" value="23" min="1" max="100" step="1"></div>
   <div class="input-group" style="grid-column: 1 / -1;"><label>混凝土泊松比 ν <span class="hint">EC2 §3.1.3 / fib MC2010 — 按fck自动取值</span></label><input type="number" id="poisson" value="0.20" min="0.10" max="0.30" step="0.01" readonly></div>
-  <div class="input-group"><label>接缝传力 LT <span class="unit">(kN/m)</span> <span class="hint">0=无传力/内部</span></label><input type="number" id="ltValue" value="0" min="0" max="500" step="0.1"></div>
 </div>
 <div class="alert alert-info" style="margin-top:8px; font-size:0.82rem;" id="compactionNote">
   <strong>📐 压实系数 → K值换算（TR34 Table 8.3 经验公式）：</strong><br>λ=0.94, 粉土/粉质粘土 → CBR≈23% → k≈0.050 N/mm³ (50 MN/m³)
@@ -396,6 +395,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 
 <h3>1.6 接缝传力板参数（可选 — 用于 第5节 传力验算）</h3>
 <div class="input-grid">
+  <div class="input-group"><label>接缝传力 LT <span class="unit">(kN/m)</span> <span class="hint">0=无传力/内部区域</span></label><input type="number" id="ltValue" value="0" min="0" max="500" step="0.1"></div>
   <div class="input-group"><label>钢板宽度 W <span class="unit">(mm)</span></label><input type="number" id="dw_W" value="150" min="0" step="1"></div>
   <div class="input-group"><label>钢板长度 L <span class="unit">(mm)</span></label><input type="number" id="dw_L" value="135" min="0" step="1"></div>
   <div class="input-group"><label>嵌入深度 Emb <span class="unit">(mm)</span></label><input type="number" id="dw_Emb" value="45" min="0" step="1"></div>
