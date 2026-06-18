@@ -30,6 +30,7 @@ section { background: var(--card-bg); border-radius: var(--radius-lg); padding: 
 section h2 { font-size: 1.2rem; color: #2e2a25; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; letter-spacing: 0.02em; }
 section h2 .sec-num { background: var(--accent); color: #f3efe8; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; }
 section h3 { font-size: 1.05rem; color: var(--accent); margin: 20px 0 10px; padding-left: 10px; border-left: 4px solid var(--accent2); }
+section h4 { font-size: 0.92rem; color: var(--accent2); margin: 12px 0 8px; padding-left: 8px; border-left: 3px solid var(--accent2); }
 .input-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin: 12px 0; }
 .input-group { display: flex; flex-direction: column; gap: 4px; }
 .input-group label { font-size: 0.85rem; font-weight: 600; color: var(--text); }
@@ -59,11 +60,14 @@ tbody tr:hover { background: #f2f6f4; }
 .badge-warn { background: #f9f2e5; color: #8b6a3e; }
 .badge-fail { background: #f7e9e3; color: #9b5040; }
 .badge-info { background: #f2f6f4; color: #3d504a; }
+.badge-combined { background: #e8f0f8; color: #2c5f8a; }
 .alert { border-radius: var(--radius-sm); padding: 14px 18px; margin: 16px 0; font-size: 0.88rem; line-height: 1.6; }
 .alert-info    { background: #f2f6f4; border-left: 4px solid var(--accent); color: #3d504a; }
 .alert-warning { background: #f7f3eb; border-left: 4px solid var(--warn); color: #5b4e3e; }
 .alert-danger  { background: #f7e9e3; border-left: 4px solid var(--fail); color: #9b5040; }
 .alert-success { background: #ebf2ec; border-left: 4px solid var(--pass); color: #4a6b55; }
+.combined-box { background: linear-gradient(135deg, #f2f6f4 0%, #f7f3eb 100%); border: 2px solid var(--accent3); border-radius: var(--radius); padding: 16px 20px; margin: 16px 0; }
+.combined-box h3 { border-left-color: var(--accent3) !important; color: var(--accent2) !important; }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 16px 0; }
 .card { border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; transition: box-shadow 0.2s; background: var(--card-bg); }
 .card:hover { box-shadow: 0 8px 32px rgba(46,42,37,.12); }
@@ -215,7 +219,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 <main><!-- ════════════ HEADER ════════════ -->
 <div class="report-header">
   <h1>🏗️ 地基承载混凝土地坪通用设计计算工具</h1>
-  <div class="subtitle">基于 TR34 第4版 (2016) &amp; Eurocode 2 | SFRC 钢纤维 + 传统RC配筋双体系 | 仅作参考，工程决策请以专业工程师判断为准<br>技术整合和汉化 HE YONG <span style="display:inline-block;margin-left:8px;font-size:.62rem;padding:2px 8px;border-radius:50px;border:1px solid rgba(44,95,138,.3);color:var(--accent);vertical-align:middle;">© 版权所有</span></div>
+  <div class="subtitle">基于 TR34 第4版 (2016) &amp; Eurocode 2 · fib MC2010 §7.7 | SFRC + RC + 组合配筋 三体系 | 仅作参考，工程决策请以专业工程师判断为准<br>技术整合和汉化 HE YONG <span style="display:inline-block;margin-left:8px;font-size:.62rem;padding:2px 8px;border-radius:50px;border:1px solid rgba(44,95,138,.3);color:var(--accent);vertical-align:middle;">© 版权所有</span></div>
 </div>
 
 <!-- ════════════ SECTION 2 ════════════ -->
@@ -225,13 +229,13 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 <div class="preset-row" id="concretePresets">
   <button class="preset-btn" data-fck="17" data-fckcube="25">GB C25</button>
   <button class="preset-btn" data-fck="20" data-fckcube="30">GB C30</button>
-  <button class="preset-btn selected" data-fck="23" data-fckcube="35">GB C35</button>
+  <button class="preset-btn selected" data-fck="20" data-fckcube="30">GB C30</button>
   <button class="preset-btn" data-fck="27" data-fckcube="40">GB C40</button>
   <button class="preset-btn" data-fck="30" data-fckcube="45">GB C45</button>
 </div>
 <div class="input-grid">
-  <div class="input-group"><label>圆柱体特征抗压强度 f<sub>ck</sub> <span class="unit">(N/mm²)</span></label><input type="number" id="fck" value="23" min="12" max="120" step="1"></div>
-  <div class="input-group"><label>立方体特征抗压强度 f<sub>ck,cube</sub> <span class="unit">(N/mm²)</span></label><input type="number" id="fckcube" value="35" min="15" max="150" step="1"></div>
+  <div class="input-group"><label>圆柱体特征抗压强度 f<sub>ck</sub> <span class="unit">(N/mm²)</span></label><input type="number" id="fck" value="20" min="12" max="120" step="1"></div>
+  <div class="input-group"><label>立方体特征抗压强度 f<sub>ck,cube</sub> <span class="unit">(N/mm²)</span></label><input type="number" id="fckcube" value="30" min="15" max="150" step="1"></div>
   <div class="input-group"><label>材料分项系数 γ<sub>c</sub></label><input type="number" id="gammaC" value="1.5" min="1.0" max="2.0" step="0.05"></div>
   <div class="input-group"><label>长期系数 α<sub>cc</sub></label><input type="number" id="alphaCC" value="0.85" min="0.5" max="1.0" step="0.05"></div>
 </div>
@@ -268,7 +272,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 	<h4 style="font-size:0.92rem; color: var(--accent2); margin:12px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">1.4a 静荷载</h4>
 	<div class="input-grid">
 	  <div class="input-group"><label>均布荷载 UDL <span class="unit">(kN/m²)</span></label><input type="number" id="udl" value="50" min="0" step="1"></div>
-	  <div class="input-group"><label>点荷载 / 货架立柱荷载 P<sub>u</sub> <span class="unit">(kN)</span></label><input type="number" id="rackingLoad" value="90" min="0" step="0.1"></div>
+	  <div class="input-group"><label>点荷载 / 货架立柱荷载 P<sub>u</sub> <span class="unit">(kN)</span></label><input type="number" id="rackingLoad" value="80" min="0" step="0.1"></div>
 	  <div class="input-group"><label>立柱底板尺寸 <span class="unit">(mm)</span></label><input type="text" id="basePlateSize" value="150" placeholder="正方形边长"></div>
 	  <div class="input-group"><label>背对背立柱间距 <span class="unit">(mm)</span></label><input type="number" id="backToBackSpacing" value="300" min="0" step="10"></div>
 	</div>
@@ -307,18 +311,33 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 
 		<h3>1.5 候选板厚（可填1-3个方案进行比选）</h3>
 <div class="input-grid">
-  <div class="input-group"><label>方案 A 板厚 <span class="unit">(mm)</span> <span class="hint">推荐值</span></label><input type="number" id="hA" value="160" min="80" max="500" step="5"></div>
-  <div class="input-group"><label>方案 B 板厚 <span class="unit">(mm)</span> <span class="hint">保守方案</span></label><input type="number" id="hB" value="180" min="80" max="500" step="5"></div>
-  <div class="input-group"><label>方案 C 板厚 <span class="unit">(mm)</span> <span class="hint">传统配筋方案</span></label><input type="number" id="hC" value="200" min="80" max="500" step="5" placeholder="传统RC方案板厚" onchange="updateRebarRatio()"></div>
+  <div class="input-group"><label>方案 A 板厚 <span class="unit">(mm)</span> <span class="hint">推荐值</span></label><input type="number" id="hA" value="180" min="80" max="500" step="5"></div>
+  <div class="input-group"><label>方案 B 板厚 <span class="unit">(mm)</span> <span class="hint">传统配筋方案</span></label><input type="number" id="hB" value="180" min="80" max="500" step="5" placeholder="传统RC方案板厚" onchange="updateRebarRatio()"></div>
+  <div class="input-group"><label>方案 C 板厚 <span class="unit">(mm)</span> <span class="hint" style="color:var(--accent3);">⭐ 组合配筋 SFRC+RC</span></label><input type="number" id="hC" value="180" min="80" max="500" step="5" onchange="updateRebarBRatio()"></div>
 </div>
 
-<h3>1.5a 方案C — 传统配筋参数</h3>
+
+<h3>1.5a 方案B — 传统配筋参数 <span style="font-size:0.78rem;font-weight:400;color:var(--muted);">（纯RC，无钢纤维）</span></h3>
 <div class="input-grid">
   <div class="input-group"><label>钢筋等级</label><select id="rebarGrade"><option value="HRB400" selected>HRB400 (fy=360N/mm²)</option><option value="HRB500">HRB500 (fy=435N/mm²)</option><option value="HPB300">HPB300 (fy=270N/mm²)</option></select></div>
   <div class="input-group"><label>钢筋直径 <span class="unit">(mm)</span></label><input type="number" id="rebarDia" value="12" min="6" max="32" step="1" onchange="updateRebarRatio()"></div>
   <div class="input-group"><label>钢筋间距 <span class="unit">(mm)</span></label><input type="number" id="rebarSpacing" value="200" min="50" max="400" step="10" onchange="updateRebarRatio()"></div>
   <div class="input-group"><label>钢筋位置</label><select id="rebarPosition" onchange="updateRebarRatio()"><option value="top">面层钢筋 (顶部)</option><option value="bottom" selected>底层钢筋 (底部)</option><option value="both">双层双向钢筋</option></select></div>
   <div class="input-group"><label>截面配筋率 ρ <span class="unit">(%)</span> <span class="hint">自动计算</span></label><input type="text" id="rebarRatio" value="—" readonly></div>
+</div>
+
+<h3>1.5b 方案C — 组合配筋参数 <span style="font-size:0.78rem;font-weight:400;color:var(--accent);">钢纤维(f<sub>R1</sub>–f<sub>R4</sub>) + 传统钢筋 协同工作</span></h3>
+<div class="combined-box" style="margin-bottom:12px;">
+<div class="alert alert-info" style="font-size:0.8rem;margin-bottom:12px;">
+<strong>📐 组合设计依据：</strong>fib Model Code 2010 §7.7.2 允许钢纤维残余抗拉强度与钢筋贡献叠加。纤维控制微裂缝(CMOD&lt;0.5mm)，钢筋控制宏观裂缝——两者在不同裂缝宽度区间发挥作用，可全叠加 (λ=1.0)。
+</div>
+<div class="input-grid">
+<div class="input-group"><label>钢筋等级</label><select id="rebarBGrade" onchange="updateRebarBRatio()"><option value="HRB400" selected>HRB400 (fy=360N/mm²)</option><option value="HRB500">HRB500 (fy=435N/mm²)</option><option value="HPB300">HPB300 (fy=270N/mm²)</option></select></div>
+<div class="input-group"><label>钢筋直径 <span class="unit">(mm)</span></label><input type="number" id="rebarBDia" value="10" min="6" max="32" step="1" onchange="updateRebarBRatio()"></div>
+<div class="input-group"><label>钢筋间距 <span class="unit">(mm)</span></label><input type="number" id="rebarBSpacing" value="200" min="50" max="400" step="10" onchange="updateRebarBRatio()"></div>
+<div class="input-group"><label>钢筋位置</label><select id="rebarBPosition" onchange="updateRebarBRatio()"><option value="bottom" selected>底层钢筋 (底部受拉)</option><option value="top">面层钢筋 (顶部受拉)</option><option value="both">双层双向钢筋</option></select></div>
+<div class="input-group"><label>截面配筋率 ρ <span class="unit">(%)</span></label><input type="text" id="rebarBRatio" value="—" readonly></div>
+</div>
 </div>
 
 <h3>1.6 接缝传力杆参数（可选 — 用于 第5节 传力验算）</h3>
@@ -348,7 +367,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 <section id="s8"><h2><span class="sec-num">8</span>计算汇总与导出</h2><div id="section8Content"><p style="color:var(--muted);">请先执行计算。</p></div>
 </section>
 
-<footer>地基承载混凝土地坪通用设计计算工具 · 基于 TR34 第4版 (2016) &amp; Eurocode 2 · 仅作参考</footer>
+<footer>地基承载混凝土地坪通用设计计算工具 · 基于 TR34 第4版 (2016) · Eurocode 2 · fib MC2010 §7.7 · SFRC+RC组合配筋 · 仅作参考</footer>
 </main>
 
 <script src="../engineering-tools/tr34-engine.js"></script>
@@ -425,13 +444,13 @@ document.querySelectorAll('input, select').forEach(el => {
     clearTimeout(recalcTimeout); recalcTimeout = setTimeout(calculateAll, 300);
   });
 });
-window.addEventListener('load', () => { updatePoisson(); updateRebarRatio(); initPwdProtection(); });
+window.addEventListener('load', () => { updatePoisson(); updateRebarRatio(); updateRebarBRatio(); estimateKfromCompaction(); initPwdProtection(); });
 
 // 页面加载完成后立即执行计算
 if (document.readyState === 'complete') {
-  updatePoisson(); updateRebarRatio(); calculateAll();
+  updatePoisson(); updateRebarRatio(); estimateKfromCompaction(); calculateAll();
 } else {
-  window.addEventListener('load', function() { updatePoisson(); updateRebarRatio(); calculateAll(); });
+  window.addEventListener('load', function() { updatePoisson(); updateRebarRatio(); updateRebarBRatio(); estimateKfromCompaction(); calculateAll(); });
 }
 
 // ═══════════════ CORE ENGINE ═══════════════
@@ -476,6 +495,12 @@ function getParams() {
   p.dw_ds = parseFloat(document.getElementById('dw_ds').value) || 275;
   p.dw_X = parseFloat(document.getElementById('dw_X').value) || 20;
   p.dw_e = parseFloat(document.getElementById('dw_e').value) || 10;
+  // 方案B combined rebar (NEW)
+  p.rebarBGrade = document.getElementById('rebarBGrade').value || 'HRB400';
+  p.rebarBDia = parseFloat(document.getElementById('rebarBDia').value) || 10;
+  p.rebarBSpacing = parseFloat(document.getElementById('rebarBSpacing').value) || 200;
+  p.rebarBPosition = document.getElementById('rebarBPosition').value || 'bottom';
+  // 方案C rebar
   p.rebarGrade = document.getElementById('rebarGrade').value || 'HRB400';
   p.rebarDia = parseFloat(document.getElementById('rebarDia').value) || 12;
   p.rebarSpacing = parseFloat(document.getElementById('rebarSpacing').value) || 200;
@@ -484,9 +509,9 @@ function getParams() {
   const ha = parseFloat(document.getElementById('hA').value);
   if (ha && ha > 0) p.schemes.push({h: ha, type: 'sfrc', label: '方案A (SFRC)'});
   const hb = parseFloat(document.getElementById('hB').value);
-  if (hb && hb > 0) p.schemes.push({h: hb, type: 'sfrc', label: '方案B (SFRC)'});
+  if (hb && hb > 0) p.schemes.push({h: hb, type: 'rc', label: '方案B (传统RC配筋)'});
   const hc = parseFloat(document.getElementById('hC').value);
-  if (hc && hc > 0) p.schemes.push({h: hc, type: 'rc', label: '方案C (传统RC配筋)'});
+  if (hc && hc > 0) p.schemes.push({h: hc, type: 'combined', label: '方案C (钢纤维+钢筋组合)'});
   if (p.schemes.length === 0) p.schemes = [{h: 160, type: 'sfrc', label: '方案A (SFRC)'}];
   return p;
 }
@@ -531,6 +556,17 @@ function fmt(n, d){ d=d||2; return n.toFixed(d); }
 function fmt0(n) { return Math.round(n).toLocaleString(); }
 
 // ═══════════════ MAIN CALCULATION ═══════════════
+function calcRebarMoment(h, fy, dia, spacing, position){
+  const As=(Math.PI*dia*dia/4)*(1000/spacing);
+  const d_pos=h-40-dia/2, d_neg=h-25-dia/2;
+  const Mrc=As*fy*0.9/1e6;
+  let Mrc_pos=0, Mrc_neg=0, d_eff=0;
+  if(position==='top'){Mrc_neg=Mrc*d_neg;d_eff=d_neg;}
+  else if(position==='bottom'){Mrc_pos=Mrc*d_pos;d_eff=d_pos;}
+  else{Mrc_pos=Mrc*d_pos;Mrc_neg=Mrc*d_neg;d_eff=d_pos;}
+  return{As:As,Mrc_pos:Mrc_pos,Mrc_neg:Mrc_neg,d_eff:d_eff};
+}
+
 function calculateAll() {
   try {
   const p = getParams();
@@ -543,9 +579,10 @@ function calculateAll() {
     const fctdfl = calcFctdFl(fctm, h, p.gammaC);
     const l = calcL(Ecm, h, p.nu, p.k);
     const Mun = calcMun(fctdfl, h);
-    let Mp, Mn_internal, Mn_edge, fy=0, As=0, d_eff_rc=0, Mrc_pos=0, Mrc_neg=0;
+    let Mp, Mn_internal, Mn_edge, fy=0, As=0, d_eff_rc=0, Mrc_pos=0, Mrc_neg=0, M_fiber=0; const isCombined=(scheme.type==='combined');
+	    const fy_map = {"HRB400":360,"HRB500":435,"HPB300":270};
 	    if (isRC) {
-	      const fy_map = {"HRB400":360,"HRB500":435,"HPB300":270}; fy=fy_map[p.rebarGrade]||360;
+	      fy=fy_map[p.rebarGrade]||360;
 	      As=(Math.PI*p.rebarDia*p.rebarDia/4)*(1000/p.rebarSpacing);
 	      const d_pos = h - 40 - p.rebarDia/2;
 	      const d_neg = h - 25 - p.rebarDia/2;
@@ -563,6 +600,21 @@ function calculateAll() {
 	        Mp = Mrc_pos; Mn_internal = Mrc_neg;
 	        Mn_edge = 0.5 * Mrc_neg; d_eff_rc = d_pos;
 	      }
+    } else if (scheme.type === 'combined') {
+      // ═══ COMBINED SFRC + RC (Model Code 2010 §7.7.2) ═══
+      M_fiber=calcMp(r1,r4,h);
+      fy=fy_map[p.rebarBGrade]||360;
+      const rb=calcRebarMoment(h,fy,p.rebarBDia,p.rebarBSpacing,p.rebarBPosition);
+      As=rb.As; Mrc_pos=rb.Mrc_pos; Mrc_neg=rb.Mrc_neg; d_eff_rc=rb.d_eff;
+      // Full additivity λ=1.0 (justified for ground slabs ρ<0.5%)
+      const lambda=1.0;
+      Mp=Mrc_pos+lambda*M_fiber;
+      Mn_internal=Mrc_neg+lambda*M_fiber;
+      Mn_edge=Math.max(0.5*Mrc_neg+0.5*lambda*M_fiber, 0.5*Mun);
+      // Mun (plain concrete cracking) and M_fiber (post-crack residual) are
+      // ALTERNATIVE mechanisms — concrete cracks → fibers activate. Take max, not sum.
+      if(p.rebarBPosition==='bottom') Mn_internal=Math.max(M_fiber, Mun);
+      if(p.rebarBPosition==='top') Mp=Math.max(M_fiber, Mun);
     } else {
       Mp=calcMp(r1,r4,h); Mn_internal=Math.max(Mp, Mun); Mn_edge=Math.max(0.5*Mp, 0.5*Mun);
     }
@@ -572,16 +624,19 @@ function calculateAll() {
     const Pu0_dual = calcPu0_dual(Mp, Mn_internal, p.bbSpacing, 0, l);
     const l_udl_val = Math.pow(Ecm * Math.pow(h, 3) / (3 * p.k), 0.25);
     const l_udl_m = l_udl_val / 1000;
+    // TR34 §8.4: Westergaard UDL = sagging moment check (Mp, bottom tension)
+    // Mn < Mp is a separate hogging concern → flagged in joint spacing check
     const qu = Mp / (0.168 * l_udl_m * l_udl_m);
     const mhe_kn = p.mheTons*10, frontAxle=mhe_kn*0.9, wheelStatic=frontAxle/2, wheelDesign=wheelStatic*p.dynFactor;
     const a_mhe = Math.sqrt((wheelDesign*1000)/Math.PI/1.0), a_over_l_mhe = a_mhe/l;
     const Pu0_mhe = calcPu0_internal(Mp, Mn_internal);
-    const F = isRC?0.7:calcFatigueFactor(p.N), Mp_fatigue = F*Mp;
+    let F; if(isCombined){const Ff=calcFatigueFactor(p.N),Fr=0.7;const fr=Mp>0?M_fiber/Mp:0.5;F=Ff*fr+Fr*(1-fr);}else if(isRC){F=0.7;}else{F=calcFatigueFactor(p.N);} const Mp_fatigue = F*Mp;
     const fcd = calcFcd(p.fck, p.alphaCC, p.gammaC), k2 = calcK2(p.fck), vmax = calcVmax(k2, fcd);
     const d = 0.75*h, u0 = 4*p.basePlate, Pp_max = vmax*u0*d/1000;
     const ks = Math.min(1+Math.sqrt(200/d), 2.0);
     let rhl, vf;
-    if (isRC) { rhl=As/(1000*d_eff_rc); vf=0; }
+    if (isCombined) { rhl=As/(1000*d_eff_rc); vf=0.015*(p.fR1+p.fR2+p.fR3+p.fR4); }
+    else if (isRC) { rhl=As/(1000*d_eff_rc); vf=0; }
     else { rhl=0.001; vf=0.015*(p.fR1+p.fR2+p.fR3+p.fR4); }
     const vRd_c = 0.18*ks*Math.pow(100*Math.max(rhl,0.001)*p.fck, 1/3)/p.gammaC;
     const u1 = 4*p.basePlate + 4*Math.PI*d, Pp_fiber = (vRd_c+vf)*u1*d/1000;
@@ -599,13 +654,13 @@ function calculateAll() {
     const fl_Pu_int_double = fl_interacting?calcPu0_dual(Mp, Mn_internal, p.fl_D, 0, l):calcPu0_internal(Mp, Mn_internal);
     const fl_Pu_edge_lt_single = calcPu0_internal(Mp, Mn_edge)+fl_lt_reduce;
     const fl_Pu_edge_lt_double = fl_interacting?calcPu0_dual(Mp, Mn_edge, p.fl_D, 0, l)+fl_lt_reduce:calcPu0_internal(Mp, Mn_edge)+fl_lt_reduce;
-    return { h, isRC, schemeLabel: scheme.label, fctdfl, l, Mun, Mp, Mn_internal, Mn_edge, a, a_over_l,
+    return { h, isRC, isCombined, schemeLabel: scheme.label, fctdfl, l, Mun, Mp, Mn_internal, Mn_edge, a, a_over_l,
       Pu0_internal, Pu0_edge, Pu0_dual, qu, mhe_kn, wheelStatic, wheelDesign, a_mhe, a_over_l_mhe, Pu0_mhe,
       F, Mp_fatigue, fcd, k2, vmax, d, u0, Pp_max, ks, vRd_c, vf, u1, Pp_fiber,
       lt_raw, lt_reduction, Pu0_edge_lt,
       l_udl_val, fl_contactArea, fl_equivSide, fl_a, fl_a_over_l, fl_Fser_single, fl_Fser_double, fl_interacting, fl_a_double,
       fl_Pu_int_single, fl_Pu_int_double, fl_Pu_edge_lt_single, fl_Pu_edge_lt_double, fl_lt_reduce,
-      As, d_eff_rc, fy, Mrc_pos, Mrc_neg };
+      As, d_eff_rc, fy, Mrc_pos, Mrc_neg, M_fiber };
   });
 
   var renderFns = [
@@ -643,8 +698,8 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
   html += '<tr><td>设计残余抗拉强度 r<sub>1</sub></td><td>r<sub>1</sub></td><td>0.45×f<sub>R1</sub></td><td><strong>'+fmt(r1,2)+'</strong></td><td>N/mm²</td></tr>';
   html += '<tr><td>设计残余抗拉强度 r<sub>4</sub></td><td>r<sub>4</sub></td><td>0.37×f<sub>R4</sub></td><td><strong>'+fmt(r4,2)+'</strong></td><td>N/mm²</td></tr>';
   html += '<tr><td>力矩系数 (SFRC)</td><td>—</td><td>0.29·r₄+0.16·r₁</td><td><strong>'+fmt(0.29*r4+0.16*r1,3)+'</strong></td><td>—</td></tr>';
-  html += '<tr><td>RC 钢筋等级 (方案C)</td><td>—</td><td>'+p.rebarGrade+'</td><td><strong>fy='+(results[0].fy||360)+' N/mm²</strong></td><td>—</td></tr>';
-  html += '<tr><td>RC 配筋 (方案C)</td><td>—</td><td>D'+p.rebarDia+'@'+p.rebarSpacing+'mm</td><td><strong>'+(p.rebarPosition==='top'?'面层':p.rebarPosition==='bottom'?'底层':'双层双向')+'</strong></td><td>—</td></tr>';
+  html += '<tr><td>RC 钢筋等级 (方案B)</td><td>—</td><td>'+p.rebarGrade+'</td><td><strong>fy='+(results[0].fy||360)+' N/mm²</strong></td><td>—</td></tr>';
+  html += '<tr><td>RC 配筋 (方案B)</td><td>—</td><td>D'+p.rebarDia+'@'+p.rebarSpacing+'mm</td><td><strong>'+(p.rebarPosition==='top'?'面层':p.rebarPosition==='bottom'?'底层':'双层双向')+'</strong></td><td>—</td></tr>';
   html += '</tbody></table></div>';
 
   html += '<h3>3.2 各板厚计算</h3><div class="table-wrap"><table><thead><tr><th>参数</th><th>符号</th>'+results.map(r=>'<th>'+r.schemeLabel+'<br>h='+r.h+'mm</th>').join('')+'<th>单位</th></tr></thead><tbody>';
@@ -653,15 +708,18 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
     ['相对刚度半径','l','l','mm'],
     ['素混凝土抵抗力矩','M<sub>un</sub>','Mun','kNm/m'],
     ['SFRC 正弯矩抗力','M<sub>p</sub>','Mp','kNm/m'],
-    ['RC 正弯矩抗力 (方案C)','M<sub>rc,pos</sub>','Mrc_pos','kNm/m'],
-    ['RC 负弯矩抗力 (方案C)','M<sub>rc,neg</sub>','Mrc_neg','kNm/m'],
-    ['RC 配筋面积','A<sub>s</sub>','As','mm²/m'],
+    ['RC 正弯矩抗力 (方案B/C)','M<sub>rc,pos</sub>','Mrc_pos','kNm/m'],
+    ['RC 负弯矩抗力 (方案B/C)','M<sub>rc,neg</sub>','Mrc_neg','kNm/m'],
+    ['RC 配筋面积 (方案B/C)','A<sub>s</sub>','As','mm²/m'],
     ['等效接触半径','a','a','mm'],
     ['a / l 比值','a/l','a_over_l','—'],
+    ['钢纤维贡献 M<sub>fib</sub>','M<sub>fib</sub>','M_fiber','kNm/m'],
+    ['RC 正弯矩贡献','M<sub>rc,pos</sub>','Mrc_pos','kNm/m'],
+    ['RC 负弯矩贡献','M<sub>rc,neg</sub>','Mrc_neg','kNm/m'],
   ];
   rows.forEach(row => {
     html += '<tr><td>'+row[0]+'</td><td>'+row[1]+'</td>';
-    results.forEach(r => { const val=r[row[2]]; html += '<td><strong>'+(typeof val==='number'&&row[3]!=='—'?fmt(val,row[2]==='l'?0:2):fmt(val,3))+'</strong></td>'; });
+    results.forEach(r => { const val=r[row[2]]; if(row[2]==='M_fiber'&&!r.isCombined&&!r.isRC){ html += '<td><strong>'+fmt(r.Mp,2)+'</strong></td>'; } else if((row[2]==='Mrc_pos'||row[2]==='Mrc_neg')&&!r.isRC&&!r.isCombined){ html += '<td><em style="color:var(--muted);">—</em></td>'; } else if(row[2]==='As'&&!r.isRC&&!r.isCombined){ html += '<td><em style="color:var(--muted);">—</em></td>'; } else { html += '<td><strong>'+(typeof val==='number'&&row[3]!=='—'?fmt(val,row[2]==='l'?0:2):fmt(val,3))+'</strong></td>'; } });
     html += '<td>'+row[3]+'</td></tr>';
   });
   html += '</tbody></table></div>';
@@ -678,7 +736,7 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
   html += '<span class="formula">l = [E<sub>cm</sub>×h³ / (12×(1−ν²)×k)]<sup>0.25</sup></span>\n';
   html += '<span class="formula">l = ['+fmt(Ecm_gpa*1000,0)+'×'+r0.h+'³ / (12×(1−'+p.nu+'²)×'+p.k+')]<sup>0.25</sup></span> = <span class="result">'+fmt0(r0.l)+' mm</span>\n\n';
     if (r0.isRC) {
-      html += '<span class="comment">// 方案C: 传统配筋 ('+p.rebarGrade+' D'+p.rebarDia+'@'+p.rebarSpacing+'mm — '+p.rebarPosition+'钢筋)</span>\n';
+      html += '<span class="comment">// 方案B: 传统配筋 ('+p.rebarGrade+' D'+p.rebarDia+'@'+p.rebarSpacing+'mm — '+p.rebarPosition+'钢筋)</span>\n';
       html += '<span class="formula">A<sub>s</sub></span> = (π×'+p.rebarDia+'²/4)×(1000/'+p.rebarSpacing+') = <span class="result">'+fmt(r0.As,0)+' mm²/m</span>\n';
       if (p.rebarPosition==='top' || p.rebarPosition==='both') {
         html += '<span class="formula">d<sub>neg</sub> (顶部有效高度)</span> = '+r0.h+' − 25 − '+p.rebarDia+'/2 = <span class="result">'+fmt(r0.h-25-p.rebarDia/2,0)+' mm</span>\n';
@@ -746,12 +804,50 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
 
   const rcResult = results.find(r=>r.isRC);
   if (rcResult && !r0.isRC) {
-    html += '<h3>3.4 方案C RC配筋计算（h='+rcResult.h+'mm）</h3><div class="calc-box">';
+    html += '<h3>3.4 方案B RC配筋计算（h='+rcResult.h+'mm）</h3><div class="calc-box">';
     html += '<span class="formula">A<sub>s</sub></span> = '+(Math.PI*p.rebarDia*p.rebarDia/4).toFixed(1)+' × (1000/'+p.rebarSpacing+') = <span class="result">'+fmt(rcResult.As,0)+' mm²/m</span>\n';
     html += '<span class="formula">M<sub>rc,pos</sub></span> = <span class="result">'+fmt(rcResult.Mrc_pos,2)+' kNm/m</span>\n';
     html += '<span class="formula">M<sub>rc,neg</sub></span> = <span class="result">'+fmt(rcResult.Mrc_neg,2)+' kNm/m</span>\n';
     html += '<span class="comment">// 注意：方案C冲切验算使用实际配筋率，不含纤维贡献 (vf=0)</span>\n';
     html += '</div>';
+  }
+  // Show combined scheme calculation details
+  const combinedR=results.find(r=>r.isCombined);
+  if(combinedR){
+    html+='<h3>3.4 方案C — 组合配筋计算详述 (h='+combinedR.h+'mm)</h3><div class="combined-box"><div class="calc-box">';
+    html+='<span class="comment">// ══ 组合配筋：钢纤维(SFRC) + 传统钢筋(RC) 协同工作 ══</span>\n';
+    html+='<span class="comment">// 设计依据：fib Model Code 2010 §7.7.2 + DAfStB Guideline</span>\n';
+    html+='<span class="comment">// 叠加系数 λ = 1.0（地坪板小配筋率，全叠加）</span>\n\n';
+    html+='<span class="comment">// ── ① 钢纤维贡献（TR34 §6.3.5）──</span>\n';
+    html+='<span class="formula">r₁ = 0.45 × f<sub>R1</sub> = 0.45 × '+fmt(p.fR1,1)+' = '+fmt(r1,2)+' N/mm²</span>\n';
+    html+='<span class="formula">r₄ = 0.37 × f<sub>R4</sub> = 0.37 × '+fmt(p.fR4,1)+' = '+fmt(r4,2)+' N/mm²</span>\n';
+    html+='<span class="formula">M<sub>fiber</sub> = (0.29×r₄ + 0.16×r₁) × h² / 1000 = <span class="result">'+fmt(combinedR.M_fiber,2)+' kNm/m</span></span>\n\n';
+    html+='<span class="comment">// ── ② 钢筋贡献（EC2 §6.1）──</span>\n';
+    html+='<span class="formula">A<sub>s</sub> = π×'+p.rebarBDia+'²/4 × 1000/'+p.rebarBSpacing+' = '+fmt(combinedR.As,0)+' mm²/m</span>\n';
+    if(p.rebarBPosition==='bottom'||p.rebarBPosition==='both'){
+      html+='<span class="formula">d<sub>pos</sub> = '+combinedR.h+' − 40 − '+p.rebarBDia+'/2 = '+fmt(combinedR.h-40-p.rebarBDia/2,0)+' mm</span>\n';
+      html+='<span class="formula">M<sub>rc,pos</sub> = A<sub>s</sub>×fy×0.9×d<sub>pos</sub>/1e6 = '+fmt(combinedR.Mrc_pos,2)+' kNm/m</span>\n';
+    }
+    if(p.rebarBPosition==='top'||p.rebarBPosition==='both'){
+      html+='<span class="formula">d<sub>neg</sub> = '+combinedR.h+' − 25 − '+p.rebarBDia+'/2 = '+fmt(combinedR.h-25-p.rebarBDia/2,0)+' mm</span>\n';
+      html+='<span class="formula">M<sub>rc,neg</sub> = A<sub>s</sub>×fy×0.9×d<sub>neg</sub>/1e6 = '+fmt(combinedR.Mrc_neg,2)+' kNm/m</span>\n';
+    }
+    html+='\n<span class="comment">// ── ③ 组合承载力 ──</span>\n';
+    html+='<span class="formula highlight">M<sub>p,combined</sub> = M<sub>rc,pos</sub> + M<sub>fiber</sub> = '+fmt(combinedR.Mrc_pos,2)+' + '+fmt(combinedR.M_fiber,2)+' = <span class="result"><strong>'+fmt(combinedR.Mp,2)+' kNm/m</strong></span></span>\n';
+    if(combinedR.Mrc_neg>0){
+      html+='<span class="formula">M<sub>n,combined</sub> = M<sub>rc,neg</sub> + M<sub>fiber</sub> = '+fmt(combinedR.Mrc_neg,2)+' + '+fmt(combinedR.M_fiber,2)+' = <span class="result"><strong>'+fmt(combinedR.Mn_internal,2)+' kNm/m</strong></span></span>\n';
+    }else{
+      html+='<span class="comment">// 无顶部钢筋 → M<sub>n</sub> = max(M<sub>fiber</sub>, M<sub>un</sub>)</span>\n';
+      if(combinedR.M_fiber>=combinedR.Mun){
+        html+='<span class="formula">M<sub>n</sub> = M<sub>fiber</sub> = <span class="result"><strong>'+fmt(combinedR.Mn_internal,2)+' kNm/m</strong></span> (钢纤维控制)</span>\n';
+      }else{
+        html+='<span class="formula">M<sub>n</sub> = M<sub>un</sub> = <span class="result"><strong>'+fmt(combinedR.Mn_internal,2)+' kNm/m</strong></span> (素混凝土开裂控制)</span>\n';
+      }
+    }
+    if(combinedR.Mn_internal<combinedR.Mp){
+      html+='<span class="comment">// ⚠ M<sub>n</sub>='+fmt(combinedR.Mn_internal,2)+' < M<sub>p</sub>='+fmt(combinedR.Mp,2)+' → UDL按正弯矩(sagging)验算通过，但接缝/边部负弯矩偏弱，需关注设缝间距</span>\n';
+    }
+    html+='</div></div>';
   }
   document.getElementById('section2Content').innerHTML = html;
 }
@@ -771,7 +867,7 @@ function renderSection3(p, results) {
   html += '</tr></tbody></table></div>';
 
   html += '<h3>4.3 均布荷载 (UDL) 验算 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">(ULS — Westergaard)</span> — TR34 §8.4 Westergaard 公式</h3><div class="calc-box">';
-      results.forEach(r=>{ const l_udl_m=r.l_udl_val/1000, ok=r.qu>=p.udl; html += '<span class="comment">// h='+r.h+'mm, l<sub>UDL</sub>='+fmt0(r.l_udl_val)+'mm ('+fmt(l_udl_m,3)+' m)</span>\n<span class="comment">// l<sub>UDL</sub> = [E<sub>cm</sub>\u00d7h\u00b3/(3\u00d7k)]<sup>0.25</sup> (\u2260 l<sub>Westergaard</sub>)</span>\n<span class="formula">q<sub>u</sub> = M<sub>p</sub> / (0.168 \u00d7 l<sub>UDL</sub>\u00b2)</span>\n<span class="formula">q<sub>u</sub> = '+fmt(r.Mp,2)+' / (0.168 \u00d7 '+fmt(l_udl_m,3)+'\u00b2)</span> = <span class="result">'+fmt(r.qu,1)+' kN/m\u00b2</span> vs '+p.udl+' kN/m\u00b2 '+badge(ok,ok?'OK':'不满足')+'\n'; });
+      results.forEach(r=>{ const l_udl_m=r.l_udl_val/1000, ok=r.qu>=p.udl; const sagNote=r.Mn_internal<r.Mp?'<span class="comment">// ⚠ M<sub>n</sub>='+fmt(r.Mn_internal,2)+' < M<sub>p</sub>='+fmt(r.Mp,2)+' → 负弯矩偏弱，接缝/边部需单独验算（见设缝间距）</span>\n':''; html += sagNote+'<span class="comment">// h='+r.h+'mm, l<sub>UDL</sub>='+fmt0(r.l_udl_val)+'mm ('+fmt(l_udl_m,3)+' m)</span>\n<span class="comment">// Westergaard 正弯矩(sagging)控制 UDL：M<sub>p</sub> = '+fmt(r.Mp,2)+' kNm/m</span>\n<span class="formula">q<sub>u</sub> = M<sub>p</sub> / (0.168 × l<sub>UDL</sub>²)</span>\n<span class="formula">q<sub>u</sub> = '+fmt(r.Mp,2)+' / (0.168 × '+fmt(l_udl_m,3)+'²) = <span class="result">'+fmt(r.qu,1)+' kN/m²</span> vs '+p.udl+' kN/m² '+badge(ok,ok?'OK':'不满足')+'\n'; });
   html += '</div>';
 
   const allPassSection4 = results.some(r=>{
@@ -874,9 +970,23 @@ function renderSection7(p, results) {
     const wheelDesign=p.mheTons*10*0.9/2*p.dynFactor;
     const okMHE=r.Pu0_mhe>=wheelDesign, okPunch=r.Pp_fiber>=p.Pu_rack;
     const allPass=okRackInt&&okRackEdge&&okDual&&okUDL&&okMHE&&okPunch;
-    html += '<div class="card'+(isRec&&allPass?' recommended':'')+'"><h4>'+r.schemeLabel+'：h='+r.h+'mm '+(r.isRC?'(传统RC配筋 — 无钢纤维)':'(SFRC 钢纤维)')+'</h4><table>';
+    var typeLabel=r.isCombined?'(SFRC+RC 组合配筋)':r.isRC?'(传统RC配筋)':'(SFRC 钢纤维)';html += '<div class="card'+(isRec&&allPass?' recommended':'')+'"><h4>'+r.schemeLabel+'：h='+r.h+'mm '+typeLabel+'</h4><table>';
     html += '<tr><td>板厚</td><td><strong>'+r.h+' mm</strong></td></tr><tr><td>混凝土等级</td><td>C'+p.fckcube+'/'+p.fck+'</td></tr>';
-    if (r.isRC) {
+    if (r.isCombined) {
+      html += '<tr><td>钢纤维贡献</td><td><strong>'+fmt(r.M_fiber,2)+' kNm/m</strong> (f<sub>R1</sub>='+fmt(p.fR1,1)+', f<sub>R4</sub>='+fmt(p.fR4,1)+')</td></tr>';
+      html += '<tr><td>钢筋贡献</td><td><strong>M<sub>rc,pos</sub>='+fmt(r.Mrc_pos,2)+', M<sub>rc,neg</sub>='+fmt(r.Mrc_neg,2)+' kNm/m</strong></td></tr>';
+      html += '<tr><td>钢筋等级/配筋</td><td><strong>'+p.rebarBGrade+' D'+p.rebarBDia+'@'+p.rebarBSpacing+'mm</strong></td></tr>';
+      html += '<tr><td>钢筋位置</td><td><strong>'+(p.rebarBPosition==='top'?'面层钢筋':p.rebarBPosition==='bottom'?'底层钢筋':'双层双向')+'</strong></td></tr>';
+      html += '<tr><td>A<sub>s</sub> 配筋面积</td><td><strong>'+fmt(r.As,0)+' mm²/m</strong></td></tr>';
+      (function(){
+        var factor=(p.rebarBPosition==='both')?4:2;
+        var rebarKgPerM2=r.As*7850/1e6*factor;
+        var dosage=parseFloat(p.fiberDosage)||0;
+        var fiberPerM2=dosage*r.h/1000;
+        html += '<tr><td>钢筋用量</td><td><strong>'+fmt(rebarKgPerM2,2)+' kg/m²</strong></td></tr>';
+        if(fiberPerM2>0)html += '<tr><td>钢纤维用量</td><td><strong>'+fmt(fiberPerM2,2)+' kg/m²</strong></td></tr>';
+      })();
+    } else if (r.isRC) {
       html += '<tr><td>钢筋等级/配筋</td><td><strong>'+p.rebarGrade+' D'+p.rebarDia+'@'+p.rebarSpacing+'mm</strong></td></tr>';
       html += '<tr><td>钢筋位置</td><td><strong>'+(p.rebarPosition==='top'?'面层钢筋':p.rebarPosition==='bottom'?'底层钢筋':'双层双向钢筋')+'</strong></td></tr>';
       html += '<tr><td>A<sub>s</sub> 配筋面积</td><td><strong>'+fmt(r.As,0)+' mm²/m</strong></td></tr>';
@@ -888,7 +998,7 @@ function renderSection7(p, results) {
       html += '<tr><td>M<sub>rc,pos</sub></td><td><strong>'+fmt(r.Mrc_pos,2)+' kNm/m</strong></td></tr>';
       html += '<tr><td>M<sub>rc,neg</sub></td><td><strong>'+fmt(r.Mrc_neg,2)+' kNm/m</strong></td></tr>';
     } else {
-      html += '<tr><td>钢纤维</td><td><strong>'+p.fiberLabel+'</strong></td></tr>';
+      html += '<tr><td>钢纤维</td><td><strong>'+p.fiberLabel+'</strong></td></tr>'; html += '<tr><td>钢筋</td><td><em style="color:var(--muted);">无 (纯SFRC方案)</em></td></tr>';
       html += '<tr><td>f<sub>R1</sub></td><td>'+fmt(p.fR1,1)+' N/mm²</td></tr>';
       html += '<tr><td>f<sub>R4</sub></td><td>'+fmt(p.fR4,1)+' N/mm²</td></tr>';
       html += '<tr><td>M<sub>p</sub> (SFRC)</td><td><strong>'+fmt(r.Mp,2)+' kNm/m</strong></td></tr>';
@@ -921,7 +1031,7 @@ function renderSection7(p, results) {
 function renderSection8(p, results) {
   let html = '';
   const wheelDesign = p.mheTons*10*0.9/2*p.dynFactor;
-  html += '<h3>9.1 荷载验算汇总表</h3><div class="table-wrap"><table><thead><tr><th>验算项</th>'+results.map(r=>'<th>h='+r.h+'mm ('+(r.isRC?'RC':'SFRC')+')</th>').join('')+'</tr></thead><tbody>';
+  html += '<h3>9.1 荷载验算汇总表</h3><div class="table-wrap"><table><thead><tr><th>验算项</th>'+results.map(r=>'<th>h='+r.h+'mm ('+(r.isCombined?'SFRC+RC':r.isRC?'RC':'SFRC')+')</th>').join('')+'</tr></thead><tbody>';
   html += '<tr><td>立柱内部</td>'+results.map(r=>'<td>'+badge(r.Pu0_internal>=p.Pu_rack,r.Pu0_internal>=p.Pu_rack?'OK':'FAIL')+'</td>').join('')+'</tr>';
   html += '<tr><td>立柱边部'+(p.lt>0?'+LT':'')+'</td>'+results.map(r=>{const cap=p.lt>0?r.Pu0_edge_lt:r.Pu0_edge;return'<td>'+badge(cap>=p.Pu_rack,cap>=p.Pu_rack?'OK':'FAIL')+'</td>';}).join('')+'</tr>';
   html += '<tr><td>双立柱</td>'+results.map(r=>'<td>'+badge(r.Pu0_dual>=2*p.Pu_rack,r.Pu0_dual>=2*p.Pu_rack?'OK':'FAIL')+'</td>').join('')+'</tr>';
@@ -940,10 +1050,22 @@ function renderSection8(p, results) {
     : results.reduce((a,b) => a.h <= b.h ? a : b);
   const bestPassesAll = passingS9.length > 0 && passingS9.includes(best);
   html += '<div class="final-banner"><h2>🏆 推荐方案 '+(bestPassesAll?'':'<span style=\"color:var(--fail);font-size:0.85rem;\">（⚠️ 不满足全部验算，以下为最优候选）</span>')+'</h2><div class="table-wrap" style="margin-top:16px;"><table><tbody>';
-  html += '<tr><td style="width:40%"><strong>方案类型</strong></td><td><strong>'+(best.isRC?'传统RC配筋 (无钢纤维)':'SFRC 钢纤维混凝土')+'</strong></td></tr>';
+  html += '<tr><td style="width:40%"><strong>方案类型</strong></td><td><strong>'+(best.isCombined?'SFRC+RC 组合配筋':best.isRC?'传统RC配筋 (无钢纤维)':'SFRC 钢纤维混凝土')+'</strong></td></tr>';
   html += '<tr><td><strong>板厚</strong></td><td><strong>'+best.h+' mm</strong></td></tr>';
   html += '<tr><td><strong>混凝土</strong></td><td><strong>C'+p.fckcube+' (立方体) / C'+p.fck+' (圆柱体)</strong></td></tr>';
-  if (best.isRC) {
+  if (best.isCombined) {
+    html += '<tr><td><strong>钢纤维</strong></td><td><strong>'+p.fiberLabel+' (f<sub>R1</sub>='+fmt(p.fR1,1)+', f<sub>R4</sub>='+fmt(p.fR4,1)+' N/mm²)</strong></td></tr>';
+    html += '<tr><td><strong>钢纤维贡献 M<sub>fib</sub></strong></td><td><strong>'+fmt(best.M_fiber,2)+' kNm/m</strong></td></tr>';
+    html += '<tr><td><strong>钢筋等级</strong></td><td><strong>'+p.rebarBGrade+' (fy='+best.fy+' N/mm²)</strong></td></tr>';
+    html += '<tr><td><strong>配筋</strong></td><td><strong>D'+p.rebarBDia+'@'+p.rebarBSpacing+'mm — '+(p.rebarBPosition==='top'?'面层':p.rebarBPosition==='bottom'?'底层':'双层双向')+'</strong></td></tr>';
+    html += '<tr><td><strong>配筋面积 A<sub>s</sub></strong></td><td><strong>'+fmt(best.As,0)+' mm²/m</strong></td></tr>';
+    (function(){
+      var factor=(p.rebarBPosition==='both')?4:2;
+      html += '<tr><td><strong>钢筋用量</strong></td><td><strong>'+fmt(best.As*7850/1e6*factor,2)+' kg/m²</strong></td></tr>';
+      var dosage=parseFloat(p.fiberDosage)||0;
+      if(dosage>0)html += '<tr><td><strong>钢纤维用量</strong></td><td><strong>'+fmt(dosage*best.h/1000,2)+' kg/m²</strong></td></tr>';
+    })();
+  } else if (best.isRC) {
     html += '<tr><td><strong>钢筋等级</strong></td><td><strong>'+p.rebarGrade+' (fy='+best.fy+' N/mm²)</strong></td></tr>';
     html += '<tr><td><strong>配筋</strong></td><td><strong>D'+p.rebarDia+'@'+p.rebarSpacing+'mm — '+(p.rebarPosition==='top'?'面层':p.rebarPosition==='bottom'?'底层':'双层双向')+'</strong></td></tr>';
     html += '<tr><td><strong>配筋面积 A<sub>s</sub></strong></td><td><strong>'+fmt(best.As,0)+' mm²/m</strong></td></tr>';
@@ -957,7 +1079,7 @@ function renderSection8(p, results) {
     html += '<tr><td><strong>钢纤维</strong></td><td><strong>'+p.fiberLabel+'</strong></td></tr>';
     html += '<tr><td><strong>f<sub>R1</sub> (CMOD 0.5mm)</strong></td><td><strong>'+fmt(p.fR1,1)+' N/mm²</strong></td></tr>';
     html += '<tr><td><strong>f<sub>R4</sub> (CMOD 3.5mm)</strong></td><td><strong>'+fmt(p.fR4,1)+' N/mm²</strong></td></tr>';
-    html += '<tr><td><strong>正弯矩抗力 M<sub>p</sub></strong></td><td><strong>'+fmt(best.Mp,2)+' kNm/m</strong></td></tr>';
+    html += // (Mp row already shown)
 	    (function(){
 	      var dosage = parseFloat(p.fiberDosage) || 0;
 	      if (dosage > 0) {
@@ -1099,7 +1221,7 @@ function toggleFlatness() {
 }
 
 function updateRebarRatio() {
-  const h=parseFloat(document.getElementById('hC').value)||0;
+  const h=parseFloat(document.getElementById('hB').value)||0;
   const dia=parseFloat(document.getElementById('rebarDia').value)||12;
   const s=parseFloat(document.getElementById('rebarSpacing').value)||200;
   const pos=document.getElementById('rebarPosition').value;
@@ -1110,7 +1232,20 @@ function updateRebarRatio() {
   const As=(Math.PI*dia*dia/4)*(1000/s);
   const rho=As/(1000*deff)*100;
   document.getElementById('rebarRatio').value=rho.toFixed(3)+'%'+(pos==='both'?' (双层合计×2)':'');
-  document.getElementById('rebarRatio').style.color=(rho<0.12||rho>2.0)?'var(--fail)':'var(--pass)';
+  document.getElementById('rebarRatio').style.color=(rho<0.12||rho>2.0)?'var(--fail)':'var(--pass)';}
+
+function updateRebarBRatio() {
+  const h=parseFloat(document.getElementById('hC').value)||0;
+  const dia=parseFloat(document.getElementById('rebarBDia').value)||10;
+  const s=parseFloat(document.getElementById('rebarBSpacing').value)||200;
+  const pos=document.getElementById('rebarBPosition').value;
+  const cover=(pos==='top')?25:40;
+  if(h<=0){document.getElementById('rebarBRatio').value='— (请先输入板厚)';return;}
+  const deff=h-cover-dia/2;
+  if(deff<=0){document.getElementById('rebarBRatio').value='— (板厚不足)';return;}
+  const As=(Math.PI*dia*dia/4)*(1000/s);
+  const rho=As/(1000*deff)*100;
+  document.getElementById('rebarBRatio').value=rho.toFixed(3)+'%'+(pos==='both'?' (双层合计×2)':'');
 }
 
 function estimateKfromCompaction() {
@@ -1146,33 +1281,33 @@ function setForkliftPreset(Q, pVal, D, gf) {
 function resetToDefaults() {
      
   
-  document.getElementById('fck').value='23'; document.getElementById('fckcube').value='35';
+  document.getElementById('fck').value='20'; document.getElementById('fckcube').value='30';
   document.getElementById('gammaC').value='1.5'; document.getElementById('alphaCC').value='0.85';
   document.getElementById('fR1').value=''; document.getElementById('fR4').value='';
   document.getElementById('fR2').value=''; document.getElementById('fR3').value='';
   document.getElementById('fiberLabel').value=''; document.getElementById('fiberDosage').value='';
   document.getElementById('compactionCoeff').value='0.95'; document.getElementById('subbaseType').value='gravel';
-  document.getElementById('kValue').value='0.054'; document.getElementById('cbrValue').value='15';
   document.getElementById('poisson').value='0.20'; updatePoisson(); document.getElementById('ltValue').value='0';
-  document.getElementById('rackingLoad').value='90'; document.getElementById('basePlateSize').value='150';
+  document.getElementById('rackingLoad').value='80'; document.getElementById('basePlateSize').value='150';
   document.getElementById('backToBackSpacing').value='300'; document.getElementById('udl').value='50';
   document.getElementById('mheWeight').value='7'; document.getElementById('dynamicFactor').value='1.4';
   document.getElementById('fatigueCycles').value='500000';  document.getElementById('jointSpacing').value='35'; document.getElementById('jointMu').value='0.5';
    
   document.getElementById('fl_Q').value='30'; document.getElementById('fl_p').value='4.0';
   document.getElementById('fl_D').value='1100'; document.getElementById('fl_gf').value='1.6';
-  document.getElementById('hA').value='160'; document.getElementById('hB').value='180'; document.getElementById('hC').value='200';
-  document.getElementById('rebarGrade').value='HRB400'; document.getElementById('rebarDia').value='12';
+  document.getElementById('hA').value='180'; document.getElementById('hB').value='180'; document.getElementById('hC').value='180';
+  document.getElementById('rebarBGrade').value='HRB400'; document.getElementById('rebarBDia').value='10'; document.getElementById('rebarBSpacing').value='200'; document.getElementById('rebarBPosition').value='bottom'; document.getElementById('rebarGrade').value='HRB400'; document.getElementById('rebarDia').value='12';
   document.getElementById('rebarSpacing').value='200'; document.getElementById('rebarPosition').value='bottom';
   document.getElementById('dw_W').value='150'; document.getElementById('dw_L').value='135';
   document.getElementById('dw_Emb').value='45'; document.getElementById('dw_T').value='6';
   document.getElementById('dw_S').value='500'; document.getElementById('dw_ds').value='275';
   document.getElementById('dw_X').value='20'; document.getElementById('dw_e').value='10';
   document.querySelectorAll('#concretePresets .preset-btn').forEach(b=>b.classList.remove('selected'));
-  document.querySelector('#concretePresets .preset-btn[data-fck="23"]').classList.add('selected');
+  document.querySelector('#concretePresets .preset-btn[data-fck="20"]').classList.add('selected');
+  updateRebarBRatio();
   document.querySelectorAll('#fiberPresets .preset-btn').forEach(b=>b.classList.remove('selected'));
   // No fiber preset selected
-  calculateAll();
+  estimateKfromCompaction();
 }
 
 function exportJSON() {
