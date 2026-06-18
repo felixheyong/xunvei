@@ -1124,20 +1124,29 @@ function renderSection4(p, results) {
 
 function renderSection5(p, results) {
   const h0=results[0].h;
-  const d=calculateDowel({dw_W:p.dw_W,dw_L:p.dw_L,dw_Emb:p.dw_Emb,dw_T:p.dw_T,dw_S:p.dw_S,dw_ds:p.dw_ds,dw_e:p.dw_e,fck:p.fck,h:h0});
-  const modeLabel=d.P_critical===d.Psh?'钢板剪切控制':d.P_critical===d.Pmax?'混凝土承压控制':'混凝土冲切（无筋）控制';
+  const d0=calculateDowel({dw_W:p.dw_W,dw_L:p.dw_L,dw_Emb:p.dw_Emb,dw_T:p.dw_T,dw_S:p.dw_S,dw_ds:p.dw_ds,dw_e:p.dw_e,fck:p.fck,h:h0});
   let html='';
-  html += '<h3>5.1 传力杆承载力计算（基于 h='+h0+'mm）</h3><div class="calc-box">';
-  html += '<span class="formula">P<sub>sh</sub> (钢板剪切)</span> = <span class="result">'+fmt(d.Psh,1)+' kN</span>\n';
-  html += '<span class="formula">P<sub>max</sub> (承压)</span> = <span class="result">'+fmt(d.Pmax,1)+' kN</span>\n';
-  html += '<span class="formula">P<sub>burst</sub> (冲切)</span> = <span class="result">'+fmt(d.Pburst_unreinf,1)+' kN</span>\n';
-  html += '<span class="comment">// 控制模式：'+modeLabel+'</span>\n';
-  html += '<span class="formula"><strong>P<sub>crit</sub> (每根)</strong></span> = <span class="result"><strong>'+fmt(d.P_critical,1)+' kN</strong></span>\n';
-  html += '<span class="formula"><strong>ULS 传力/每米</strong></span> = <span class="result"><strong>'+fmt(d.ULS_per_m,1)+' kN/m</strong></span></div>';
+  html += '<h3>5.1 传力承载力 <span style="font-size:0.7rem;color:var(--accent);font-weight:400;">TR34 Appendix E</span></h3>';
+
+  // 传力板参数 + 承载力计算
+  html += '<div class="table-wrap"><table><thead><tr><th>参数</th><th>符号</th><th>公式</th><th>结果</th><th>单位</th></tr></thead><tbody>';
+  html += '<tr><td>钢板宽度</td><td>W</td><td>输入</td><td>'+p.dw_W+'</td><td>mm</td></tr>';
+  html += '<tr><td>钢板长度</td><td>L</td><td>输入</td><td>'+p.dw_L+'</td><td>mm</td></tr>';
+  html += '<tr><td>嵌入深度</td><td>Emb</td><td>输入</td><td>'+p.dw_Emb+'</td><td>mm</td></tr>';
+  html += '<tr><td>钢板厚度</td><td>T</td><td>输入</td><td>'+p.dw_T+'</td><td>mm</td></tr>';
+  html += '<tr><td>钢板间距</td><td>S</td><td>输入</td><td>'+p.dw_S+'</td><td>mm</td></tr>';
+  html += '<tr><td>设计强度</td><td>f<sub>y</sub></td><td>输入</td><td>'+p.dw_ds+'</td><td>N/mm²</td></tr>';
+  html += '<tr><td>钢板剪切承载力</td><td>P<sub>sh</sub></td><td>0.6f<sub>y</sub>·T·W×0.9 / 1000</td><td><strong>'+fmt(d0.Psh,1)+'</strong></td><td>kN</td></tr>';
+  html += '<tr><td>混凝土承压承载力</td><td>P<sub>max</sub></td><td>0.5(√(b₁²+c₁)−b₁)/1000</td><td><strong>'+fmt(d0.Pmax,1)+'</strong></td><td>kN</td></tr>';
+  html += '<tr><td>混凝土冲切承载力</td><td>P<sub>burst</sub></td><td>u₁·d₂·v<sub>Rd,ct</sub>/1000</td><td><strong>'+fmt(d0.Pburst_unreinf,1)+'</strong></td><td>kN</td></tr>';
+  html += '<tr style="background:#e8f0f8;"><td><strong>控制承载力 (每根)</strong></td><td><strong>P<sub>crit</sub></strong></td><td>min(P<sub>sh</sub>, P<sub>max</sub>, P<sub>burst</sub>)</td><td><strong>'+fmt(d0.P_critical,1)+'</strong></td><td>kN</td></tr>';
+  html += '<tr style="background:#e8f0f8;"><td><strong>ULS 传力 / 每米</strong></td><td><strong>q<sub>Rd</sub></strong></td><td>P<sub>crit</sub> / (S/1000)</td><td><strong>'+fmt(d0.ULS_per_m,1)+'</strong></td><td>kN/m</td></tr>';
+  html += '</tbody></table></div>';
+  html += '<div class="alert alert-info" style="font-size:0.78rem;margin-top:4px;"><strong>📐 公式：</strong>P<sub>sh</sub>=0.6f<sub>y</sub>TW·0.9/1000 &nbsp;|&nbsp; b₁=2ek₃f<sub>cd</sub>W, c₁=2k₃f<sub>cd</sub>W²T²f<sub>y</sub> &nbsp;|&nbsp; P<sub>burst</sub>=u₁d₂v<sub>Rd,ct</sub>/1000 &nbsp;|&nbsp; k₃=3, v<sub>Rd,ct</sub>=0.52</div>';
 
   html += '<h3>5.2 传力验算</h3>';
   if (p.lt>0) {
-    html += '<div class="table-wrap"><table><thead><tr><th>板厚</th><th>LT需求 (kN/m)</th><th>传力杆提供 (kN/m)</th><th>判定</th></tr></thead><tbody>';
+    html += '<div class="table-wrap"><table><thead><tr><th>方案</th><th>LT需求 (kN/m)</th><th>传力板提供 (kN/m)</th><th>判定</th></tr></thead><tbody>';
     results.forEach(r=>{
       const dd=calculateDowel({dw_W:p.dw_W,dw_L:p.dw_L,dw_Emb:p.dw_Emb,dw_T:p.dw_T,dw_S:p.dw_S,dw_ds:p.dw_ds,dw_e:p.dw_e,fck:p.fck,h:r.h});
       html += '<tr><td><strong>'+r.schemeLabel+'<br>h='+r.h+'mm</strong></td><td>'+fmt(p.lt,1)+'</td><td>'+fmt(dd.ULS_per_m,1)+'</td><td>'+badge(dd.ULS_per_m>=p.lt,dd.ULS_per_m>=p.lt?'OK':'传力不足')+'</td></tr>';
