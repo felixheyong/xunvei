@@ -1007,29 +1007,29 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
     html+='<div class="table-wrap"><table><thead><tr><th></th><th>参数</th><th>公式</th><th>结果</th><th>单位</th></tr></thead><tbody>';
 
     // ── ① 钢纤维 ──
-    html+='<tr style="background:#f7f3eb;"><td rowspan="3"><strong>① 钢纤维</strong><br><small>TR34 §6.3.5</small></td>';
+    html+='<tr style="background:#faf7f0;"><td rowspan="3"><strong>① 钢纤维</strong><br><small>TR34 §6.3.5</small></td>';
     html+='<td>r<sub>1</sub></td><td>0.45 × f<sub>R1</sub></td><td><strong>'+fmt(r1,2)+'</strong></td><td>N/mm²</td></tr>';
-    html+='<tr style="background:#f7f3eb;"><td>r<sub>4</sub></td><td>0.37 × f<sub>R4</sub></td><td><strong>'+fmt(r4,2)+'</strong></td><td>N/mm²</td></tr>';
-    html+='<tr style="background:#f7f3eb;"><td>M<sub>fiber</sub></td><td>(0.29r₄+0.16r₁)×h²/1000</td><td><strong>'+fmt(combinedR.M_fiber,2)+'</strong></td><td>kNm/m</td></tr>';
+    html+='<tr style="background:#faf7f0;"><td>r<sub>4</sub></td><td>0.37 × f<sub>R4</sub></td><td><strong>'+fmt(r4,2)+'</strong></td><td>N/mm²</td></tr>';
+    html+='<tr style="background:#faf7f0;"><td>M<sub>fiber</sub></td><td>(0.29r₄+0.16r₁)×h²/1000</td><td><strong>'+fmt(combinedR.M_fiber,2)+'</strong></td><td>kNm/m</td></tr>';
 
     // ── ② 钢筋 ──
     const rebarRows = (p.rebarBPosition==='both'?3:2);
-    html+='<tr style="background:#f2f6f4;"><td rowspan="'+rebarRows+'"><strong>② 钢筋</strong><br><small>EC2 §6.1</small></td>';
+    html+='<tr style="background:#f5f1e8;"><td rowspan="'+rebarRows+'"><strong>② 钢筋</strong><br><small>EC2 §6.1</small></td>';
     html+='<td>A<sub>s</sub></td><td>π×'+p.rebarBDia+'²/4×1000/'+p.rebarBSpacing+'</td><td><strong>'+fmt(combinedR.As,0)+'</strong></td><td>mm²/m</td></tr>';
     if(p.rebarBPosition==='bottom'||p.rebarBPosition==='both'){
-      html+='<tr style="background:#f2f6f4;"><td>M<sub>rc,pos</sub></td><td>A<sub>s</sub>×fy×0.9×d<sub>pos</sub>/10⁶</td><td><strong>'+fmt(combinedR.Mrc_pos,2)+'</strong></td><td>kNm/m</td></tr>';
+      html+='<tr style="background:#f5f1e8;"><td>M<sub>rc,pos</sub></td><td>A<sub>s</sub>×fy×0.9×d<sub>pos</sub>/10⁶</td><td><strong>'+fmt(combinedR.Mrc_pos,2)+'</strong></td><td>kNm/m</td></tr>';
     }
     if(p.rebarBPosition==='top'||p.rebarBPosition==='both'){
-      html+='<tr style="background:#f2f6f4;"><td>M<sub>rc,neg</sub></td><td>A<sub>s</sub>×fy×0.9×d<sub>neg</sub>/10⁶</td><td><strong>'+fmt(combinedR.Mrc_neg,2)+'</strong></td><td>kNm/m</td></tr>';
+      html+='<tr style="background:#f5f1e8;"><td>M<sub>rc,neg</sub></td><td>A<sub>s</sub>×fy×0.9×d<sub>neg</sub>/10⁶</td><td><strong>'+fmt(combinedR.Mrc_neg,2)+'</strong></td><td>kNm/m</td></tr>';
     }
 
     // ── ③ 叠加 ──
-    html+='<tr style="background:#e8f0f8;"><td rowspan="2"><strong>③ 叠加</strong></td>';
+    html+='<tr style="background:#f2ede0;"><td rowspan="2"><strong>③ 叠加</strong></td>';
     html+='<td>M<sub>p</sub> (正弯矩)</td><td>M<sub>rc,pos</sub> + M<sub>fiber</sub></td><td><strong>'+fmt(combinedR.Mp,2)+'</strong></td><td>kNm/m</td></tr>';
     if(combinedR.Mrc_neg>0){
-      html+='<tr style="background:#e8f0f8;"><td>M<sub>n</sub> (负弯矩)</td><td>M<sub>rc,neg</sub> + M<sub>fiber</sub> = '+fmt(combinedR.Mrc_neg,2)+' + '+fmt(combinedR.M_fiber,2)+'</td><td><strong>'+fmt(combinedR.Mn_internal,2)+'</strong></td><td>kNm/m</td></tr>';
+      html+='<tr style="background:#f2ede0;"><td>M<sub>n</sub> (负弯矩)</td><td>M<sub>rc,neg</sub> + M<sub>fiber</sub> = '+fmt(combinedR.Mrc_neg,2)+' + '+fmt(combinedR.M_fiber,2)+'</td><td><strong>'+fmt(combinedR.Mn_internal,2)+'</strong></td><td>kNm/m</td></tr>';
     }else{
-      html+='<tr style="background:#e8f0f8;"><td>M<sub>n</sub> (负弯矩)</td><td>max(M<sub>fiber</sub>='+fmt(combinedR.M_fiber,2)+', M<sub>un</sub>='+fmt(combinedR.Mun,2)+')</td><td><strong>'+fmt(combinedR.Mn_internal,2)+'</strong></td><td>kNm/m</td></tr>';
+      html+='<tr style="background:#f2ede0;"><td>M<sub>n</sub> (负弯矩)</td><td>max(M<sub>fiber</sub>='+fmt(combinedR.M_fiber,2)+', M<sub>un</sub>='+fmt(combinedR.Mun,2)+')</td><td><strong>'+fmt(combinedR.Mn_internal,2)+'</strong></td><td>kNm/m</td></tr>';
     }
     html+='</tbody></table></div>';
 
@@ -1139,8 +1139,8 @@ function renderSection5(p, results) {
   html += '<tr><td>钢板剪切承载力</td><td>P<sub>sh</sub></td><td>0.6f<sub>y</sub>·T·W×0.9 / 1000</td><td><strong>'+fmt(d0.Psh,1)+'</strong></td><td>kN</td></tr>';
   html += '<tr><td>混凝土承压承载力</td><td>P<sub>max</sub></td><td>0.5(√(b₁²+c₁)−b₁)/1000</td><td><strong>'+fmt(d0.Pmax,1)+'</strong></td><td>kN</td></tr>';
   html += '<tr><td>混凝土冲切承载力</td><td>P<sub>burst</sub></td><td>u₁·d₂·v<sub>Rd,ct</sub>/1000</td><td><strong>'+fmt(d0.Pburst_unreinf,1)+'</strong></td><td>kN</td></tr>';
-  html += '<tr style="background:#e8f0f8;"><td><strong>控制承载力 (每根)</strong></td><td><strong>P<sub>crit</sub></strong></td><td>min(P<sub>sh</sub>, P<sub>max</sub>, P<sub>burst</sub>)</td><td><strong>'+fmt(d0.P_critical,1)+'</strong></td><td>kN</td></tr>';
-  html += '<tr style="background:#e8f0f8;"><td><strong>ULS 传力 / 每米</strong></td><td><strong>q<sub>Rd</sub></strong></td><td>P<sub>crit</sub> / (S/1000)</td><td><strong>'+fmt(d0.ULS_per_m,1)+'</strong></td><td>kN/m</td></tr>';
+  html += '<tr style="background:#f2ede0;"><td><strong>控制承载力 (每根)</strong></td><td><strong>P<sub>crit</sub></strong></td><td>min(P<sub>sh</sub>, P<sub>max</sub>, P<sub>burst</sub>)</td><td><strong>'+fmt(d0.P_critical,1)+'</strong></td><td>kN</td></tr>';
+  html += '<tr style="background:#f2ede0;"><td><strong>ULS 传力 / 每米</strong></td><td><strong>q<sub>Rd</sub></strong></td><td>P<sub>crit</sub> / (S/1000)</td><td><strong>'+fmt(d0.ULS_per_m,1)+'</strong></td><td>kN/m</td></tr>';
   html += '</tbody></table></div>';
   html += '<div class="alert alert-info" style="font-size:0.78rem;margin-top:4px;"><strong>📐 公式：</strong>P<sub>sh</sub>=0.6f<sub>y</sub>TW·0.9/1000 &nbsp;|&nbsp; b₁=2ek₃f<sub>cd</sub>W, c₁=2k₃f<sub>cd</sub>W²T²f<sub>y</sub> &nbsp;|&nbsp; P<sub>burst</sub>=u₁d₂v<sub>Rd,ct</sub>/1000 &nbsp;|&nbsp; k₃=3, v<sub>Rd,ct</sub>=0.52</div>';
 
