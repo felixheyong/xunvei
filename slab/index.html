@@ -998,7 +998,7 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
 
   const rcResult = results.find(r=>r.isRC);
   if (rcResult && !r0.isRC) {
-    html += '<h3>2.4 方案B RC配筋计算（h='+rcResult.h+'mm）</h3><div class="calc-box">';
+    html += '<h3>2.4 方案B — 传统RC配筋计算（h='+rcResult.h+'mm）</h3><div class="calc-box">';
     html += '<span class="formula">A<sub>s</sub></span> = '+(Math.PI*p.rebarDia*p.rebarDia/4).toFixed(1)+' × (1000/'+p.rebarSpacing+') = <span class="result">'+fmt(rcResult.As,0)+' mm²/m</span>\n';
     html += '<span class="formula">M<sub>rc,pos</sub></span> = <span class="result">'+fmt(rcResult.Mrc_pos,2)+' kNm/m</span>\n';
     html += '<span class="formula">M<sub>rc,neg</sub></span> = <span class="result">'+fmt(rcResult.Mrc_neg,2)+' kNm/m</span>\n';
