@@ -13,6 +13,9 @@
 <script>if(location.protocol==='http:')location.replace('https://xunvei.com'+location.pathname)</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="copyright" content="HE YONG — 粘接面层裂缝控制 技术整合和汉化">
+<meta name="author" content="HE YONG">
+<meta name="robots" content="noarchive">
 <title>粘接面层裂缝控制 — Bonded Topping Crack Control</title>
 <style>
 /*
@@ -149,10 +152,20 @@ input[readonly] { background: #f5f2ea; color: var(--muted); cursor: not-allowed;
 .content-locked .app { filter: blur(12px); pointer-events: none; }
 .no-print .big-result, .no-print .card, .no-print .results-grid, .no-print .step { filter: blur(6px); user-select: none; pointer-events: none; }
 @media print {
-  .no-print .sidebar { display: none !important; }
-  .no-print .header { background: #2a2722 !important; -webkit-print-color-adjust: exact; }
-  .no-print .watermark-layer { display: block !important; opacity: 0.18 !important; z-index: 9999 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  .no-print .big-result, .no-print .card, .no-print .results-grid, .no-print .step { filter: none !important; background: #fff !important; border: 1px solid #ccc !important; box-shadow: none !important; }
+  @page { size: A3 landscape; margin: 10mm; }
+  body { background: #fff; color: #000; }
+  .sidebar { display: none !important; }
+  .header { background: #2a2722 !important; color: #f3efe8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .watermark-layer { display: block !important; z-index: 9999 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .watermark-layer svg { width: 100% !important; height: 100% !important; }
+  .watermark-text { fill: rgba(0,0,0,.12) !important; font-size: 42px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .big-result, .card, .results-grid, .step { background: #fff !important; border: 1px solid #ccc !important; box-shadow: none !important; page-break-inside: avoid; }
+  table { font-size: 0.75rem; }
+  /* 非主密码用户 — 打印时隐藏所有计算内容 + 红色水印 */
+  .no-print .app, .no-print .main { display: none !important; }
+  .no-print .watermark-layer { display: block !important; }
+  .no-print .watermark-text { fill: rgba(255,0,0,.25) !important; font-size: 28px !important; }
+  .no-print .header { display: block !important; }
 }
 </style>
 </head>
@@ -185,23 +198,34 @@ input[readonly] { background: #f5f2ea; color: var(--muted); cursor: not-allowed;
 <!-- 水印 -->
 <style>
 .watermark-layer {
-  position: fixed; top: -10%; left: -10%; width: 130%; height: 130%;
-  pointer-events: none; z-index: 9999; opacity: 0.035;
-  display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr);
+  position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
-.watermark-layer span {
-  display: flex; align-items: center; justify-content: center;
-  transform: rotate(-20deg);
-  font-size: 4.5rem; font-weight: 900; letter-spacing: 0.3em;
-  color: #000; white-space: nowrap;
-  font-family: 'Inter', 'Noto Sans SC', sans-serif;
+.watermark-layer svg {
+  width: 100%; height: 100%;
+}
+.watermark-text {
+  font-size: 36px;
+  fill: rgba(46,42,37,.04);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
+  font-weight: 700;
+  letter-spacing: 6px;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 </style>
 <div class="watermark-layer">
-  <span>HE YONG</span><span>HE YONG</span><span>HE YONG</span>
-  <span>HE YONG</span><span>HE YONG</span><span>HE YONG</span>
-  <span>HE YONG</span><span>HE YONG</span><span>HE YONG</span>
-  <span>HE YONG</span><span>HE YONG</span><span>HE YONG</span>
+  <svg xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="wm" x="0" y="0" width="720" height="200" patternUnits="userSpaceOnUse">
+        <text x="360" y="100" text-anchor="middle" dominant-baseline="middle"
+              class="watermark-text" transform="rotate(-25, 360, 100)">技术整合和汉化 HE YONG</text>
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#wm)"/>
+  </svg>
+</div>
 </div>
 
 <div class="app">
@@ -699,58 +723,106 @@ window.addEventListener('DOMContentLoaded', function() {
   el('hMax').value = Math.round(hVal * 1.25 / 5) * 5;
 });
 
-// ═══════════════ 安全控制 ═══════════════
+// ═══════════════ 安全防护（同 xunvei.com/slab） ═══════════════
 (function() {
   function isMaster() { try { return sessionStorage.getItem('topping_master') === '1'; } catch(e) { return false; } }
 
-  // 右键禁用（非主密码）
+  // ── DevTools 检测 ──
+  var devtoolsOpen = false;
+  setInterval(function() {
+    var before = new Date().getTime();
+    debugger;
+    var after = new Date().getTime();
+    if (after - before > 100) {
+      devtoolsOpen = true;
+      document.body.style.opacity = '0.15';
+      document.body.style.pointerEvents = 'none';
+      showProtectAlert('⚠ 检测到开发者工具已打开<br><span style="font-size:.7rem;color:#c4bcb0;">请关闭开发者工具后刷新页面</span>');
+    } else if (devtoolsOpen) {
+      document.body.style.opacity = '1';
+      document.body.style.pointerEvents = '';
+      devtoolsOpen = false;
+    }
+  }, 1000);
+
+  // ── 禁用右键 ──
   document.addEventListener('contextmenu', function(e) {
     if (isMaster()) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     e.preventDefault();
-    showProtectAlert('© HE YONG<br><span style=\"font-size:.7rem;color:#c4bcb0;\">右键已禁用 — 内容受版权保护</span>');
+    showProtectAlert('© HE YONG<br><span style="font-size:.7rem;color:#c4bcb0;">右键已禁用 — 内容受版权保护</span>');
+    return false;
   });
 
-  // 快捷键禁用
+  // ── 禁用快捷键 (F12 / Ctrl+U / Ctrl+S / Ctrl+P / Ctrl+Shift+I/J/C) ──
   document.addEventListener('keydown', function(e) {
     if (isMaster()) return;
     var blocked = false;
-    if (e.key === 'F12') blocked = true;
-    if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) blocked = true;
-    if (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I' || e.key === 'j' || e.key === 'J' || e.key === 'c' || e.key === 'C')) blocked = true;
-    if (blocked) { e.preventDefault(); showProtectAlert('© HE YONG<br><span style=\"font-size:.7rem;color:#c4bcb0;\">快捷键已禁用 — 内容受版权保护</span>'); return false; }
+    if (e.key === 'F12') { blocked = true; }
+    if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) { blocked = true; }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I' || e.key === 'j' || e.key === 'J' || e.key === 'c' || e.key === 'C')) { blocked = true; }
+    if (blocked) {
+      e.preventDefault();
+      showProtectAlert('© HE YONG<br><span style="font-size:.7rem;color:#c4bcb0;">快捷键已禁用 — 内容受版权保护</span>');
+      return false;
+    }
   });
 
-  // 禁用复制/剪切/拖拽
+  // ── 禁用复制 / 剪切 / 拖拽 ──
   document.addEventListener('copy', function(e) { if (!isMaster()) { e.preventDefault(); showProtectAlert('© HE YONG — 禁止复制'); return false; } });
   document.addEventListener('cut', function(e) { if (!isMaster()) { e.preventDefault(); return false; } });
   document.addEventListener('dragstart', function(e) { if (!isMaster()) { e.preventDefault(); return false; } });
 
-  // 保护提示
+  // ── 保护提示弹窗 ──
   var alertActive = false;
-  window.showProtectAlert = function(msg) {
-    if (alertActive) return; alertActive = true;
+  function showProtectAlert(msg) {
+    if (alertActive) return;
+    alertActive = true;
     var div = document.createElement('div');
-    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100000;background:rgba(37,34,32,.94);color:#f3efe8;padding:20px 36px;border-radius:10px;font-family:Inter,\"Noto Sans SC\",sans-serif;font-size:.92rem;text-align:center;box-shadow:0 12px 48px rgba(0,0,0,.3);border:1px solid rgba(196,154,74,.3);pointer-events:none;';
+    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100000;'
+      + 'background:rgba(37,34,32,.94);color:#f3efe8;padding:20px 36px;border-radius:10px;'
+      + 'font-family:Inter,"Noto Sans SC",sans-serif;font-size:.92rem;text-align:center;'
+      + 'box-shadow:0 12px 48px rgba(0,0,0,.3);border:1px solid rgba(196,154,74,.3);'
+      + 'animation:protectFade .25s ease;pointer-events:none;';
     div.innerHTML = msg;
     document.body.appendChild(div);
     setTimeout(function() { div.remove(); alertActive = false; }, 2500);
-  };
+  }
 
-  // 文本选中禁用（非主密码）
+  // ── 动画 CSS ──
+  var style = document.createElement('style');
+  style.textContent = '@keyframes protectFade{from{opacity:0;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}';
+  document.head.appendChild(style);
+
+  // ── 全局禁止文本选中（非主密码） ──
   document.addEventListener('DOMContentLoaded', function() {
-    var blocks = document.querySelectorAll('.card, .step, .result-card, .result-item, h2, h3, .note-box');
-    blocks.forEach(function(el) { el.style.userSelect = 'none'; el.style.webkitUserSelect = 'none'; el.style.msUserSelect = 'none'; });
-    var inputs = document.querySelectorAll('input, select');
-    inputs.forEach(function(el) { el.style.userSelect = 'text'; el.style.webkitUserSelect = 'text'; });
+    var blocks = document.querySelectorAll('.card, .step, .result-card, .result-item, h2, h3, .note-box, .big-result');
+    blocks.forEach(function(el) {
+      el.style.userSelect = 'none';
+      el.style.webkitUserSelect = 'none';
+      el.style.msUserSelect = 'none';
+    });
+    var inputs = document.querySelectorAll('input, select, textarea');
+    inputs.forEach(function(el) {
+      el.style.userSelect = 'text';
+      el.style.webkitUserSelect = 'text';
+    });
   });
 
-  // 打印拦截
+  // ── 打印拦截 ──
   document.addEventListener('keydown', function(e) {
     if (isMaster()) return;
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S')) { e.preventDefault(); e.stopPropagation(); alert('🔒 打印和保存功能需使用主密码登录。'); return false; }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S')) {
+      e.preventDefault(); e.stopPropagation();
+      alert('🔒 打印和保存功能需使用主密码登录。');
+      return false;
+    }
   });
-  window.addEventListener('beforeprint', function() { if (!isMaster()) { /* CSS 兜底 */ } });
+  window.addEventListener('beforeprint', function() {
+    if (!isMaster()) {
+      // CSS .no-print 规则处理打印隐藏
+    }
+  });
 })();
 </script>
 </body>
