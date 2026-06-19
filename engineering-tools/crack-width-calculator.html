@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BFVZQQ2LYN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-BFVZQQ2LYN');
+</script>
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+<script>if(location.protocol==='http:')location.replace('https://xunvei.com'+location.pathname)</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="copyright" content="HE YONG — 裂缝宽度分析 CUR65 + EC2 技术整合和汉化">
+<meta name="author" content="HE YONG">
+<meta name="robots" content="noarchive">
+<title>裂缝宽度计算器 — CUR 65 + EC2 (EN 1992-1-1 §7.3)</title>
+<style>
+/*
+ * 唐风宋骨色系 (Tang-Song Fusion Palette)
+ * 宋素底 · 唐彩点睛 — 素白为底 · 青金为骨 · 石绿朱砂为用
+ * 色系参考：xunvei.com/slab
+ */
+:root {
+  --bg:           #f3efe8;   /* 宋素白 — 仿古纸底 */
+  --panel:        #faf8f3;   /* 宋茶白 — 卷面微暖 */
+  --text:         #252220;   /* 宋墨 — 松烟墨 */
+  --muted:        #8a8278;   /* 宋灰檀 — 次文 */
+  --border:       #e0dbd0;   /* 宋绢色 — 细边 */
+  --accent:       #2c5f8a;   /* 唐青金 — 主色 */
+  --accent2:      #7a5538;   /* 唐赭石 — 辅色 */
+  --accent3:      #b8965a;   /* 唐金 — 强调 */
+  --pass:         #3d7a5c;   /* 唐石绿 — 合规 */
+  --warn:         #d4943a;   /* 唐土黄赤 — 临界 */
+  --fail:         #c4553a;   /* 唐朱砂 — 不合规 */
+  --cur65:        #2c5f8a;   /* 唐青金 — CUR65 */
+  --ec2:          #7a5538;   /* 唐赭石 — EC2 */
+  --shadow:       0 1px 3px rgba(37,34,32,.05), 0 1px 2px rgba(37,34,32,.03);
+  --radius:       10px;
+  --radius-sm:    6px;
+  --radius-lg:    14px;
+  --dark:         linear-gradient(165deg, #2a2722 0%, #36312b 40%, #3d3730 100%);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.65; min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 顶部导航 — 深色唐风 */
+.header {
+  background: var(--dark);
+  color: #f3efe8; padding: 14px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  z-index: 100; position: relative;
+}
+.header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.04em; }
+.header .subtitle { font-size: 0.72rem; opacity: 0.65; margin-top: 2px; letter-spacing: 0.02em; }
+.badges { display: flex; gap: 8px; }
+.badge {
+  font-size: 0.68rem; padding: 4px 12px; border-radius: 100px;
+  font-weight: 600; letter-spacing: 0.04em;
+}
+.badge-cur { background: rgba(184,150,90,0.25); border: 1px solid rgba(184,150,90,0.45); color: #e8d5a8; }
+.badge-ec2 { background: rgba(184,150,90,0.18); border: 1px solid rgba(184,150,90,0.35); color: #d4c098; }
+
+.app { display: flex; min-height: calc(100vh - 58px); }
+
+/* 侧边栏 — 宋茶白底 */
+.sidebar {
+  width: 360px; min-width: 360px; background: var(--panel);
+  border-right: 1px solid var(--border); padding: 18px 20px;
+  overflow-y: auto; max-height: calc(100vh - 58px); position: sticky; top: 0;
+  box-shadow: 1px 0 8px rgba(37,34,32,0.04);
+}
+.sidebar h2 {
+  font-size: 0.82rem; letter-spacing: 0.05em; font-weight: 600;
+  color: var(--accent2); margin: 18px 0 10px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar h2:first-child { margin-top: 0; }
+.form-group { margin-bottom: 11px; }
+.form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.form-group .hint { font-size: 0.7rem; color: var(--accent2); float: right; font-weight: 400; }
+.form-row { display: flex; gap: 8px; }
+.form-row .form-group { flex: 1; }
+input, select {
+  width: 100%; padding: 8px 11px; border: 1px solid #d5cfc4;
+  border-radius: var(--radius-sm); font-size: 0.88rem; font-family: inherit;
+  background: #fefefc; color: #2e2a25;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(44,95,138,0.12); }
+.checkbox-group { display: flex; align-items: center; gap: 6px; }
+.checkbox-group input[type="checkbox"] { width: auto; }
+.checkbox-group label { margin: 0; font-size: 0.84rem; color: var(--text); }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px;
+  border: 1px solid #d5cfc4; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; font-family: inherit;
+  background: #fefefc; color: #2e2a25;
+}
+.btn:hover { border-color: var(--accent); background: #f2f6f4; }
+.btn-primary {
+  width: 100%; background: var(--accent); color: #f3efe8; border-color: var(--accent);
+  justify-content: center; margin-top: 6px; padding: 11px; font-size: 0.92rem; letter-spacing: 0.04em;
+}
+.btn-primary:hover { background: #254f73; border-color: #254f73; }
+
+/* 主内容区 */
+.main { flex: 1; padding: 22px 26px; overflow-y: auto; max-height: calc(100vh - 58px); }
+
+/* 卡片 */
+.card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); margin-bottom: 16px; overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.card-header {
+  padding: 11px 18px; background: #faf8f3;
+  border-bottom: 1px solid var(--border); font-weight: 600;
+  font-size: 0.88rem; letter-spacing: 0.03em;
+  display: flex; align-items: center; justify-content: space-between;
+  color: #2e2a25;
+}
+.card-body { padding: 16px 18px; }
+
+/* 参数汇总网格 */
+.results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.result-item {
+  text-align: center; padding: 10px 8px; background: #fefefc;
+  border-radius: var(--radius); border: 1px solid var(--border);
+}
+.result-item .val { font-size: 1.15rem; font-weight: 700; color: var(--accent); }
+.result-item .lbl { font-size: 0.7rem; color: var(--muted); margin-top: 2px; letter-spacing: 0.02em; }
+
+/* 大结果卡片 */
+.big-result { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.result-card {
+  text-align: center; padding: 20px 14px; border-radius: var(--radius-lg);
+  border: 2px solid; box-shadow: var(--shadow);
+}
+.result-card.cur65 { border-color: var(--accent); background: #f2f6f4; }
+.result-card.ec2   { border-color: var(--accent2); background: #f8f5f0; }
+.result-card .method-label {
+  font-size: 0.7rem; letter-spacing: 0.06em; font-weight: 700; margin-bottom: 4px;
+  text-transform: uppercase;
+}
+.result-card.cur65 .method-label { color: var(--accent); }
+.result-card.ec2 .method-label { color: var(--accent2); }
+.result-card .big-val { font-size: 2.4rem; font-weight: 800; letter-spacing: -1px; }
+.result-card.cur65 .big-val { color: var(--accent); }
+.result-card.ec2 .big-val { color: var(--accent2); }
+.result-card .big-unit { font-size: 0.78rem; font-weight: 500; color: var(--muted); }
+.result-card .location { font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
+.result-card .limit-info { margin-top: 8px; padding: 5px 14px; border-radius: 100px; font-size: 0.72rem; font-weight: 600; display: inline-block; letter-spacing: 0.03em; }
+.limit-pass { background: #ebf2ec; color: #4a6b55; }
+.limit-fail { background: #f7e9e3; color: #9b5040; }
+
+/* 对比表格 — 深色表头唐风 */
+.comp-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; border-radius: var(--radius-sm); overflow: hidden; }
+.comp-table thead { background: var(--dark); }
+.comp-table th {
+  text-align: left; padding: 9px 12px; color: #f3efe8;
+  font-size: 0.72rem; letter-spacing: 0.05em; font-weight: 600;
+  white-space: nowrap;
+}
+.comp-table td { padding: 7px 12px; border-bottom: 1px solid var(--border); }
+.comp-table tbody tr:nth-child(even) { background: #f7f4ed; }
+.comp-table tbody tr:hover { background: #f2f6f4; }
+.comp-table .val-col { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--accent2); }
+
+/* 计算步骤 */
+.step {
+  padding: 11px 16px; border-left: 4px solid var(--accent); margin: 8px 0;
+  background: #faf8f3; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 0.82rem; border: 1px solid var(--border); border-left: 4px solid var(--accent);
+}
+.step .step-num {
+  display: inline-block; width: 22px; height: 22px; background: var(--accent);
+  color: #f3efe8; border-radius: 50%; text-align: center;
+  line-height: 22px; font-size: 0.7rem; font-weight: 700; margin-right: 8px;
+}
+.step .formula {
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', 'JetBrains Mono', monospace;
+  font-style: normal; color: var(--accent); margin: 3px 0; font-size: 0.82rem; font-weight: 600;
+}
+.step .calc-line { color: var(--muted); font-size: 0.78rem; margin: 2px 0; }
+
+/* 标签页 */
+.tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 16px; }
+.tab {
+  padding: 10px 20px; border: none; background: none; cursor: pointer;
+  font-size: 0.85rem; font-weight: 500; color: var(--muted);
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: all 0.2s; letter-spacing: 0.03em; font-family: inherit;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* 截面示意图 */
+.diagram-container { text-align: center; padding: 10px; }
+.diagram-container svg { max-width: 100%; }
+
+/* 响应式 */
+@media (max-width: 860px) {
+  .app { flex-direction: column; }
+  .sidebar { width: 100%; min-width: 0; max-height: none; position: static; border-right: none; border-bottom: 1px solid var(--border); }
+  .main { max-height: none; }
+  .big-result { grid-template-columns: 1fr; }
+}
+
+/* ── 密码弹窗 ── */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: none; align-items: center; justify-content: center; }
+.modal-overlay.active { display: flex; }
+.modal-dialog { background: var(--panel); border-radius: var(--radius-lg); padding: 28px 32px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 12px 48px rgba(0,0,0,.3); border: 1px solid rgba(196,154,74,.3); }
+.modal-dialog h3 { font-size: 1rem; margin-bottom: 8px; color: var(--text); }
+.modal-dialog p { font-size: 0.82rem; color: var(--muted); margin-bottom: 16px; }
+.modal-dialog input[type="password"] { width: 100%; padding: 10px 14px; border: 1px solid #d5cfc4; border-radius: var(--radius-sm); font-size: 0.9rem; font-family: inherit; background: #fefefc; margin-bottom: 10px; }
+.modal-dialog input[type="password"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(44,95,138,.14); }
+.modal-error { color: var(--fail); font-size: 0.78rem; margin-bottom: 8px; min-height: 20px; }
+.modal-dialog .btn-row { display: flex; gap: 10px; justify-content: center; }
+.modal-dialog .btn-cancel { background: #f5f2ea; color: var(--muted); border-color: var(--border); }
+
+/* ── 锁屏模糊 ── */
+.content-locked .app { filter: blur(12px); pointer-events: none; }
+.no-print .big-result, .no-print .card, .no-print .results-grid, .no-print .step { filter: blur(6px); user-select: none; pointer-events: none; }
+
+/* ── 水印 ── */
+.watermark-layer {
+  position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.watermark-layer svg {
+  width: 100%; height: 100%;
+}
+.watermark-text {
+  font-size: 36px;
+  fill: rgba(46,42,37,.04);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
+  font-weight: 700;
+  letter-spacing: 6px;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ── 打印样式 ── */
+@media print {
+  @page { size: A3 landscape; margin: 10mm; }
+  body { background: #fff; color: #000; display: block !important; }
+  .sidebar { display: none !important; }
+  .tabs { display: none !important; }
+  .header { background: #2a2722 !important; color: #f3efe8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .btn, .btn-primary, .modal-overlay { display: none !important; }
+  .main { display: block !important; max-width: 100%; width: 100%; padding: 0; margin: 0; max-height: none; overflow: visible; }
+  .card { background: #fff; border: 1px solid #ccc; box-shadow: none; padding: 8px 12px; margin-bottom: 8px; page-break-inside: auto; }
+  .card-header { background: #fff; border-bottom: 1px solid #000; }
+  .watermark-layer { display: block !important; z-index: 9999 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .watermark-layer svg { width: 100% !important; height: 100% !important; }
+  .watermark-text { fill: rgba(0,0,0,.12) !important; font-size: 42px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .comp-table thead { background: #eee !important; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .comp-table th { color: #000; }
+  table { font-size: 0.62rem; }
+  table td, table th { padding: 3px 5px; }
+  /* 非主密码用户 — 打印时隐藏所有计算内容 + 红色水印 */
+  .no-print .app, .no-print .main, .no-print .tab-content { display: none !important; }
+  .no-print .watermark-layer { display: block !important; }
+  .no-print .watermark-text { fill: rgba(255,0,0,.25) !important; font-size: 28px !important; }
+  .no-print .header { display: block !important; }
+}
+</style>
+</head>
+<body class="content-locked">
+
+<!-- 水印层 -->
+<div class="watermark-layer">
+  <svg xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="wm" x="0" y="0" width="720" height="200" patternUnits="userSpaceOnUse">
+        <text x="360" y="100" text-anchor="middle" dominant-baseline="middle"
+              class="watermark-text" transform="rotate(-25, 360, 100)">技术整合和汉化 HE YONG</text>
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#wm)"/>
+  </svg>
+</div>
+
+<!-- 密码弹窗 -->
+<div class="modal-overlay active" id="passwordModal">
+  <div class="modal-dialog">
+    <h3 id="modalTitle">🔐 访问验证</h3>
+    <p id="modalDesc">请输入访问密码</p>
+    <div id="loginForm">
+      <input type="password" id="passwordInput" placeholder="请输入密码" autocomplete="off" onkeydown="if(event.key==='Enter')verifyPassword()">
+      <div class="modal-error" id="passwordError"></div>
+      <div class="btn-row">
+        <button type="button" class="btn btn-primary" style="width:auto" onclick="verifyPassword()">确认</button>
+      </div>
+    </div>
+    <div id="lockoutMsg" style="display:none;color:var(--fail);">🔒 访问已锁定 — 请稍后重试</div>
+  </div>
+</div>
+
+<div class="header">
+  <div>
+    <h1>🔬 裂缝宽度分析 — CUR 65 + EC2</h1>
+    <div class="subtitle">EN 1992-1-1 §7.3.4 + CUR 65（荷兰混凝土楼板设计指南）</div>
+  </div>
+  <div style="text-align:right;">
+    <div class="badges">
+      <span class="badge badge-cur">CUR 65</span>
+      <span class="badge badge-ec2">欧洲规范 2</span>
+    </div>
+    <div style="font-size:0.7rem;opacity:0.6;margin-top:4px;letter-spacing:0.04em;">技术整合和汉化 HE YONG © 版权所有</div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- ====== 侧边栏 ====== -->
+  <div class="sidebar">
+
+    <h2>📐 几何参数</h2>
+    <div class="form-group">
+      <label>板厚, h <span class="hint">mm</span></label>
+      <input type="number" id="h" value="250" min="80" max="2000" step="10">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>钢筋直径, φ <span class="hint">mm</span></label>
+        <input type="number" id="phi" value="12" min="6" max="40" step="1">
+      </div>
+      <div class="form-group">
+        <label>钢筋间距 <span class="hint">mm 中到中</span></label>
+        <input type="number" id="spacing" value="150" min="50" max="400" step="5">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>名义保护层, c<sub>nom</sub> <span class="hint">mm</span></label>
+        <input type="number" id="cover" value="30" min="10" max="80" step="5">
+      </div>
+      <div class="form-group">
+        <label>保护层偏差, Δc <span class="hint">mm</span></label>
+        <input type="number" id="coverTol" value="12" min="0" max="30" step="1">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>钢筋层位置</label>
+      <select id="layer">
+        <option value="top" selected>上层钢筋（近顶面）</option>
+        <option value="bottom">下层钢筋（近底面）</option>
+      </select>
+    </div>
+    <div class="checkbox-group">
+      <input type="checkbox" id="considerBottom" checked>
+      <label for="considerBottom">考虑同规格双层钢筋</label>
+    </div>
+
+    <h2>🧱 材料参数</h2>
+    <div class="form-group">
+      <label>混凝土强度等级</label>
+      <select id="concreteGrade">
+        <option value="C25">C25</option>
+        <option value="C30" selected>C30</option>
+        <option value="C35">C35</option>
+        <option value="C40">C40</option>
+        <option value="C45">C45</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>钢筋等级</label>
+        <select id="steelGrade">
+          <option value="400" selected>HRB400</option>
+          <option value="500">HRB500</option>
+          <option value="600">HRB600</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>粘结类型</label>
+        <select id="bondType">
+          <option value="ribbed" selected>带肋钢筋</option>
+          <option value="plain">光圆钢筋</option>
+        </select>
+      </div>
+    </div>
+
+    <h2>📊 荷载（正常使用极限状态）</h2>
+    <div class="form-group">
+      <label>荷载模式</label>
+      <select id="loadMode">
+        <option value="stress" selected>固定钢筋应力 σ<sub>s</sub>（改板厚时自动调 M<sub>Ed</sub>）</option>
+        <option value="moment">固定弯矩 M<sub>Ed</sub></option>
+      </select>
+    </div>
+    <div class="form-row" id="stressRow">
+      <div class="form-group">
+        <label>钢筋应力, σ<sub>s,target</sub> <span class="hint">N/mm²</span></label>
+        <input type="number" id="sigmaTarget" value="216" min="50" max="400" step="1">
+      </div>
+      <div class="form-group">
+        <label>作用弯矩 M<sub>Ed</sub> <span class="hint">kNm/m（自动算）</span></label>
+        <input type="number" id="MEd_display" value="30" readonly style="background:#f5f2ea;color:var(--muted);">
+      </div>
+    </div>
+    <div class="form-row" id="momentRow" style="display:none;">
+      <div class="form-group">
+        <label>作用弯矩, M<sub>Ed</sub> <span class="hint">kNm/m</span></label>
+        <input type="number" id="MEd" value="30" min="0" max="5000" step="0.1">
+      </div>
+      <div class="form-group">
+        <label>钢筋应力 σ<sub>s</sub> <span class="hint">N/mm²（自动算）</span></label>
+        <input type="number" id="sigmaDisplay" value="0" readonly style="background:#f5f2ea;color:var(--muted);">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>轴力, N<sub>Ed</sub> <span class="hint">kN/m（+受拉）</span></label>
+      <input type="number" id="NEd" value="0" min="-5000" max="5000" step="1">
+    </div>
+    <div class="form-group">
+      <label>荷载持续时间</label>
+      <select id="loadingType">
+        <option value="long" selected>长期 / 重复荷载 (k<sub>t</sub> = 0.4, β<sub>1</sub> = 0.26)</option>
+        <option value="short">短期荷载 (k<sub>t</sub> = 0.6, β<sub>1</sub> = 0.40)</option>
+      </select>
+    </div>
+
+    <h2>✅ 环境类别（GB 50010 裂缝限值）</h2>
+    <div class="form-group">
+      <label>环境类别 <span class="hint">→ 裂缝限值</span></label>
+      <select id="exposureClass">
+        <option value="I" selected>一类 — 室内干燥环境 → w<sub>lim</sub> = 0.30 mm</option>
+        <option value="IIa">二a类 — 室内潮湿/露天环境 → w<sub>lim</sub> = 0.20 mm</option>
+        <option value="IIb">二b类 — 干湿交替环境 → w<sub>lim</sub> = 0.20 mm</option>
+        <option value="IIIa">三a类 — 寒冷+除冰盐 → w<sub>lim</sub> = 0.20 mm</option>
+        <option value="IIIb">三b类 — 滨海/除冰盐 → w<sub>lim</sub> = 0.15 mm</option>
+        <option value="IV">四类 — 海水环境 → w<sub>lim</sub> = 0.15 mm</option>
+        <option value="V">五类 — 化学腐蚀环境 → w<sub>lim</sub> = 0.15 mm</option>
+        <option value="custom">自定义限值…</option>
+      </select>
+    </div>
+    <div class="form-group" id="customLimitGroup" style="display:none;">
+      <label>自定义裂缝宽度限值 <span class="hint">mm</span></label>
+      <input type="number" id="customLimit" value="0.20" min="0.1" max="1.0" step="0.05">
+    </div>
+
+    <button class="btn btn-primary" onclick="calculateAll()">🔄 重新计算</button>
+    <div style="font-size:0.68rem;color:var(--muted);text-align:center;margin-top:4px;">
+      输入变更时自动更新
+    </div>
+  </div>
+
+  <!-- ====== 主内容区 ====== -->
+  <div class="main">
+
+    <!-- 标签页 -->
+    <div class="tabs">
+      <button class="tab active" data-tab="summary">📋 总览</button>
+      <button class="tab" data-tab="ec2">🇪🇺 EC2 详细</button>
+      <button class="tab" data-tab="cur65">🇳🇱 CUR 65 详细</button>
+      <button class="tab" data-tab="diagram">📐 截面示意图</button>
+    </div>
+
+    <!-- ========== 总览标签页 ========== -->
+    <div class="tab-content active" id="tab-summary">
+      <div class="big-result">
+        <div class="result-card ec2" id="cardEC2">
+          <div class="method-label">EC2 §7.3.4 — 裂缝宽度 w<sub>k</sub></div>
+          <div class="big-val" id="wkVal">—</div>
+          <div class="big-unit">mm（表面处）</div>
+          <div class="location" id="wkSurfLabel">钢筋高度处: — mm</div>
+          <div class="limit-info" id="ec2Status">—</div>
+        </div>
+        <div class="result-card cur65" id="cardCUR65">
+          <div class="method-label">CUR 65 — 裂缝宽度 w<sub>m</sub></div>
+          <div class="big-val" id="wmVal">—</div>
+          <div class="big-unit">mm（表面处）</div>
+          <div class="location" id="wmRebarLabel">钢筋高度处: — mm</div>
+          <div class="limit-info" id="cur65Status">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">📊 截面与材料关键参数</div>
+        <div class="card-body"><div class="results-grid" id="summaryGrid"></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">🔬 EC2 vs. CUR 65 — 逐步对比</div>
+        <div class="card-body" style="overflow-x:auto;">
+          <table class="comp-table">
+            <thead><tr><th>参数</th><th>符号</th><th class="val-col">EC2</th><th class="val-col">CUR 65</th><th>单位</th></tr></thead>
+            <tbody id="compTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== EC2 详细标签页 ========== -->
+    <div class="tab-content" id="tab-ec2">
+      <div class="card">
+        <div class="card-header">EC2 裂缝宽度计算 — EN 1992-1-1 §7.3.4</div>
+        <div class="card-body" id="ec2Steps"></div>
+      </div>
+    </div>
+
+    <!-- ========== CUR 65 详细标签页 ========== -->
+    <div class="tab-content" id="tab-cur65">
+      <div class="card">
+        <div class="card-header">CUR 65 裂缝宽度计算 — 荷兰混凝土楼板指南</div>
+        <div class="card-body" id="cur65Steps"></div>
+      </div>
+    </div>
+
+    <!-- ========== 截面示意图标签页 ========== -->
+    <div class="tab-content" id="tab-diagram">
+      <div class="card">
+        <div class="card-header">裂缝处截面 — 开裂状态（阶段 II）</div>
+        <div class="card-body diagram-container" id="diagramContainer"></div>
+        <div id="diagramLegend" style="padding:0 16px 14px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  核心计算引擎
+// ============================================================
+
+const Es = 200000; // N/mm2
+
+function getConcreteProps(grade) {
+  const fck_cube = parseInt(grade.replace('C',''));     // GB: "C30" -> 30 (立方体强度)
+  const fck = Math.round(fck_cube * 0.8);               // 转圆柱体强度 (EC2 公式用)
+  const fcm = fck + 8;
+  let fctm;
+  if (fck <= 50) {
+    fctm = 0.30 * Math.pow(fck, 2/3);
+  } else {
+    fctm = 2.12 * Math.log(1 + 0.1 * (fck + 8));
+  }
+  const Ecm = 22 * Math.pow(fcm / 10, 0.3) * 1000;
+  return { fck, fck_cube, fcm, fctm, Ecm };
+}
+
+function calcCrackedNA(alpha_e, As_t, d_t, As_c, d_c, b) {
+  // 解方程: 0.5*b*x^2 + (alpha_e-1)*As_c*(x-d_c) = alpha_e*As_t*(d_t-x)
+  // As_t = 受拉钢筋, As_c = 受压钢筋
+  // 若 x < d_c，受压钢筋实际受拉:
+  //   0.5*b*x^2 = alpha_e*As_t*(d_t-x) + alpha_e*As_c*(d_c-x)
+
+  // 先尝试受压钢筋处于受压区的情况 (x > d_c)
+  let a = 0.5 * b;
+  let bx = (alpha_e - 1) * As_c + alpha_e * As_t;
+  let cx = -((alpha_e - 1) * As_c * d_c + alpha_e * As_t * d_t);
+  let disc = bx * bx - 4 * a * cx;
+  let x = disc > 0 ? (-bx + Math.sqrt(disc)) / (2 * a) : 0;
+
+  // 若 x < d_c，受压钢筋实际受拉
+  if (x < d_c && As_c > 0) {
+    a = 0.5 * b;
+    bx = 0;
+    cx = -(alpha_e * As_t * d_t + alpha_e * As_c * d_c);
+    disc = bx * bx - 4 * a * cx;
+    x = disc > 0 ? (-bx + Math.sqrt(disc)) / (2 * a) : 0;
+  }
+
+  return Math.max(3, Math.min(x, 0.85 * d_t));
+}
+
+function performCalculation() {
+  // --- 读取输入 ---
+  const h     = parseFloat(el('h').value) || 250;
+  const phi   = parseFloat(el('phi').value) || 12;
+  const spacing = parseFloat(el('spacing').value) || 150;
+  const coverNom = parseFloat(el('cover').value) || 30;
+  const coverTol = parseFloat(el('coverTol').value) || 12;
+  const considerBottom = el('considerBottom').checked;
+  const layer = el('layer').value;
+  const loadMode = el('loadMode').value;
+  const sigmaTarget = parseFloat(el('sigmaTarget').value) || 216;
+  const MEd_input  = parseFloat(el('MEd').value) || 30;
+  const NEd   = parseFloat(el('NEd').value) || 0;
+  const loadingType = el('loadingType').value;
+  const bondType = el('bondType').value;
+  const steelGrade = parseInt(el('steelGrade').value) || 500;
+  const fyk = steelGrade;
+  const grade = el('concreteGrade').value;
+  const exposureClass = el('exposureClass').value;
+
+  const cover_eff = coverNom + coverTol; // 有效保护层（含偏差）
+  const b = 1000;
+
+  // --- 材料参数 ---
+  const props = getConcreteProps(grade);
+  const fctm_fl = Math.max((1.6 - h / 1000) * props.fctm, props.fctm);
+  const alpha_e = Es / props.Ecm;
+
+  // --- 钢筋面积 ---
+  const A_bar = Math.PI * phi * phi / 4;
+  const nBars  = b / spacing;
+  const As = nBars * A_bar;
+
+  // 受拉（主）层有效高度
+  const d_primary = layer === 'top'
+    ? h - cover_eff - phi / 2
+    : cover_eff + phi / 2;
+
+  // 第二层（对面）
+  const d_second = layer === 'top'
+    ? cover_eff + phi / 2
+    : h - cover_eff - phi / 2;
+  const As_second = considerBottom ? As : 0;
+  const As_total = As + As_second;
+
+  // 全部受拉钢筋形心处的有效高度
+  const d_eff = considerBottom
+    ? (As * d_primary + As_second * d_second) / As_total
+    : d_primary;
+
+  const rho = As / (b * d_primary);
+
+  // --- 未开裂截面 ---
+  const A_c = b * h;
+  const Sy_c = b * h * h / 2;
+  const Sy_s1 = (alpha_e - 1) * As * d_primary;
+  const Sy_s2 = considerBottom ? (alpha_e - 1) * As_second * d_second : 0;
+  const A_tot = A_c + (alpha_e - 1) * As + (considerBottom ? (alpha_e - 1) * As_second : 0);
+  const x_I = (Sy_c + Sy_s1 + Sy_s2) / A_tot;
+
+  const I_c = b * h * h * h / 12 + b * h * Math.pow(x_I - h/2, 2);
+  const I_s1 = (alpha_e - 1) * As * Math.pow(d_primary - x_I, 2);
+  const I_s2 = considerBottom ? (alpha_e - 1) * As_second * Math.pow(d_second - x_I, 2) : 0;
+  const I_I = I_c + I_s1 + I_s2;
+  const ht = layer === 'top' ? h - x_I : x_I;
+  const W_I = I_I / Math.max(ht, 0.01);
+  const Mcr_bending = fctm_fl * W_I / 1e6;
+
+  // --- 开裂截面（阶段 II）---
+  // 所有距离从受压面算起（EC2 标准约定）
+  // 不论受拉面在上/下，受压面始终在对侧，钢筋到受压面的距离 = h − 保护层 − φ/2
+  const d_t_EC2 = h - cover_eff - phi / 2;  // 受拉钢筋到受压面的距离
+  const d_c_EC2 = cover_eff + phi / 2;       // 对面钢筋到受压面的距离
+
+  const As_t = As;         // 主受拉钢筋
+  const As_c = As_second;  // 对面钢筋（可能受压或受拉）
+
+  const x_II = calcCrackedNA(alpha_e, As_t, d_t_EC2, (layer==='top') ? As_c : 0, d_c_EC2, b);
+  const z = d_t_EC2 - x_II / 3;
+
+  // --- 正常使用极限状态钢筋应力 ---
+  // 应力模式：从目标 σs 反算 MEd；弯矩模式：从 MEd 计算 σs
+  let sigma_s, MEd_actual;
+  if (loadMode === 'stress') {
+    sigma_s = sigmaTarget;
+    MEd_actual = sigma_s * (As_t * z) / 1e6 - NEd * (d_t_EC2 - h/2) / 1000;
+  } else {
+    MEd_actual = MEd_input;
+    const M_total = MEd_actual + NEd * (d_t_EC2 - h/2) / 1000;
+    const M_Nmm = Math.max(Math.abs(M_total) * 1e6, 1);
+    sigma_s = Math.min(M_Nmm / (As_t * z), 0.85 * fyk);
+  }
+
+  // --- 有效受拉区（EC2 §7.3.2）---
+  const d_cover_tension = cover_eff + phi / 2;
+  const hc_ef = Math.min(
+    2.5 * d_cover_tension,
+    (h - x_II) / 3,
+    h / 2
+  );
+  const Ac_eff = b * hc_ef;
+  const rho_p_eff = Math.min(As_t / Ac_eff, 1.0);
+
+  // --- EC2 系数 ---
+  const k1 = bondType === 'ribbed' ? 0.8 : 1.6;
+  const k2 = (NEd > 0 && Math.abs(MEd) < 0.1) ? 1.0 : 0.5;
+  const k3 = 3.4;
+  const k4 = 0.425;
+  const kt = loadingType === 'long' ? 0.4 : 0.6;
+
+  // --- 应变差（EC2 公式7.9）---
+  const fct_eff = props.fctm;
+  const term1 = (sigma_s - kt * (fct_eff / rho_p_eff) * (1 + alpha_e * rho_p_eff)) / Es;
+  const term2 = 0.6 * sigma_s / Es;
+  const eps_sm_cm = Math.max(term1, term2);
+
+  // --- EC2 最大裂缝间距（公式7.11）---
+  const sr_max = k3 * cover_eff + k1 * k2 * k4 * phi / rho_p_eff;
+
+  // --- EC2 裂缝宽度（公式7.8）---
+  const wk_rebar = sr_max * eps_sm_cm;
+  const ratio_surf = (h - x_II) / Math.max(d_t_EC2 - x_II, 1);
+  const wk_surf = wk_rebar * ratio_surf;
+
+  // --- CUR 65 计算 ---
+  // CUR 65 通过传递长度表达裂缝宽度:  wm = 2·lv·(εsm−εcm)
+  // 而非通过裂缝间距:               wk = sr,max·(εsm−εcm)
+  // 两者等价:  lv ≈ sr,max / 2  （传递长度 ≈ ½ 裂缝间距）
+  const beta1 = loadingType === 'long' ? 0.26 : 0.40;
+
+  // 基本传递长度 (CUR 65): 与 EC2 sr,max 采用相同的几何基础
+  // lv0 ≡ sr,max — 两者均代表稳定裂缝间距，使用有效保护层 c_eff
+  const lv0 = k3 * cover_eff + k1 * k2 * k4 * phi / rho_p_eff;  // ≡ sr,max
+
+  // 有效传递长度: 裂缝间距的一半
+  const eps_s = sigma_s / Es;
+  const lv = lv0 / 2;
+
+  // 裂缝宽度: wm = 2 × lv × (εsm − εcm) = lv0 × (εsm − εcm)
+  const wm_rebar = 2 * lv * eps_sm_cm;
+
+  // CUR 65 表面外推: 使用 h/d 比值（与 EC2 的 (h−x)/(d−x) 不同）
+  // PDF 验证: wm_surf/wm_rebar = 0.26/0.21 = 1.238 = h/d = 250/202
+  const ratio_surf_c65 = h / Math.max(d_t_EC2, 1);
+  const wm_surf = wm_rebar * ratio_surf_c65;
+
+  // --- 暴露等级限值 ---
+  let wlim;
+  switch (exposureClass) {
+    case 'I':    wlim = 0.30; break;  // 一类 — 室内干燥
+    case 'IIa':  wlim = 0.20; break;  // 二a类 — 室内潮湿/露天
+    case 'IIb':  wlim = 0.20; break;  // 二b类 — 干湿交替
+    case 'IIIa': wlim = 0.20; break;  // 三a类 — 寒冷+除冰盐
+    case 'IIIb': wlim = 0.15; break;  // 三b类 — 滨海/除冰盐
+    case 'IV':   wlim = 0.15; break;  // 四类 — 海水
+    case 'V':    wlim = 0.15; break;  // 五类 — 化学腐蚀
+    case 'custom': wlim = parseFloat(el('customLimit').value) || 0.20; break;
+    default: wlim = 0.20;
+  }
+
+  return {
+    inputs: { h, phi, spacing, coverNom, coverTol, cover_eff, considerBottom, layer, loadMode, sigma_s, MEd_actual, NEd, loadingType, bondType },
+    props: { ...props, fctm_fl, alpha_e },
+    sec: { As, As_second, As_total, d_primary, d_second, d_eff, rho, x_I, I_I, W_I, Mcr_bending, x_II, z, hc_ef, Ac_eff, rho_p_eff, d_t_EC2 },
+    ec2: { sigma_s, k1, k2, k3, k4, kt, fct_eff, term1, term2, eps_sm_cm, sr_max, wk_rebar, wk_surf, ratio_surf },
+    cur65: { beta1, lv0, lv, eps_s, eps_sm_cm, wm_rebar, wm_surf, ratio_surf: ratio_surf_c65 },
+    wlim
+  };
+}
+
+// ============================================================
+//  渲染函数
+// ============================================================
+
+function fmt(v, d) {
+  if (v === undefined || v === null || isNaN(v)) return '—';
+  return Number(v).toFixed(d || 2);
+}
+
+function renderSummary(data) {
+  const { sec, props, ec2, cur65, wlim } = data;
+
+  // 大结果卡片
+  // EC2 卡片：大字=表面裂缝，小字=钢筋高度处
+  el('wkVal').textContent = fmt(ec2.wk_surf, 3);
+  el('wkSurfLabel').innerHTML = `钢筋高度处: <b>${fmt(ec2.wk_rebar, 3)} mm</b>`;
+  const ec2Pass = ec2.wk_surf <= wlim;
+  const ec2Stat = el('ec2Status');
+  ec2Stat.textContent = ec2Pass ? '✓ 通过' : '✗ 不通过';
+  ec2Stat.className = 'limit-info ' + (ec2Pass ? 'limit-pass' : 'limit-fail');
+
+  // CUR 65 卡片：大字=表面裂缝，小字=钢筋高度处（统一用词）
+  el('wmVal').textContent = fmt(cur65.wm_surf, 3);
+  el('wmRebarLabel').innerHTML = `钢筋高度处: <b>${fmt(cur65.wm_rebar, 3)} mm</b>`;
+  const cur65Pass = cur65.wm_surf <= wlim;
+  const cur65Stat = el('cur65Status');
+  cur65Stat.textContent = cur65Pass ? '✓ 通过' : '✗ 不通过';
+  cur65Stat.className = 'limit-info ' + (cur65Pass ? 'limit-pass' : 'limit-fail');
+
+  // 参数汇总网格
+  const items = [
+    ['As（受拉）', fmt(sec.As, 0) + ' mm²/m'],
+    ['As,总', fmt(sec.As_total, 0) + ' mm²/m'],
+    ['d（EC2 有效高度）', fmt(sec.d_t_EC2, 0) + ' mm'],
+    ['d,有效', fmt(sec.d_eff, 0) + ' mm'],
+    ['xII（开裂中性轴）', fmt(sec.x_II, 1) + ' mm'],
+    ['z（内力臂）', fmt(sec.z, 0) + ' mm'],
+    ['Mcr,弯曲', fmt(sec.Mcr_bending, 2) + ' kNm/m'],
+    ['fctm', fmt(props.fctm, 2) + ' N/mm²'],
+    ['fctm,fl', fmt(props.fctm_fl, 2) + ' N/mm²'],
+    ['Ecm', fmt(props.Ecm, 0) + ' N/mm²'],
+    ['αe = Es/Ecm', fmt(props.alpha_e, 2)],
+    ['hc,ef', fmt(sec.hc_ef, 0) + ' mm'],
+  ];
+  el('summaryGrid').innerHTML = items.map(i =>
+    `<div class="result-item"><div class="val">${i[1].split(' ')[0]}</div><div class="lbl">${i[0]} [${i[1].split(' ').slice(1).join(' ')}]</div></div>`
+  ).join('');
+
+  // 对比表格
+  const rows = [
+    ['钢筋应力', 'σ<sub>s</sub>', fmt(ec2.sigma_s, 1), fmt(ec2.sigma_s, 1), 'N/mm²'],
+    ['有效受拉区高度', 'h<sub>c,ef</sub>', fmt(sec.hc_ef, 0), fmt(sec.hc_ef, 0), 'mm'],
+    ['有效配筋率', 'ρ<sub>p,eff</sub>', fmt(sec.rho_p_eff * 100, 2), fmt(sec.rho_p_eff * 100, 2), '%'],
+    ['最大应力处伸长率', 'ε<sub>s</sub> = σ<sub>s</sub>/E<sub>s</sub>', fmt(cur65.eps_s * 1000, 3), fmt(cur65.eps_s * 1000, 3), '‰'],
+    ['应变差', 'ε<sub>sm</sub>−ε<sub>cm</sub>', fmt(ec2.eps_sm_cm * 1000, 3), fmt(cur65.eps_sm_cm * 1000, 3), '‰'],
+    ['受拉刚化项1', '(σ<sub>s</sub>−k<sub>t</sub>·…)/E<sub>s</sub>', fmt(ec2.term1 * 1000, 3), '—', '‰'],
+    ['下限项2', '0.6·σ<sub>s</sub>/E<sub>s</sub>', fmt(ec2.term2 * 1000, 3), fmt(ec2.term2 * 1000, 3), '‰'],
+    ['裂缝间距', 's<sub>r,max</sub>', fmt(ec2.sr_max, 0), '—', 'mm'],
+    ['基本传递长度', 'l<sub>v0</sub>', '—', fmt(cur65.lv0, 0), 'mm'],
+    ['传递长度', 'l<sub>v</sub>', '—', fmt(cur65.lv, 0), 'mm'],
+    ['粘结系数', 'k<sub>t</sub> / β<sub>1</sub>', fmt(ec2.kt, 2), fmt(cur65.beta1, 2), '—'],
+    ['裂缝宽度（钢筋处）', 'w（钢筋高度）', fmt(ec2.wk_rebar, 3), fmt(cur65.wm_rebar, 3), 'mm'],
+    ['表面外推比', 'EC2:(h−x)/(d−x) CUR65:h/d', fmt(ec2.ratio_surf, 3), fmt(cur65.ratio_surf, 3), '—'],
+    ['裂缝宽度（表面）', 'w（表面）', fmt(ec2.wk_surf, 3), fmt(cur65.wm_surf, 3), 'mm'],
+  ];
+  el('compTableBody').innerHTML = rows.map(r =>
+    `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="val-col">${r[2]}</td><td class="val-col">${r[3]}</td><td>${r[4]}</td></tr>`
+  ).join('');
+}
+
+function renderEC2Steps(data) {
+  const { sec, props, ec2, inputs } = data;
+  const s = [];
+
+  s.push({ t: '1. 材料参数（EC2 表3.1）',
+    l: [
+      `f<sub>ck</sub> = ${props.fck} N/mm²  |  f<sub>cm</sub> = f<sub>ck</sub> + 8 = ${props.fcm} N/mm²`,
+      `f<sub>ctm</sub> = 0.30 × f<sub>ck</sub><sup>2/3</sup> = 0.30 × ${props.fck}<sup>2/3</sup> = <b>${fmt(props.fctm, 2)} N/mm²</b>`,
+      `f<sub>ctm,fl</sub> = max[(1.6 − h/1000) × f<sub>ctm</sub>, f<sub>ctm</sub>] = max[${fmt((1.6 - inputs.h/1000), 2)} × ${fmt(props.fctm,2)}, ${fmt(props.fctm,2)}] = <b>${fmt(props.fctm_fl, 2)} N/mm²</b>`,
+      `E<sub>cm</sub> = 22 × (f<sub>cm</sub>/10)<sup>0.3</sup> × 1000 = <b>${fmt(props.Ecm, 0)} N/mm²</b>`,
+      `α<sub>e</sub> = E<sub>s</sub> / E<sub>cm</sub> = 200,000 / ${fmt(props.Ecm, 0)} = <b>${fmt(props.alpha_e, 2)}</b>`,
+    ]
+  });
+
+  s.push({ t: '2. 截面几何参数',
+    l: [
+      `A<sub>s</sub> = (1000 / ${inputs.spacing}) × π × ${inputs.phi}² / 4 = ${fmt(sec.As, 0)} mm²/m`,
+      `d = h − c<sub>eff</sub> − φ/2 = ${inputs.h} − ${inputs.cover_eff} − ${inputs.phi}/2 = <b>${fmt(sec.d_t_EC2, 0)} mm</b>`,
+      `ρ = A<sub>s</sub> / (b × d) = ${fmt(sec.As,0)} / (1000 × ${fmt(sec.d_t_EC2,0)}) = <b>${fmt(sec.rho*100, 3)}%</b>`,
+    ]
+  });
+
+  s.push({ t: '3. 开裂截面 — 中性轴深度（阶段 II）',
+    l: [
+      `x<sub>II</sub> 由方程求解: ½·b·x² + (α<sub>e</sub>−1)·A<sub>s2</sub>·(x−d<sub>2</sub>) = α<sub>e</sub>·A<sub>s</sub>·(d−x)`,
+      `<b>x<sub>II</sub> = ${fmt(sec.x_II, 1)} mm</b>`,
+      `z = d − x<sub>II</sub>/3 = ${fmt(sec.d_t_EC2,0)} − ${fmt(sec.x_II,1)}/3 = <b>${fmt(sec.z, 0)} mm</b>`,
+    ]
+  });
+
+  s.push({ t: '4. 正常使用极限状态钢筋应力',
+    l: [
+      inputs.loadMode === 'stress'
+        ? `固定 σ<sub>s</sub> = ${fmt(ec2.sigma_s, 1)} N/mm² → 反算 M<sub>Ed</sub> = σ<sub>s</sub>×A<sub>s</sub>×z = ${fmt(inputs.MEd_actual, 2)} kNm/m`
+        : `σ<sub>s</sub> = M<sub>Ed</sub> / (A<sub>s</sub> × z) = ${fmt(inputs.MEd_actual,2)}×10⁶ / (${fmt(sec.As,0)}×${fmt(sec.z,0)})`,
+      `<b>σ<sub>s</sub> = ${fmt(ec2.sigma_s, 1)} N/mm²  |  M<sub>Ed</sub> = ${fmt(inputs.MEd_actual, 2)} kNm/m</b>`,
+    ]
+  });
+
+  s.push({ t: '5. 有效受拉区（EC2 §7.3.2）',
+    l: [
+      `h<sub>c,ef</sub> = min[ 2.5·(h−d) , (h−x<sub>II</sub>)/3 , h/2 ]`,
+      `= min[ 2.5×(c+φ/2)=${fmt(2.5*(inputs.cover_eff+inputs.phi/2),0)} , (h−x<sub>II</sub>)/3=${fmt((inputs.h-sec.x_II)/3,0)} , h/2=${fmt(inputs.h/2,0)} ] = <b>${fmt(sec.hc_ef, 0)} mm</b>`,
+      `A<sub>c,eff</sub> = b × h<sub>c,ef</sub> = 1000 × ${fmt(sec.hc_ef,0)} = <b>${fmt(sec.Ac_eff, 0)} mm²</b>`,
+      `ρ<sub>p,eff</sub> = A<sub>s</sub> / A<sub>c,eff</sub> = ${fmt(sec.As,0)} / ${fmt(sec.Ac_eff,0)} = <b>${fmt(sec.rho_p_eff*100, 2)}%</b>`,
+    ]
+  });
+
+  s.push({ t: '6. 最大裂缝间距（EC2 公式7.11）',
+    l: [
+      `k<sub>1</sub> = ${ec2.k1}（${inputs.bondType==='ribbed'?'带肋':'光圆'}钢筋）`,
+      `k<sub>2</sub> = ${ec2.k2}（${ec2.k2===0.5?'受弯':'纯拉'}）`,
+      `k<sub>3</sub> = ${ec2.k3}  |  k<sub>4</sub> = ${ec2.k4}`,
+      `s<sub>r,max</sub> = k<sub>3</sub>·c + k<sub>1</sub>·k<sub>2</sub>·k<sub>4</sub>·φ / ρ<sub>p,eff</sub>`,
+      `= ${ec2.k3}×${inputs.cover_eff} + ${ec2.k1}×${ec2.k2}×${ec2.k4}×${inputs.phi} / ${fmt(sec.rho_p_eff*100,2)}%`,
+      `<b>s<sub>r,max</sub> = ${fmt(ec2.sr_max, 0)} mm</b>`,
+    ]
+  });
+
+  s.push({ t: '7. 应变差 — 受拉刚化效应（EC2 公式7.9）',
+    l: [
+      `k<sub>t</sub> = ${ec2.kt}（${inputs.loadingType==='long'?'长期':'短期'}荷载）`,
+      `项1 = [σ<sub>s</sub> − k<sub>t</sub>·f<sub>ct,eff</sub>·(1+α<sub>e</sub>·ρ<sub>p,eff</sub>)/ρ<sub>p,eff</sub>] / E<sub>s</sub>`,
+      `= [${fmt(ec2.sigma_s,1)} − ${ec2.kt}×${fmt(ec2.fct_eff,2)}×(1+${fmt(props.alpha_e,2)}×${fmt(sec.rho_p_eff*100,2)}%)/${fmt(sec.rho_p_eff*100,2)}%] / 200,000`,
+      `= <b>${fmt(ec2.term1*1000, 3)} ‰</b>`,
+      `项2 = 0.6 × σ<sub>s</sub> / E<sub>s</sub> = 0.6 × ${fmt(ec2.sigma_s,1)} / 200,000 = <b>${fmt(ec2.term2*1000, 3)} ‰</b>`,
+      `<b>ε<sub>sm</sub> − ε<sub>cm</sub> = max(项1, 项2) = ${fmt(ec2.eps_sm_cm*1000, 3)} ‰</b>`,
+      `（控制项: ${ec2.term1 >= ec2.term2 ? '项1 — 受拉刚化作用' : '项2 — 0.6σ<sub>s</sub>/E<sub>s</sub> 下限'}）`,
+    ]
+  });
+
+  s.push({ t: '8. 裂缝宽度（EC2 公式7.8）',
+    l: [
+      `w<sub>k</sub> = s<sub>r,max</sub> × (ε<sub>sm</sub> − ε<sub>cm</sub>)`,
+      `= ${fmt(ec2.sr_max,0)} × ${fmt(ec2.eps_sm_cm*1000,3)}‰`,
+      `<b>w<sub>k</sub>（钢筋高度处）= ${fmt(ec2.wk_rebar, 3)} mm</b>`,
+      `表面外推: (h−x)/(d−x) = (${inputs.h}−${fmt(sec.x_II,1)})/(${fmt(sec.d_t_EC2,0)}−${fmt(sec.x_II,1)}) = ${fmt(ec2.ratio_surf, 3)}`,
+      `<b>w<sub>k</sub>（表面）= ${fmt(ec2.wk_surf, 3)} mm</b>`,
+    ]
+  });
+
+  el('ec2Steps').innerHTML = s.map((st, i) => `
+    <div class="step">
+      <span class="step-num">${i+1}</span><strong>${st.t}</strong>
+      ${st.l.map(l => `<div class="calc-line">${l}</div>`).join('')}
+    </div>
+  `).join('');
+}
+
+function renderCUR65Steps(data) {
+  const { sec, props, cur65, ec2, inputs } = data;
+  const s = [];
+
+  s.push({ t: '1. 材料参数（CUR 65）',
+    l: [
+      `混凝土 C${props.fck_cube}（立方体 f<sub>cu,k</sub>=${props.fck_cube}MPa，圆柱体 f<sub>ck</sub>≈${props.fck}MPa）`,
+      `f'<sub>b</sub> = ${fmt(props.fck * 0.72, 0)} N/mm²（CUR 65 设计承压强度）`,
+      `f<sub>ctm</sub> = ${fmt(props.fctm, 2)} N/mm²  |  E<sub>cm</sub> = ${fmt(props.Ecm, 0)} N/mm²`,
+    ]
+  });
+
+  s.push({ t: '2. 截面分析 — 开裂状态',
+    l: [
+      `A<sub>s</sub> = ${fmt(sec.As, 0)} mm²/m  |  A<sub>s,total</sub> = ${fmt(sec.As_total, 0)} mm²/m`,
+      `d = ${fmt(sec.d_t_EC2, 0)} mm  |  x<sub>u</sub>（开裂中性轴）= ${fmt(sec.x_II, 1)} mm`,
+      `z<sub>top</sub>（内力臂）= ${fmt(sec.z, 0)} mm`,
+    ]
+  });
+
+  s.push({ t: '3. 钢筋应力 — 正常使用极限状态（下一道裂缝形成前）',
+    l: [
+      inputs.loadMode === 'stress'
+        ? `固定 σ<sub>s</sub> = ${fmt(ec2.sigma_s, 1)} N/mm² → M<sub>Ed</sub> = ${fmt(inputs.MEd_actual, 2)} kNm/m`
+        : `σ<sub>s</sub> = M<sub>Ed</sub> / (A<sub>s</sub> × z) = ${fmt(inputs.MEd_actual,2)}×10⁶ / (${fmt(sec.As,0)}×${fmt(sec.z,0)})`,
+      `N<sub>s,total</sub> = A<sub>s,total</sub> × σ<sub>s</sub> = ${fmt(sec.As_total, 0)} × ${fmt(ec2.sigma_s, 1)} = ${fmt(sec.As_total * ec2.sigma_s, 0)} N/m`,
+      `<b>σ<sub>s</sub> = ${fmt(ec2.sigma_s, 1)} N/mm²</b>`,
+    ]
+  });
+
+  s.push({ t: '4. 传递长度（CUR 65 方法）',
+    l: [
+      `h<sub>c,ef</sub> = ${fmt(sec.hc_ef, 0)} mm  |  ρ<sub>p,eff</sub> = ${fmt(sec.rho_p_eff*100, 2)}%`,
+      `粘结系数 β<sub>1</sub> = <b>${fmt(cur65.beta1, 2)}</b>（${inputs.loadingType==='long'?'长期荷载, 带肋钢筋':'短期荷载, 带肋钢筋'}）`,
+      `基本传递长度: l<sub>v0</sub> = k<sub>3</sub>·c<sub>eff</sub> + k<sub>1</sub>·k<sub>2</sub>·k<sub>4</sub>·φ / ρ<sub>p,eff</sub>  ≡  s<sub>r,max</sub>（EC2）`,
+      `= ${ec2.k3}×${inputs.cover_eff} + ${ec2.k1}×${ec2.k2}×${ec2.k4}×${inputs.phi} / ${fmt(sec.rho_p_eff*100,2)}%`,
+      `<b>l<sub>v0</sub> = ${fmt(cur65.lv0, 0)} mm</b>（= 稳定裂缝间距）`,
+      `有效传递长度: l<sub>v</sub> = l<sub>v0</sub> / 2（裂缝间距的一半）`,
+      `<b>l<sub>v</sub> = ${fmt(cur65.lv, 0)} mm</b>`,
+      `关系: β<sub>1</sub> = ${fmt(cur65.beta1,2)} 影响粘结性能；β<sub>1</sub> 越小 → 粘结越好 → 裂缝越多 → 间距越小`,
+    ]
+  });
+
+  s.push({ t: '5. 应变差（与 EC2 §7.3.4 公式7.9 相同）',
+    l: [
+      `ε<sub>sm</sub> − ε<sub>cm</sub> = max[ (σ<sub>s</sub> − k<sub>t</sub>·f<sub>ct,eff</sub>·(1+α<sub>e</sub>·ρ<sub>eff</sub>)/ρ<sub>eff</sub>) / E<sub>s</sub>  ,  0.6·σ<sub>s</sub>/E<sub>s</sub> ]`,
+      `= max[ ${fmt(cur65.eps_sm_cm*1000,3)}‰ , ${fmt(0.6*ec2.sigma_s/Es*1000,3)}‰ ]`,
+      `<b>ε<sub>sm</sub> − ε<sub>cm</sub> = ${fmt(cur65.eps_sm_cm*1000, 3)} ‰</b>`,
+    ]
+  });
+
+  s.push({ t: '6. 裂缝宽度 — CUR 65 公式',
+    l: [
+      `w<sub>m</sub> = 2 × l<sub>v</sub> × (ε<sub>sm</sub> − ε<sub>cm</sub>)`,
+      `= 2 × ${fmt(cur65.lv,0)} × ${fmt(cur65.eps_sm_cm*1000,3)}‰`,
+      `<b>w<sub>m</sub>（钢筋高度处）= ${fmt(cur65.wm_rebar, 3)} mm</b>`,
+      `CUR 65 表面外推: h/d = ${inputs.h}/${fmt(sec.d_t_EC2,0)} = ${fmt(cur65.ratio_surf, 3)}`,
+      `（注: EC2 使用 (h−x)/(d−x) = ${fmt(ec2.ratio_surf, 3)}，CUR 65 使用简化的 h/d）`,
+      `<b>w<sub>m</sub>（顶面）= ${fmt(cur65.wm_rebar,3)} × ${fmt(cur65.ratio_surf,3)} = ${fmt(cur65.wm_surf, 3)} mm</b>`,
+    ]
+  });
+
+  el('cur65Steps').innerHTML = s.map((st, i) => `
+    <div class="step">
+      <span class="step-num">${i+1}</span><strong>${st.t}</strong>
+      ${st.l.map(l => `<div class="calc-line">${l}</div>`).join('')}
+    </div>
+  `).join('');
+}
+
+function renderDiagram(data) {
+  const { sec, ec2, cur65, inputs } = data;
+  const { h, cover_eff, phi, layer, considerBottom } = inputs;
+  const { x_II, hc_ef } = sec;
+
+  // ---- 板式截面（纯图），参数描述用下方 HTML ----
+  const W = 660, H = 230;
+  const sc = 0.68;
+  const slabW = 480;
+  const ox = 55, oy = 25;
+  const slabH = h * sc;
+
+  const tensionTop = (layer === 'top');
+  const d_bar_px = (cover_eff + phi / 2) * sc;
+
+  const tensionY  = tensionTop ? oy : oy + slabH;
+  const compY     = tensionTop ? oy + slabH : oy;
+  const rebarY    = tensionTop ? oy + d_bar_px : oy + slabH - d_bar_px;       // 主受拉层
+  const rebar2Y   = tensionTop ? oy + slabH - d_bar_px : oy + d_bar_px;       // 对面层（受压侧）
+  const naY       = tensionTop ? oy + slabH - x_II * sc : oy + x_II * sc;
+  const hcefTop   = tensionTop ? oy : oy + slabH - hc_ef * sc;
+  const hcefH     = hc_ef * sc;
+
+  const crackXs = [ox + slabW * 0.22, ox + slabW * 0.5, ox + slabW * 0.78];
+  const crackTop = tensionTop ? oy : naY;
+  const crackBot = tensionTop ? naY : oy + slabH;
+
+  const barR = Math.max(phi / 2 * sc, 2.2);
+  const nBars = 12;
+  let barsSvg = '';
+  // 主受拉层 — 实心圆
+  for (let i = 0; i < nBars; i++) {
+    barsSvg += `<circle cx="${ox + 10 + i*(slabW-20)/(nBars-1)}" cy="${rebarY}" r="${barR}" fill="#2c5f8a" stroke="#1e405c" stroke-width="0.7"/>`;
+  }
+  // 第二层（对面）— 空心圆
+  if (considerBottom) {
+    for (let i = 0; i < nBars; i++) {
+      barsSvg += `<circle cx="${ox + 10 + i*(slabW-20)/(nBars-1)}" cy="${rebar2Y}" r="${barR}" fill="none" stroke="#7a5538" stroke-width="1" stroke-dasharray="2,1"/>`;
+    }
+  }
+
+  const svg = `
+<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft YaHei','Segoe UI',sans-serif">
+  <defs>
+    <pattern id="concFill2" patternUnits="userSpaceOnUse" width="10" height="10">
+      <rect width="10" height="10" fill="#efebe2"/>
+      <circle cx="2" cy="2" r="0.4" fill="#d5cfc4"/>
+      <circle cx="7" cy="7" r="0.4" fill="#d5cfc4"/>
+    </pattern>
+  </defs>
+
+  <rect x="${ox}" y="${oy}" width="${slabW}" height="${slabH}" fill="url(#concFill2)" stroke="#8a8278" stroke-width="1.6" rx="1"/>
+
+  <text x="${ox-6}" y="${oy-5}" font-size="10" fill="#252220" font-weight="600" text-anchor="end">顶面</text>
+  <text x="${ox-6}" y="${oy+slabH+12}" font-size="10" fill="#252220" font-weight="600" text-anchor="end">底面</text>
+
+  <rect x="${ox}" y="${tensionTop?oy:oy+slabH-cover_eff*sc}" width="${slabW}" height="${cover_eff*sc}" fill="#e6ede8" opacity="0.45" stroke="none"/>
+  <line x1="${ox}" y1="${tensionTop?oy+cover_eff*sc:oy+slabH-cover_eff*sc}" x2="${ox+slabW}" y2="${tensionTop?oy+cover_eff*sc:oy+slabH-cover_eff*sc}" stroke="#3d7a5c" stroke-width="0.7" stroke-dasharray="4,3"/>
+
+  ${barsSvg}
+
+  <line x1="${ox-6}" y1="${naY}" x2="${ox+slabW+6}" y2="${naY}" stroke="#d4943a" stroke-width="1.4" stroke-dasharray="6,3"/>
+
+  ${crackXs.map(cx => `<line x1="${cx}" y1="${crackTop}" x2="${cx}" y2="${crackBot}" stroke="#c4553a" stroke-width="1.6" stroke-dasharray="3,2" opacity="0.5"/>`).join('')}
+
+  <text x="${crackXs[0]+5}" y="${tensionTop?oy-5:oy+slabH+14}" font-size="9" fill="#c4553a" font-weight="600">w=${fmt(tensionTop?cur65.wm_surf:ec2.wk_surf,3)}mm</text>
+
+  <line x1="${crackXs[0]}" y1="${tensionTop?oy-22:oy+slabH+24}" x2="${crackXs[1]}" y2="${tensionTop?oy-22:oy+slabH+24}" stroke="#2c5f8a" stroke-width="1.2"/>
+  <line x1="${crackXs[0]}" y1="${tensionTop?oy-25:oy+slabH+21}" x2="${crackXs[0]}" y2="${tensionTop?oy-19:oy+slabH+27}" stroke="#2c5f8a" stroke-width="0.8"/>
+  <line x1="${crackXs[1]}" y1="${tensionTop?oy-25:oy+slabH+21}" x2="${crackXs[1]}" y2="${tensionTop?oy-19:oy+slabH+27}" stroke="#2c5f8a" stroke-width="0.8"/>
+
+  <rect x="${ox}" y="${hcefTop}" width="${slabW}" height="${hcefH}" fill="#f9f2e5" opacity="0.35" stroke="#d4943a" stroke-width="0.6" stroke-dasharray="3,3"/>
+
+  <line x1="${ox-22}" y1="${oy}" x2="${ox-22}" y2="${oy+slabH}" stroke="#8a8278" stroke-width="1"/>
+  <line x1="${ox-18}" y1="${oy}" x2="${ox-26}" y2="${oy}" stroke="#8a8278" stroke-width="0.8"/>
+  <line x1="${ox-18}" y1="${oy+slabH}" x2="${ox-26}" y2="${oy+slabH}" stroke="#8a8278" stroke-width="0.8"/>
+  <text x="${ox-29}" y="${oy+slabH/2+4}" font-size="9" fill="#8a8278" text-anchor="middle" transform="rotate(-90,${ox-29},${oy+slabH/2+4})">h=${h}</text>
+
+  <text x="${ox+slabW/2}" y="${compY+(naY-compY)/2}" font-size="9" fill="#252220" opacity="0.5" text-anchor="middle" font-style="italic">受压区</text>
+  <text x="${ox+slabW/2}" y="${tensionY+(naY-tensionY)/2}" font-size="9" fill="#c4553a" opacity="0.7" text-anchor="middle" font-style="italic">受拉区（开裂）</text>
+
+  <text x="${ox+slabW/2}" y="${tensionTop?oy-11:oy+slabH+22}" font-size="8" fill="#c4553a" text-anchor="middle">← 受拉面（${tensionTop?'顶':'底'}面裂缝开展） →</text>
+</svg>`;
+
+  // 参数说明用 HTML 渲染在 SVG 下方
+  const secondLayerInfo = considerBottom
+    ? `<div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1px dashed #7a5538;margin-right:5px"></span><b>φ${phi}@${inputs.spacing}（对面）</b><br><span style="font-size:0.7rem;color:var(--muted)">A<sub>s,2</sub>=${fmt(sec.As_second,2)}mm²/m</span></div>`
+    : '';
+
+  const legHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px 12px;margin-top:10px;font-size:0.78rem;">
+      <div><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2c5f8a;margin-right:5px;opacity:0.7"></span><b>φ${phi}@${inputs.spacing}（主层）</b><br><span style="font-size:0.7rem;color:var(--muted)">A<sub>s</sub>=${fmt(sec.As,2)}mm²/m | A<sub>s,total</sub>=${fmt(sec.As_total,2)}mm²/m</span></div>
+      ${secondLayerInfo}
+      <div><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#3d7a5c;margin-right:5px;opacity:0.7"></span><b>c=${cover_eff}mm</b><br><span style="font-size:0.7rem;color:var(--muted)">保护层 (c<sub>nom</sub>${inputs.coverNom}+Δ${inputs.coverTol})</span></div>
+      <div><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2c5f8a;margin-right:5px;opacity:0.7"></span><b>d=${fmt(sec.d_t_EC2,0)}mm</b><br><span style="font-size:0.7rem;color:var(--muted)">有效高度 (h−c−φ/2)</span></div>
+      <div><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#d4943a;margin-right:5px;opacity:0.7"></span><b>x<sub>II</sub>=${fmt(x_II,1)}mm</b><br><span style="font-size:0.7rem;color:var(--muted)">开裂截面中性轴</span></div>
+      <div><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#d4943a;margin-right:5px;opacity:0.7"></span><b>h<sub>c,ef</sub>=${fmt(hc_ef,0)}mm</b><br><span style="font-size:0.7rem;color:var(--muted)">有效受拉区高度</span></div>
+      <div><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2c5f8a;margin-right:5px;opacity:0.7"></span><b>s<sub>r,max</sub>=${fmt(ec2.sr_max,0)}mm</b><br><span style="font-size:0.7rem;color:var(--muted)">最大裂缝间距</span></div>
+      <div><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#c4553a;margin-right:5px;opacity:0.7"></span><b>w=${fmt(tensionTop?cur65.wm_surf:ec2.wk_surf,3)}mm</b><br><span style="font-size:0.7rem;color:var(--muted)">裂缝宽度（表面）</span></div>
+      <div><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#c4553a;margin-right:5px;opacity:0.7"></span><b>w=${fmt(tensionTop?cur65.wm_rebar:ec2.wk_rebar,3)}mm</b><br><span style="font-size:0.7rem;color:var(--muted)">裂缝宽度（钢筋处）</span></div>
+    </div>`;
+
+  el('diagramContainer').innerHTML = svg;
+  el('diagramLegend').innerHTML = legHTML;
+}
+
+// ============================================================
+//  UI 辅助函数
+// ============================================================
+
+function el(id) { return document.getElementById(id); }
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  const tabBtn = document.querySelector(`.tab[data-tab="${name}"]`);
+  if (tabBtn) tabBtn.classList.add('active');
+  const content = document.getElementById('tab-' + name);
+  if (content) content.classList.add('active');
+  if (name === 'diagram') calculateAll();
+}
+
+function calculateAll() {
+  try {
+    const data = performCalculation();
+    updateSidebarDisplays(data);
+    renderSummary(data);
+    renderEC2Steps(data);
+    renderCUR65Steps(data);
+    if (document.getElementById('tab-diagram').classList.contains('active')) {
+      renderDiagram(data);
+    }
+  } catch (e) {
+    console.error('计算错误:', e);
+  }
+}
+
+// ============================================================
+//  事件监听
+// ============================================================
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    switchTab(this.dataset.tab);
+  });
+});
+
+let calcTimeout;
+document.querySelectorAll('input, select').forEach(el => {
+  const eventType = (el.type === 'checkbox') ? 'change' : 'input';
+  el.addEventListener(eventType, () => {
+    clearTimeout(calcTimeout);
+    calcTimeout = setTimeout(calculateAll, 150);
+  });
+});
+
+el('exposureClass').addEventListener('change', function() {
+  el('customLimitGroup').style.display = this.value === 'custom' ? 'block' : 'none';
+  calculateAll();
+});
+
+// 荷载模式切换
+el('loadMode').addEventListener('change', function() {
+  const stressMode = this.value === 'stress';
+  el('stressRow').style.display = stressMode ? 'flex' : 'none';
+  el('momentRow').style.display = stressMode ? 'none' : 'flex';
+  calculateAll();
+});
+
+// 显示更新：同步 MEd 显示值和 σs 显示值
+function updateSidebarDisplays(data) {
+  if (data) {
+    el('MEd_display').value = fmt(data.inputs.MEd_actual, 2);
+    el('sigmaDisplay').value = fmt(data.inputs.sigma_s, 0);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initPasswordCheck();
+  calculateAll();
+  setTimeout(() => renderDiagram(performCalculation()), 100);
+});
+</script>
+
+<script>
+// ═══════════════ 密码系统 ═══════════════
+var AUTH_WINDOW = 24 * 60 * 60 * 1000;
+var MAX_ATTEMPTS = 5;
+var MASTER_HASH = 'eb2e9a0c13cb2db5f3186b42ec39c2c111d4f3bb7c3f9d0e4fe7fa90ca35d9d4';
+var VALID_HASHES = [
+  'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2',
+  'b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3'
+];
+
+function el(id) { return document.getElementById(id); }
+function sha256Pure(message) {
+  function ror(n, c) { return (n >>> c) | (n << (32 - c)); }
+  var K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  var H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  var msg = unescape(encodeURIComponent(message));
+  var ml = msg.length * 8;
+  var bytes = []; for (var i = 0; i < msg.length; i++) bytes.push(msg.charCodeAt(i));
+  bytes.push(0x80);
+  while ((bytes.length * 8) % 512 !== 448) bytes.push(0);
+  var hi = Math.floor(ml / 4294967296), lo = ml >>> 0;
+  for (var i = 24; i >= 0; i -= 8) bytes.push((hi >>> i) & 0xff);
+  for (var i = 24; i >= 0; i -= 8) bytes.push((lo >>> i) & 0xff);
+  for (var pos = 0; pos < bytes.length; pos += 64) {
+    var W = new Array(64);
+    for (var t = 0; t < 16; t++) W[t] = (bytes[pos + t*4] << 24) | (bytes[pos + t*4 + 1] << 16) | (bytes[pos + t*4 + 2] << 8) | bytes[pos + t*4 + 3];
+    for (var t = 16; t < 64; t++) { var s0 = ror(W[t-15],7) ^ ror(W[t-15],18) ^ (W[t-15] >>> 3); var s1 = ror(W[t-2],17) ^ ror(W[t-2],19) ^ (W[t-2] >>> 10); W[t] = (W[t-16] + s0 + W[t-7] + s1) >>> 0; }
+    var a = H[0], b = H[1], c = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
+    for (var t = 0; t < 64; t++) { var S0 = ror(a,2) ^ ror(a,13) ^ ror(a,22); var maj = (a & b) ^ (a & c) ^ (b & c); var t2 = S0 + maj; var S1 = ror(e,6) ^ ror(e,11) ^ ror(e,25); var ch = (e & f) ^ ((~e) & g); var t1 = (h + S1 + ch + K[t] + W[t]) >>> 0; h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0; }
+    H[0] = (H[0] + a) >>> 0; H[1] = (H[1] + b) >>> 0; H[2] = (H[2] + c) >>> 0; H[3] = (H[3] + d) >>> 0; H[4] = (H[4] + e) >>> 0; H[5] = (H[5] + f) >>> 0; H[6] = (H[6] + g) >>> 0; H[7] = (H[7] + h) >>> 0;
+  }
+  return H.map(function(x) { var h = x.toString(16); while (h.length < 8) h = '0' + h; return h; }).join('');
+}
+async function sha256(message) {
+  try { if (crypto && crypto.subtle) { var msgBuffer = new TextEncoder().encode(message); var hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer); var hashArray = Array.from(new Uint8Array(hashBuffer)); return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join(''); } } catch(e) {}
+  return sha256Pure(message);
+}
+
+function getUsedPasswords() { try { return JSON.parse(localStorage.getItem('rc_used_pw') || '[]'); } catch(e) { return []; } }
+function markPasswordUsed(hash) { var u = getUsedPasswords(); u.push(hash); localStorage.setItem('rc_used_pw', JSON.stringify(u)); }
+function isAuthorized() { if (window.location.protocol === 'file:') return true; try { var t = sessionStorage.getItem('rc_auth'); if (!t) return false; return (Date.now() - parseInt(t,10)) < AUTH_WINDOW; } catch(e) { return false; } }
+function setAuthorized() { try { sessionStorage.setItem('rc_auth', Date.now().toString()); } catch(e) {} }
+function getFailedAttempts() { try { return parseInt(sessionStorage.getItem('rc_failed') || '0'); } catch(e) { return 0; } }
+function incrementFailed() { var n = getFailedAttempts() + 1; try { sessionStorage.setItem('rc_failed', String(n)); } catch(e) {} return n; }
+function isLockedOut() { return getFailedAttempts() >= MAX_ATTEMPTS; }
+
+function showLockout() { el('modalTitle').textContent = '🔒 访问已锁定'; el('modalDesc').style.display = 'none'; el('loginForm').style.display = 'none'; el('lockoutMsg').style.display = 'block'; }
+function showPageContent() { el('passwordModal').classList.remove('active'); document.body.classList.remove('content-locked'); var isMaster = false; try { isMaster = sessionStorage.getItem('rc_master') === '1'; } catch(e) {} if (!isMaster) { document.body.classList.add('no-print'); } try { calculateAll(); } catch(e) {} }
+
+function initPasswordCheck() {
+  if (isAuthorized()) { showPageContent(); return; }
+  el('passwordModal').classList.add('active');
+  if (isLockedOut()) { showLockout(); return; }
+  el('modalTitle').textContent = '🔐 访问验证';
+  el('modalDesc').style.display = ''; el('loginForm').style.display = ''; el('lockoutMsg').style.display = 'none';
+  el('passwordInput').value = ''; el('passwordError').textContent = '';
+  setTimeout(function() { el('passwordInput').focus(); }, 200);
+}
+
+async function verifyPassword() {
+  if (isLockedOut()) { showLockout(); return; }
+  var input = el('passwordInput').value.trim();
+  if (!input) { el('passwordError').textContent = '请输入密码'; return; }
+  var hash;
+  try { hash = await sha256(input); } catch(e) { el('passwordError').textContent = '⚠️ 加密错误，请刷新页面重试'; return; }
+  var used = getUsedPasswords();
+  if (hash === MASTER_HASH) {
+    setAuthorized();
+    try { sessionStorage.setItem('rc_master', '1'); sessionStorage.removeItem('rc_failed'); } catch(e) {}
+    document.body.classList.remove('no-print');
+    showPageContent(); return;
+  }
+  if (VALID_HASHES.indexOf(hash) >= 0) {
+    if (used.indexOf(hash) >= 0) { el('passwordError').textContent = '❌ 此密码已被使用，请使用新的密码'; incrementFailed(); if (isLockedOut()) showLockout(); return; }
+    markPasswordUsed(hash); setAuthorized();
+    try { sessionStorage.removeItem('rc_master'); sessionStorage.removeItem('rc_failed'); } catch(e) {}
+    showPageContent(); return;
+  }
+  var attempts = incrementFailed();
+  var remaining = MAX_ATTEMPTS - attempts;
+  if (remaining > 0) { el('passwordError').textContent = '❌ 密码错误，还剩 ' + remaining + ' 次尝试机会'; }
+  else { showLockout(); }
+}
+
+// ═══════════════ 安全防护（同 xunvei.com/slab） ═══════════════
+(function() {
+  function isMaster() { try { return sessionStorage.getItem('rc_master') === '1'; } catch(e) { return false; } }
+
+  // ── DevTools 检测 ──
+  var devtoolsOpen = false;
+  setInterval(function() {
+    var before = new Date().getTime();
+    debugger;
+    var after = new Date().getTime();
+    if (after - before > 100) {
+      devtoolsOpen = true;
+      document.body.style.opacity = '0.15';
+      document.body.style.pointerEvents = 'none';
+      showProtectAlert('⚠ 检测到开发者工具已打开<br><span style="font-size:.7rem;color:#c4bcb0;">请关闭开发者工具后刷新页面</span>');
+    } else if (devtoolsOpen) {
+      document.body.style.opacity = '1';
+      document.body.style.pointerEvents = '';
+      devtoolsOpen = false;
+    }
+  }, 1000);
+
+  // ── 禁用右键 ──
+  document.addEventListener('contextmenu', function(e) {
+    if (isMaster()) return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    e.preventDefault();
+    showProtectAlert('© HE YONG<br><span style="font-size:.7rem;color:#c4bcb0;">右键已禁用 — 内容受版权保护</span>');
+    return false;
+  });
+
+  // ── 禁用快捷键 (F12 / Ctrl+U / Ctrl+S / Ctrl+P / Ctrl+Shift+I/J/C) ──
+  document.addEventListener('keydown', function(e) {
+    if (isMaster()) return;
+    var blocked = false;
+    if (e.key === 'F12') { blocked = true; }
+    if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) { blocked = true; }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I' || e.key === 'j' || e.key === 'J' || e.key === 'c' || e.key === 'C')) { blocked = true; }
+    if (blocked) {
+      e.preventDefault();
+      showProtectAlert('© HE YONG<br><span style="font-size:.7rem;color:#c4bcb0;">快捷键已禁用 — 内容受版权保护</span>');
+      return false;
+    }
+  });
+
+  // ── 禁用复制 / 剪切 / 拖拽 ──
+  document.addEventListener('copy', function(e) { if (!isMaster()) { e.preventDefault(); showProtectAlert('© HE YONG — 禁止复制'); return false; } });
+  document.addEventListener('cut', function(e) { if (!isMaster()) { e.preventDefault(); return false; } });
+  document.addEventListener('dragstart', function(e) { if (!isMaster()) { e.preventDefault(); return false; } });
+
+  // ── 保护提示弹窗 ──
+  var alertActive = false;
+  function showProtectAlert(msg) {
+    if (alertActive) return;
+    alertActive = true;
+    var div = document.createElement('div');
+    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100000;'
+      + 'background:rgba(37,34,32,.94);color:#f3efe8;padding:20px 36px;border-radius:10px;'
+      + 'font-family:Inter,"Noto Sans SC",sans-serif;font-size:.92rem;text-align:center;'
+      + 'box-shadow:0 12px 48px rgba(0,0,0,.3);border:1px solid rgba(196,154,74,.3);'
+      + 'animation:protectFade .25s ease;pointer-events:none;';
+    div.innerHTML = msg;
+    document.body.appendChild(div);
+    setTimeout(function() { div.remove(); alertActive = false; }, 2500);
+  }
+
+  // ── 动画 CSS ──
+  var style = document.createElement('style');
+  style.textContent = '@keyframes protectFade{from{opacity:0;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}';
+  document.head.appendChild(style);
+
+  // ── 全局禁止文本选中（非主密码） ──
+  document.addEventListener('DOMContentLoaded', function() {
+    var blocks = document.querySelectorAll('.card, .step, .result-card, .result-item, h2, h3, .note-box, .big-result');
+    blocks.forEach(function(el) {
+      el.style.userSelect = 'none';
+      el.style.webkitUserSelect = 'none';
+      el.style.msUserSelect = 'none';
+    });
+    var inputs = document.querySelectorAll('input, select, textarea');
+    inputs.forEach(function(el) {
+      el.style.userSelect = 'text';
+      el.style.webkitUserSelect = 'text';
+    });
+  });
+
+  // ── 打印拦截 ──
+  document.addEventListener('keydown', function(e) {
+    if (isMaster()) return;
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S')) {
+      e.preventDefault(); e.stopPropagation();
+      alert('🔒 打印和保存功能需使用主密码登录。');
+      return false;
+    }
+  });
+  window.addEventListener('beforeprint', function() {
+    if (!isMaster()) {
+      // CSS .no-print 规则处理打印隐藏
+    }
+  });
+})();
+</script>
+</body>
+</html>
