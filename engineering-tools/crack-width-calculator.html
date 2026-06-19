@@ -298,7 +298,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); box-shad
 <div class="modal-overlay active" id="passwordModal">
   <div class="modal-dialog">
     <h3 id="modalTitle">🔐 访问验证</h3>
-    <p id="modalDesc">请输入访问密码</p>
+    <p id="modalDesc">请输入访问密码 — 每个密码仅可使用一次，30 分钟后失效</p>
     <div id="loginForm">
       <input type="password" id="passwordInput" placeholder="请输入密码" autocomplete="off" onkeydown="if(event.key==='Enter')verifyPassword()">
       <div class="modal-error" id="passwordError"></div>
