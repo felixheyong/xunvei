@@ -360,6 +360,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   <div class="input-group"><label>方案 A 板厚 <span class="unit">(mm)</span> <span class="hint">SFRC 钢纤维</span></label><input type="number" id="hA" value="180" min="80" max="500" step="5"></div>
   <div class="input-group"><label>方案 B 板厚 <span class="unit">(mm)</span> <span class="hint">传统配筋方案</span></label><input type="number" id="hB" value="180" min="80" max="500" step="5" placeholder="传统RC方案板厚" onchange="updateRebarRatio()"></div>
   <div class="input-group"><label>方案 C 板厚 <span class="unit">(mm)</span> <span class="hint" style="color:var(--accent3);">⭐ 组合配筋 SFRC+RC</span></label><input type="number" id="hC" value="180" min="80" max="500" step="5" onchange="updateRebarBRatio()"></div>
+	  <div class="input-group"><label>方案 D 板厚 <span class="unit">(mm)</span> <span class="hint" style="color:var(--muted);">素混凝土 (无筋·无纤维)</span></label><input type="number" id="hD" value="" min="80" max="500" step="5" placeholder="素混凝土方案板厚"></div>
 </div></div>
 
 <h3>1.5 钢纤维参数 <span style="font-size:0.78rem; font-weight:400; color:var(--accent2);">（EN14889-1 试验数据，应用于方案A和方案C）</span></h3>
@@ -733,6 +734,8 @@ function getParams() {
   if (hb && hb > 0) p.schemes.push({h: hb, type: 'rc', label: '方案B (传统RC配筋)'});
   const hc = parseFloat(document.getElementById('hC').value);
   if (hc && hc > 0) p.schemes.push({h: hc, type: 'combined', label: '方案C (钢纤维+钢筋组合)'});
+  const hd = parseFloat(document.getElementById('hD').value);
+  if (hd && hd > 0) p.schemes.push({h: hd, type: 'plain', label: '方案D (素混凝土)'});
   if (p.schemes.length === 0) p.schemes = [{h: 160, type: 'sfrc', label: '方案A (SFRC)'}];
   return p;
 }
@@ -800,7 +803,7 @@ function calculateAll() {
   const r1 = 0.45*p.fR1, r4 = 0.37*p.fR4;
 
   const results = p.schemes.map(scheme => {
-    const h = scheme.h, isRC = (scheme.type === 'rc');
+    const h = scheme.h, isRC = (scheme.type === 'rc'), isPlain = (scheme.type === 'plain');
     const fctdfl = calcFctdFl(fctm, h, p.gammaC);
     const l = calcL(Ecm, h, p.nu, p.k);
     const Mun = calcMun(fctdfl, h);
@@ -840,6 +843,13 @@ function calculateAll() {
       // ALTERNATIVE mechanisms — concrete cracks → fibers activate. Take max, not sum.
       if(p.rebarBPosition==='bottom') Mn_internal=Math.max(M_fiber, Mun);
       if(p.rebarBPosition==='top') Mp=Math.max(M_fiber, Mun);
+    } else if (scheme.type === 'plain') {
+      // 素混凝土 (Plain Concrete): 无筋·无纤维·脆性破坏
+      // Mp/Mn 保存纯截面抗力(开裂前)用于展示，设计值在下方 Mp_design 计算中折减
+      Mp = Mun;                     // 展示用 — 纯截面抗力(开裂前)
+      Mn_internal = Mun;
+      Mn_edge = 0.5 * Mun;
+      fy = 0; As = 0; d_eff_rc = 0; Mrc_pos = 0; Mrc_neg = 0; M_fiber = 0;
     } else {
       // SFRC: 纯纤维贡献 Mp，无纤维时 = 0
       Mp = calcMp(r1, r4, h);
@@ -848,7 +858,28 @@ function calculateAll() {
       Mn_edge = Math.max(0.5 * Mn_sfrc, 0.5 * Mun);
     }
     // 设计用正弯矩：无纤维时托底为 Mun（素混凝土对称抗力）
-    const Mp_design = (Mp === 0 && !isRC && !isCombined) ? Mun : Mp;
+    // 素混凝土 / 无纤维 SFRC 施加延性折减系数 α_plain = 0.70
+    // 依据: EC2 §12.3.1 素混凝土设计强度折减 + 屈服线理论脆性修正
+    let Mp_design, Mn_design, Mn_edge_design;
+    const isNoFiberSfrc = (scheme.type === 'sfrc' && Mp === 0);
+    if (isPlain || isNoFiberSfrc) {
+      const alpha_plain = 0.70;
+      Mp_design = alpha_plain * Mun;
+      Mn_design = alpha_plain * Mun;
+      Mn_edge_design = 0.5 * alpha_plain * Mun;
+      // 更新 Mp/Mn_internal/Mn_edge 为折减值（影响 Pu/UDL 等后续计算及显示）
+      Mp = Mp_design;
+      Mn_internal = Mn_design;
+      Mn_edge = Mn_edge_design;
+    } else if (Mp === 0 && !isRC && !isCombined) {
+      Mp_design = Mun;
+      Mn_design = Mn_internal;
+      Mn_edge_design = Mn_edge;
+    } else {
+      Mp_design = Mp;
+      Mn_design = Mn_internal;
+      Mn_edge_design = Mn_edge;
+    }
     const a = calcA(p.basePlate), a_over_l = a/l;
     // ── TR34 标准公式 Pu = 2π(Mp+Mn) ──
     // TR34 第4版 Eq 8.4a: 内部点荷载标准公式（不做 a/l 插值增强）
@@ -870,13 +901,14 @@ function calculateAll() {
     const defl_edge = deflectionEdge(p.Pu_rack, K_MNm3, l_m);
     const defl_center_mhe = deflectionCentral(wheelStatic, K_MNm3, l_m);
     const defl_edge_mhe = deflectionEdge(wheelStatic, K_MNm3, l_m);
-    let F; if(isCombined){const Ff=calcFatigueFactor(p.N),Fr=0.7;const fr=Mp_design>0?M_fiber/Mp_design:0.5;F=Ff*fr+Fr*(1-fr);}else if(isRC){F=0.7;}else{F=calcFatigueFactor(p.N);} const Mp_fatigue = F*Mp_design;
+    let F; if(isCombined){const Ff=calcFatigueFactor(p.N),Fr=0.7;const fr=Mp_design>0?M_fiber/Mp_design:0.5;F=Ff*fr+Fr*(1-fr);}else if(isRC){F=0.7;}else if(isPlain||isNoFiberSfrc){F=0.50;}else{F=calcFatigueFactor(p.N);} const Mp_fatigue = F*Mp_design;
     const fcd = calcFcd(p.fck, p.alphaCC, p.gammaC), k2 = calcK2(p.fck), vmax = calcVmax(k2, fcd);
     const d = 0.75*h, u0 = 4*p.basePlate, Pp_max = vmax*u0*d/1000;
     const ks = Math.min(1+Math.sqrt(200/d), 2.0);
     let rhl, vf;
     if (isCombined) { rhl=As/(1000*d_eff_rc); vf=0.015*(p.fR1+p.fR2+p.fR3+p.fR4); }
     else if (isRC) { rhl=As/(1000*d_eff_rc); vf=0; }
+    else if (isPlain||isNoFiberSfrc) { rhl=0.001; vf=0; }
     else { rhl=0.001; vf=0.015*(p.fR1+p.fR2+p.fR3+p.fR4); }
     const vRd_c = 0.18*ks*Math.pow(100*Math.max(rhl,0.001)*p.fck, 1/3)/p.gammaC;
     const u1 = 4*p.basePlate + 4*Math.PI*d, Pp_fiber = (vRd_c+vf)*u1*d/1000;
@@ -895,7 +927,7 @@ function calculateAll() {
     const fl_Pu_int_double = fl_interacting?calcPu0_dual(Mp_design, Mn_internal, p.fl_D, 0, l):calcPu0_internal(Mp_design, Mn_internal);
     const fl_Pu_edge_lt_single = calcPu0_internal(Mp_design, Mn_edge)+fl_lt_reduce;
     const fl_Pu_edge_lt_double = fl_interacting?calcPu0_dual(Mp_design, Mn_edge, p.fl_D, 0, l)+fl_lt_reduce:calcPu0_internal(Mp_design, Mn_edge)+fl_lt_reduce;
-    return { h, isRC, isCombined, schemeLabel: scheme.label, fctdfl, l, Mun, Mp, Mn_internal, Mn_edge, a, a_over_l,
+    return { h, isRC, isCombined, isPlain, isNoFiberSfrc, schemeLabel: scheme.label, fctdfl, l, Mun, Mp, Mn_internal, Mn_edge, a, a_over_l,
       Pu0_internal, Pu0_edge, Pu0_dual, qu, M_udl, mhe_kn, wheelStatic, wheelDesign, a_mhe, a_over_l_mhe, Pu0_mhe,
       defl_center, defl_edge, defl_center_mhe, defl_edge_mhe,
       F, Mp_fatigue, fcd, k2, vmax, d, u0, Pp_max, ks, vRd_c, vf, u1, Pp_fiber,
@@ -960,7 +992,7 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
   ];
   rows.forEach(row => {
     html += '<tr><td>'+row[0]+'</td><td>'+row[1]+'</td>';
-    results.forEach(r => { const val=r[row[2]]; if(row[2]==='M_fiber'&&!r.isCombined&&!r.isRC){ html += '<td><strong>'+fmt(r.Mp,2)+'</strong></td>'; } else if((row[2]==='Mrc_pos'||row[2]==='Mrc_neg')&&!r.isRC&&!r.isCombined){ html += '<td><em style="color:var(--muted);">—</em></td>'; } else if(row[2]==='As'&&!r.isRC&&!r.isCombined){ html += '<td><em style="color:var(--muted);">—</em></td>'; } else { html += '<td><strong>'+(typeof val==='number'&&row[3]!=='—'?fmt(val,row[2]==='l'?0:2):fmt(val,3))+'</strong></td>'; } });
+    results.forEach(r => { const val=r[row[2]]; if(row[2]==='M_fiber'&&!r.isCombined&&!r.isRC&&!r.isPlain){ html += '<td><strong>'+fmt(r.Mp,2)+'</strong></td>'; } else if(row[2]==='M_fiber'&&r.isPlain){ html += '<td><em style="color:var(--muted);">—</em></td>'; } else if(row[2]==='Mp'&&r.isPlain){ html += '<td><strong>'+fmt(r.Mun,2)+' <small style="color:var(--muted);">素混凝土</small></strong></td>'; } else if((row[2]==='Mrc_pos'||row[2]==='Mrc_neg')&&!r.isRC&&!r.isCombined){ html += '<td><em style="color:var(--muted);">—</em></td>'; } else if(row[2]==='As'&&!r.isRC&&!r.isCombined){ html += '<td><em style="color:var(--muted);">—</em></td>'; } else { html += '<td><strong>'+(typeof val==='number'&&row[3]!=='—'?fmt(val,row[2]==='l'?0:2):fmt(val,3))+'</strong></td>'; } });
     html += '<td>'+row[3]+'</td></tr>';
   });
   html += '</tbody></table></div>';
@@ -977,7 +1009,13 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
   html += '<tr><td>相对刚度半径</td><td>l</td><td>[E·h³/(12(1−ν²)k)]<sup>0.25</sup></td><td><strong>'+fmt0(r0.l)+'</strong></td><td>mm</td></tr>';
   html += '<tr><td>素混凝土抵抗力矩</td><td>M<sub>un</sub></td><td>f<sub>ctd,fl</sub> × h²/6</td><td><strong>'+fmt(r0.Mun,2)+'</strong></td><td>kNm/m</td></tr>';
 
-  if (r0.isRC) {
+  if (r0.isPlain) {
+    html += '<tr style="background:#fdf5f4;"><td colspan="4"><strong>⚠️ 素混凝土 — 无筋·无纤维·脆性破坏</strong></td></tr>';
+    html += '<tr><td>素混凝土正弯矩抗力</td><td>M<sub>un</sub></td><td>f<sub>ctd,fl</sub> × h²/6</td><td><strong>'+fmt(r0.Mun,2)+'</strong></td><td>kNm/m</td></tr>';
+    html += '<tr><td>延性折减系数</td><td>α<sub>plain</sub></td><td>EC2 §12.3.1 + 屈服线脆性修正</td><td><strong>0.70</strong></td><td>—</td></tr>';
+    html += '<tr><td>设计正弯矩 (折减后)</td><td>M<sub>p</sub></td><td>α<sub>plain</sub> × M<sub>un</sub></td><td><strong>'+fmt(r0.Mp,2)+'</strong></td><td>kNm/m</td></tr>';
+    html += '<tr><td>设计负弯矩 (折减后)</td><td>M<sub>n</sub></td><td>α<sub>plain</sub> × M<sub>un</sub></td><td><strong>'+fmt(r0.Mn_internal,2)+'</strong></td><td>kNm/m</td></tr>';
+  } else if (r0.isRC) {
     html += '<tr><td>配筋面积</td><td>A<sub>s</sub></td><td>π×D²/4 × 1000/S</td><td><strong>'+fmt(r0.As,0)+'</strong></td><td>mm²/m</td></tr>';
     html += '<tr><td>RC 正弯矩抗力</td><td>M<sub>rc,pos</sub></td><td>A<sub>s</sub> × f<sub>y</sub> × 0.9d / 10⁶</td><td><strong>'+fmt(r0.Mrc_pos,2)+'</strong></td><td>kNm/m</td></tr>';
     html += '<tr><td>RC 负弯矩抗力</td><td>M<sub>rc,neg</sub></td><td>A<sub>s</sub> × f<sub>y</sub> × 0.9d / 10⁶</td><td><strong>'+fmt(r0.Mrc_neg,2)+'</strong></td><td>kNm/m</td></tr>';
@@ -992,7 +1030,7 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
   html += '</tbody></table></div>';
 
   // ── 裂缝控制说明（SFRC / Combined 专用，可折叠）──
-  if (!r0.isRC) {
+  if (!r0.isRC && !r0.isPlain) {
     const Mcr = fctm * r0.h * r0.h / 6 / 1000;
     const Mser_rack = p.Pu_rack / (2 * Math.PI);  // 立柱使用弯矩 (SLS)
     const Mser_wheel = p.mheTons > 0 ? (p.mheTons * 10 * 0.9 / 2) / (2 * Math.PI) : 0;  // 叉车使用弯矩
@@ -1099,6 +1137,13 @@ function renderSection3(p, results) {
   results.forEach(r=>{ const cap=p.lt>0?r.Pu0_edge_lt:r.Pu0_edge; const ok=cap>=p.Pu_rack; html += '<td><strong>'+fmt(cap,1)+' kN</strong>'+(p.lt>0?' <small style="color:var(--muted);">+LT</small>':'')+'</td><td>'+badge(ok,ok?'OK ('+(p.Pu_rack/cap*100).toFixed(0)+'%)':'不满足')+'</td>'; });
   html += '</tr></tbody></table></div>';
   html += '<div class="alert alert-info" style="font-size:0.78rem;margin-top:4px;"><strong>📐 公式：</strong>板内部 P<sub>u</sub> = 2π(M<sub>p</sub>+M<sub>n</sub>) &nbsp;|&nbsp; 边部 M<sub>n,edge</sub>≈0.5M<sub>n</sub> &nbsp;|&nbsp; LT贡献 = min(LT×2×0.9l, 0.5P<sub>ser</sub>) — TR34 Eq 8.4a</div>';
+  // 素混凝土方案 — 脆性破坏警告
+  if (results.some(r => r.isPlain)) {
+    html += '<div class="alert alert-warning" style="font-size:0.82rem;margin-top:6px;"><strong>⚠️ 素混凝土警告：</strong>方案D（素混凝土）为脆性破坏模式，已施加延性折减系数 α=0.70。素混凝土开裂后无残余强度，不适用于承受动荷载或疲劳荷载的地坪。仅建议用于临时性或非结构性地面。</div>';
+  }
+  if (results.some(r => r.isNoFiberSfrc)) {
+    html += '<div class="alert alert-warning" style="font-size:0.82rem;margin-top:6px;"><strong>⚠️ 无纤维警告：</strong>方案A 未输入钢纤维参数 (f<sub>R1</sub>=f<sub>R4</sub>=0)，承载力已按素混凝土折减 (α=0.70)。如需 SFRC 设计承载力，请填写 f<sub>R1</sub>/f<sub>R4</sub> 试验数据。</div>';
+  }
 
   html += '<h3>3.2 双立柱荷载（背对背间距='+p.bbSpacing+'mm）</h3><div class="table-wrap"><table><thead><tr><th>需求</th>'+results.map(r=>'<th>'+r.schemeLabel+'<br>h='+r.h+'mm</th><th>判定</th>').join('')+'</tr></thead><tbody><tr><td><strong>2×'+p.Pu_rack+'='+(2*p.Pu_rack)+' kN</strong></td>';
   results.forEach(r=>{ const ok=r.Pu0_dual>=2*p.Pu_rack; html += '<td><strong>'+fmt(r.Pu0_dual,1)+' kN</strong></td><td>'+badge(ok,ok?'OK':'不满足')+'</td>'; });
@@ -1271,7 +1316,10 @@ function renderSection8(p, results) {
   results.forEach(function(r) {
     // f_eff = f_ctd,fl (素混凝土) + 纤维/钢筋等效强度
     var f_extra = 0;
-    if (r.isCombined) {
+    if (r.isPlain) {
+      // 素混凝土：无额外贡献，且延性折减(α=0.70)
+      f_extra = -0.30 * r.fctdfl;  // 等效于 α=0.70 折减
+    } else if (r.isCombined) {
       // 组合：纤维 + RC，取两者贡献
       f_extra = f_fiber_eq + (r.Mrc_pos > 0 ? 6 * r.Mrc_pos * 1000 / (r.h * r.h) : 0);
     } else if (r.isRC) {
@@ -1297,7 +1345,8 @@ function renderSection8(p, results) {
   html += '</tbody></table></div>';
   const allMinOk = results.every(function(r) {
     var fx = 0;
-    if (r.isCombined) fx = f_fiber_eq + (r.Mrc_pos > 0 ? 6 * r.Mrc_pos * 1000 / (r.h * r.h) : 0);
+    if (r.isPlain) fx = -0.30 * r.fctdfl;
+    else if (r.isCombined) fx = f_fiber_eq + (r.Mrc_pos > 0 ? 6 * r.Mrc_pos * 1000 / (r.h * r.h) : 0);
     else if (r.isRC) fx = r.Mrc_pos > 0 ? 6 * r.Mrc_pos * 1000 / (r.h * r.h) : 0;
     else fx = f_fiber_eq;
     const fe = r.fctdfl + fx;
@@ -1311,7 +1360,7 @@ function renderSection8(p, results) {
 // ═══════════════ MAX JOINT SPACING ═══════════════
 function renderJointSpacing(p, results) {
   const r0 = results[0];  // 方案A
-  if (!r0 || r0.isRC) return; // 仅SFRC适用
+  if (!r0 || r0.isRC || r0.isPlain) return; // 仅SFRC/Combined适用
 
   const h = r0.h;
   const rho_c = 24; // kN/m³
@@ -1514,7 +1563,7 @@ function resetToDefaults() {
    
   document.getElementById('fl_Q').value='30'; document.getElementById('fl_p').value='4.0';
   document.getElementById('fl_D').value='1100'; document.getElementById('fl_gf').value='1.6';
-  document.getElementById('hA').value='180'; document.getElementById('hB').value='180'; document.getElementById('hC').value='180';
+  document.getElementById('hA').value='180'; document.getElementById('hB').value='180'; document.getElementById('hC').value='180'; document.getElementById('hD').value='';
   document.getElementById('rebarBGrade').value='HRB400'; document.getElementById('rebarBDia').value='10'; document.getElementById('rebarBSpacing').value='200'; document.getElementById('rebarBPosition').value='bottom'; document.getElementById('rebarGrade').value='HRB400'; document.getElementById('rebarDia').value='10';
   document.getElementById('rebarSpacing').value='200'; document.getElementById('rebarPosition').value='bottom';
   document.getElementById('dw_W').value='150'; document.getElementById('dw_L').value='135';
@@ -1547,11 +1596,16 @@ function copySummary() {
   if (p.schemes.some(s=>s.type==='rc')) text += '配筋(方案C)：'+p.rebarGrade+' D'+p.rebarDia+'@'+p.rebarSpacing+'mm '+(p.rebarPosition==='top'?'面层':p.rebarPosition==='bottom'?'底层':'双层双向')+'\n';
   text += '\n';
   p.schemes.forEach(s=>{
-    const h=s.h, isRC=s.type==='rc';
+    const h=s.h, isRC=s.type==='rc', isPlainS=s.type==='plain';
     const fctdfl=calcFctdFl(fctm,h,p.gammaC), Ecm_n=Ecm_gpa*1000;
     const l=calcL(Ecm_n,h,p.nu,p.k);
+    const Mun = fctdfl * (h*h/6) / 1000;
     let Mp_label, Pu0_int, qu_val;
-    if (isRC) {
+    if (isPlainS) {
+      const alpha_plain = 0.70;
+      Mp_label='Mun='+fmt(Mun,2)+' (x0.70)'; Pu0_int=fmt(2*Math.PI*(alpha_plain*Mun+alpha_plain*Mun),1);
+      qu_val=fmt(alpha_plain*Mun/(0.168*Math.pow(Math.pow(Ecm_n*Math.pow(h,3)/(3*p.k),0.25)/1000,2)),1);
+    } else if (isRC) {
       const fy_map={'HRB400':360,'HRB500':435,'HPB300':270}, fy=fy_map[p.rebarGrade]||360;
       const As=(Math.PI*p.rebarDia*p.rebarDia/4)*(1000/p.rebarSpacing);
       const cover=(p.rebarPosition==='top')?25:40, deff=h-cover-p.rebarDia/2;
