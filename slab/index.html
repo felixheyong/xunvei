@@ -281,6 +281,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   <a href="#s8">7. 计算汇总与导出</a>
 </nav>
 
+
 <main><!-- ════════════ HEADER ════════════ -->
 <div class="report-header">
   <h1>🏗️ 地基承载混凝土地坪通用设计计算工具</h1>
@@ -373,15 +374,6 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   <div class="input-group" style="grid-column: span 2;"><label>纤维品牌/型号 &nbsp;|&nbsp; 参考掺量 <span class="unit">(kg/m³)</span> <span class="hint">需试验数据确定</span></label><div style="display:flex; gap:10px;"><input type="text" id="fiberLabel" value="" placeholder="请输入纤维型号" style="flex:2;"><input type="text" id="fiberDosage" value="" placeholder="由纤维类型与掺量试验确定" style="flex:1;"></div></div>
 </div></div>
 
-<h4 style="font-size:0.92rem; color: var(--accent2); margin:16px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">1.5a 最大设缝间距（不切缝设计 — 方案A SFRC）</h4>
-		<div class="alert alert-info" style="font-size:0.82rem; margin-top:4px;">
-		  <strong>📐 原理（TR34）：</strong>不切缝钢纤维地坪的最大设缝间距由 SFRC 负弯矩承载力 M<sub>n</sub> 控制。基层摩擦约束 + 温度翘曲的组合弯矩需求必须 ≤ M<sub>n</sub>（钢纤维提供）。M<sub>n</sub> 越大，可实现的设缝间距越大。典型值 25–40m。
-		</div>
-		<div class="input-grid">
-		  <div class="input-group"><label>设计设缝间距 L<sub>j</sub> <span class="unit">(m)</span> </label><input type="number" id="jointSpacing" value="30" min="5" max="60" step="1" onchange="calculateAll()"></div>
-		  <div class="input-group"><label>板/基层摩擦系数 μ</label><select id="jointMu" onchange="calculateAll()"><option value="0.5" selected>μ=0.5 — PE滑移膜 + 级配碎石（标准推荐）</option><option value="0.8">μ=0.8 — 单层PE膜 + 碎石基层</option><option value="1.0">μ=1.0 — 直接浇筑在基层上（无滑移膜）</option><option value="1.5">μ=1.5 — 粗糙基层 / 粘结界面的保守取值</option></select></div>
-		</div>
-		<div id="jointSpacingResult" style="margin-top:8px; font-size:0.85rem;"></div>
 
 		<h3>1.5b 方案B — 传统配筋参数 <span style="font-size:0.78rem;font-weight:400;color:var(--muted);">（纯RC，无钢纤维）</span></h3>
 <div class="input-grid">
@@ -432,6 +424,17 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 <section id="s6"><h2><span class="sec-num">6</span>MHE 与叉车荷载验算</h2><div id="section6Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
 <section id="s8"><h2><span class="sec-num">7</span>计算汇总与导出</h2><div id="section8Content"><p style="color:var(--muted);">请先执行计算。</p></div>
 </section>
+<section id="s9"><h2><span class="sec-num">8</span>最大设缝间距验算 <span style="font-size:0.7rem;color:var(--accent2);font-weight:400;">不切缝设计 — 方案A SFRC</span></h2>
+<div class="alert alert-info" style="font-size:0.82rem; margin-bottom:12px;">
+  <strong>📐 原理（TR34）：</strong>不切缝钢纤维地坪的最大设缝间距由 SFRC 负弯矩承载力 M<sub>n</sub> 控制。基层摩擦约束 + 温度翘曲的组合弯矩需求必须 ≤ M<sub>n</sub>（钢纤维提供）。M<sub>n</sub> 越大，可实现的设缝间距越大。典型值 25–40m。
+</div>
+<div class="input-grid" style="margin-bottom:12px;">
+  <div class="input-group"><label>设计设缝间距 L<sub>j</sub> <span class="unit">(m)</span></label><input type="number" id="jointSpacing" value="30" min="5" max="60" step="1" onchange="calculateAll()"></div>
+  <div class="input-group"><label>板/基层摩擦系数 μ</label><select id="jointMu" onchange="calculateAll()"><option value="0.5" selected>μ=0.5 — PE滑移膜 + 级配碎石（标准推荐）</option><option value="0.8">μ=0.8 — 单层PE膜 + 碎石基层</option><option value="1.0">μ=1.0 — 直接浇筑在基层上（无滑移膜）</option><option value="1.5">μ=1.5 — 粗糙基层 / 粘结界面的保守取值</option></select></div>
+</div>
+<div id="section9Content"><p style="color:var(--muted);">请先执行计算。</p></div>
+</section>
+
 
 <footer>地基承载混凝土地坪通用设计计算工具 · 基于 TR34 第4版 (2016) · Eurocode 2 · fib MC2010 §7.7 · SFRC+RC组合配筋 · 仅作参考</footer>
 </main>
@@ -1458,7 +1461,7 @@ function renderJointSpacing(p, results) {
   html += '<br><span style="font-size:0.78rem; color:var(--muted);">依据: TR34 §8.8 工程实践，非精确计算，需要调整混凝土配合比以实现设缝间距</span>';
   html += '</div>';
 
-  document.getElementById('jointSpacingResult').innerHTML = html;
+  document.getElementById('section9Content').innerHTML = html;
 }
 // ═══════════════ UTILITIES ═══════════════
 
