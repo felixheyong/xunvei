@@ -1549,6 +1549,8 @@ function onManualKInput() {
 function setForkliftPreset(Q, pVal, D, gf) {
   document.getElementById('fl_Q').value=Q; document.getElementById('fl_p').value=pVal;
   document.getElementById('fl_D').value=D; document.getElementById('fl_gf').value=gf;
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
+  event.target.classList.add('selected');
   calculateAll();
 }
 
