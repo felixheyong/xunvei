@@ -837,12 +837,12 @@ function calculateAll() {
       // Full additivity λ=1.0 (justified for ground slabs ρ<0.5%)
       const lambda=1.0;
       Mp=Mrc_pos+lambda*M_fiber;
-      Mn_internal=Mrc_neg+lambda*M_fiber;
+      Mn_internal=Mrc_neg+lambda*1.05*M_fiber;  // 纤维负弯矩 ×1.05（同SFRC，地基约束增强）
       Mn_edge=Math.max(0.5*Mrc_neg+0.5*lambda*M_fiber, 0.5*Mun);
-      // Mun (plain concrete cracking) and M_fiber (post-crack residual) are
-      // ALTERNATIVE mechanisms — concrete cracks → fibers activate. Take max, not sum.
-      if(p.rebarBPosition==='bottom') Mn_internal=Math.max(M_fiber, Mun);
-      if(p.rebarBPosition==='top') Mp=Math.max(M_fiber, Mun);
+      // 单面配筋时，非配筋面弯矩不低于素混凝土开裂弯矩 Mun（脆性破坏下限）
+      // 注：Mrc_neg / Mrc_pos 由 calcRebarMoment 按配筋位置处理（非配筋面 = 0）
+      if(p.rebarBPosition==='bottom') Mn_internal=Math.max(Mrc_neg+lambda*1.05*M_fiber, Mun);
+      if(p.rebarBPosition==='top') Mp=Math.max(Mrc_pos+lambda*M_fiber, Mun);
     } else if (scheme.type === 'plain') {
       // 素混凝土 (Plain Concrete): 无筋·无纤维·脆性破坏
       // Mp/Mn 保存纯截面抗力(开裂前)用于展示，设计值在下方 Mp_design 计算中折减
