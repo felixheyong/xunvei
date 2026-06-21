@@ -1316,8 +1316,8 @@ function renderSection8(p, results) {
   results.forEach(function(r) {
     // f_eff = f_ctd,fl (素混凝土) + 纤维/钢筋等效强度
     var f_extra = 0;
-    if (r.isPlain) {
-      // 素混凝土：无额外贡献，且延性折减(α=0.70)
+    if (r.isPlain || r.isNoFiberSfrc) {
+      // 素混凝土 / 无纤维SFRC：无额外贡献，且延性折减(α=0.70)
       f_extra = -0.30 * r.fctdfl;  // 等效于 α=0.70 折减
     } else if (r.isCombined) {
       // 组合：纤维 + RC，取两者贡献
@@ -1345,7 +1345,7 @@ function renderSection8(p, results) {
   html += '</tbody></table></div>';
   const allMinOk = results.every(function(r) {
     var fx = 0;
-    if (r.isPlain) fx = -0.30 * r.fctdfl;
+    if (r.isPlain || r.isNoFiberSfrc) fx = -0.30 * r.fctdfl;
     else if (r.isCombined) fx = f_fiber_eq + (r.Mrc_pos > 0 ? 6 * r.Mrc_pos * 1000 / (r.h * r.h) : 0);
     else if (r.isRC) fx = r.Mrc_pos > 0 ? 6 * r.Mrc_pos * 1000 / (r.h * r.h) : 0;
     else fx = f_fiber_eq;
