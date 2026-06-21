@@ -851,9 +851,10 @@ function calculateAll() {
       Mn_edge = 0.5 * Mun;
       fy = 0; As = 0; d_eff_rc = 0; Mrc_pos = 0; Mrc_neg = 0; M_fiber = 0;
     } else {
-      // SFRC: 纯纤维贡献 Mp，无纤维时 = 0
-      Mp = calcMp(r1, r4, h);
-      const Mn_sfrc = Mp * 1.05;
+      // SFRC: 纯纤维贡献
+      M_fiber = calcMp(r1, r4, h);       // 原始纤维残余弯矩
+      Mp = Math.max(M_fiber, Mun);       // Mun 兜底：开裂前抗力不低于素混凝土
+      const Mn_sfrc = M_fiber * 1.05;    // 纤维负弯矩 ×1.05（作用于原始纤维值）
       Mn_internal = Math.max(Mn_sfrc, Mun);
       Mn_edge = Math.max(0.5 * Mn_sfrc, 0.5 * Mun);
     }
@@ -861,7 +862,7 @@ function calculateAll() {
     // 素混凝土 / 无纤维 SFRC 施加延性折减系数 α_plain = 0.70
     // 依据: EC2 §12.3.1 素混凝土设计强度折减 + 屈服线理论脆性修正
     let Mp_design, Mn_design, Mn_edge_design;
-    const isNoFiberSfrc = (scheme.type === 'sfrc' && Mp === 0);
+    const isNoFiberSfrc = (scheme.type === 'sfrc' && M_fiber === 0);  // 基于原始纤维弯矩（不含 Mun 兜底）
     if (isPlain || isNoFiberSfrc) {
       const alpha_plain = 0.70;
       Mp_design = alpha_plain * Mun;
@@ -996,7 +997,7 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
     html += '<td>'+row[3]+'</td></tr>';
   });
   html += '</tbody></table></div>';
-  html += '<div class="alert alert-info" style="font-size:0.78rem;margin-top:4px;"><strong>📐 公式速查：</strong>f<sub>ctm</sub>=0.3f<sub>ck</sub><sup>2/3</sup> &nbsp;|&nbsp; E<sub>cm</sub>=22(f<sub>cm</sub>/10)<sup>0.3</sup> &nbsp;|&nbsp; f<sub>ctd,fl</sub>=f<sub>ctm</sub>(1.6−h/1000)/γ<sub>c</sub> &nbsp;|&nbsp; l=[E·h³/(12(1−ν²)k)]<sup>0.25</sup> &nbsp;|&nbsp; M<sub>un</sub>=f<sub>ctd,fl</sub>·h²/6 &nbsp;|&nbsp; M<sub>p,SFRC</sub>=(0.29r₄+0.16r₁)h²/1000</div>';
+  html += '<div class="alert alert-info" style="font-size:0.78rem;margin-top:4px;"><strong>📐 公式速查：</strong>f<sub>ctm</sub>=0.3f<sub>ck</sub><sup>2/3</sup> &nbsp;|&nbsp; E<sub>cm</sub>=22(f<sub>cm</sub>/10)<sup>0.3</sup> &nbsp;|&nbsp; f<sub>ctd,fl</sub>=f<sub>ctm</sub>(1.6−h/1000)/γ<sub>c</sub> &nbsp;|&nbsp; l=[E·h³/(12(1−ν²)k)]<sup>0.25</sup> &nbsp;|&nbsp; M<sub>un</sub>=f<sub>ctd,fl</sub>·h²/6 &nbsp;|&nbsp; M<sub>p,SFRC</sub>=(0.29×'+fmt(r4,3)+'+0.16×'+fmt(r1,3)+')×h²/1000=<strong>'+fmt(0.29*r4+0.16*r1,3)+'</strong>×h²/1000</div>';
 
   const r0 = results[0];
   html += '<h3>2.3 计算过程（以 '+r0.schemeLabel+' h='+r0.h+'mm 为例）</h3>';
