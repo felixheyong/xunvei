@@ -216,8 +216,13 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   table { font-size: 0.62rem; }
   table td, table th { padding: 3px 5px; }
   .alert { border-left-width: 2px; padding: 6px 10px; font-size: 0.7rem; }
-  .input-grid { display: none !important; }
-  .preset-row { display: none !important; }
+  /* 打印时表单控件展示为纯文本 */
+  .input-grid { display: grid !important; }
+  .preset-row { display: flex !important; flex-wrap: wrap; }
+  input, select, textarea { border: none !important; background: transparent !important; padding: 0 !important; box-shadow: none !important; color: #000 !important; font-family: inherit !important; font-size: inherit !important; -webkit-appearance: none !important; appearance: none !important; }
+  input[type="number"] { -moz-appearance: textfield !important; }
+  select::-ms-expand { display: none !important; }
+  .preset-btn { display: none !important; }  /* 预设按钮在打印中隐藏 */
   /* 确保 details 在打印时展开 */
   details { display: block !important; }
   details > summary { display: none !important; }
