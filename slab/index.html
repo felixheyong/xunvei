@@ -815,10 +815,11 @@ function calculateAll() {
 	    const fy_map = {"HRB400":360,"HRB500":435,"HPB300":270};
 	    if (isRC) {
 	      fy=fy_map[p.rebarGrade]||360;
-	      As=(Math.PI*p.rebarDia*p.rebarDia/4)*(1000/p.rebarSpacing);
+	      const As_single=(Math.PI*p.rebarDia*p.rebarDia/4)*(1000/p.rebarSpacing);
+		      As=(p.rebarPosition==="both")?2*As_single:As_single;  // 双层双向时总面积
 	      const d_pos = h - 40 - p.rebarDia/2;
 	      const d_neg = h - 25 - p.rebarDia/2;
-	      const Mrc = As*fy*0.9/1e6;
+	      const Mrc = As_single*fy*0.9/1e6;  // 单层钢筋力用于弯矩计算
 	      if (p.rebarPosition === "top") {
 	        Mrc_neg = Mrc * d_neg; Mrc_pos = 0;
 	        Mn_internal = Math.max(Mrc_neg, Mun); Mp = Mun;
@@ -837,7 +838,7 @@ function calculateAll() {
       M_fiber=calcMp(r1,r4,h);
       fy=fy_map[p.rebarBGrade]||360;
       const rb=calcRebarMoment(h,fy,p.rebarBDia,p.rebarBSpacing,p.rebarBPosition);
-      As=rb.As; Mrc_pos=rb.Mrc_pos; Mrc_neg=rb.Mrc_neg; d_eff_rc=rb.d_eff;
+      As=(p.rebarBPosition==="both")?2*rb.As:rb.As; Mrc_pos=rb.Mrc_pos; Mrc_neg=rb.Mrc_neg; d_eff_rc=rb.d_eff;  // 双层时总面积
       // Full additivity λ=1.0 (justified for ground slabs ρ<0.5%)
       const lambda=1.0;
       Mp=Mrc_pos+lambda*M_fiber;
