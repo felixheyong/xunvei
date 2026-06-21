@@ -629,7 +629,8 @@ function performCalculation() {
     ? (As * d_primary + As_second * d_second) / As_total
     : d_primary;
 
-  const rho = As / (b * d_primary);
+  const d_effective = h - cover_eff - phi / 2;  // 受压面到受拉钢筋距离（恒为此值，与受拉面在上/下无关）
+  const rho = As / (b * d_effective);
 
   // --- 未开裂截面 ---
   const A_c = b * h;
