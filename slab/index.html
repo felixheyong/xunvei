@@ -341,7 +341,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 
 	<h4 style="font-size:0.92rem; color: var(--accent2); margin:12px 0 8px; padding-left:8px; border-left:3px solid var(--accent2);">1.3b 动荷载（叉车 / MHE）</h4>
 	<div class="input-grid">
-	  <div class="input-group"><label>叉车总重 <span class="unit">(吨)</span></label><input type="number" id="mheWeight" value="7" min="0" step="0.5"></div>
+	  <div class="input-group"><label>叉车总重 <span class="unit">(吨)</span></label><input type="number" id="mheWeight" value="2.5" min="0" step="0.5"></div>
 	  <div class="input-group"><label>叉车轮荷载 Q <span class="unit">(kN)</span> <span class="hint">接触压力法</span></label><input type="number" id="fl_Q" value="30" min="0" step="0.5"></div>
 	  <div class="input-group"><label>接触压力 p <span class="unit">(N/mm²)</span></label><input type="number" id="fl_p" value="4.0" min="0.1" max="20" step="0.1"></div>
 	  <div class="input-group"><label>轮间距 D <span class="unit">(mm)</span></label><input type="number" id="fl_D" value="1100" min="0" step="10"></div>
@@ -350,12 +350,12 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 	  <div class="input-group"><label>MHE 疲劳循环次数 N</label><input type="number" id="fatigueCycles" value="500000" min="0" step="10000"></div>
 	</div>
 	<div style="margin-top:4px;"><span style="font-size:0.82rem; color:var(--muted);">叉车预设（常用型号）：</span>
-	  <button class="preset-btn" onclick="setForkliftPreset(15,5.0,900,1.4)">1.5t 电动堆高车</button>
-	  <button class="preset-btn selected" onclick="setForkliftPreset(30,4.0,1100,1.6)">2.5t 平衡重 (常见)</button>
-	  <button class="preset-btn" onclick="setForkliftPreset(45,2.5,1200,1.6)">3.5t 内燃叉车</button>
-	  <button class="preset-btn" onclick="setForkliftPreset(65,2.0,1400,1.6)">5.0t 重载叉车</button>
-	  <button class="preset-btn" onclick="setForkliftPreset(100,1.5,1600,1.6)">8.0t 集装箱叉车</button>
-	  <button class="preset-btn" onclick="setForkliftPreset(0,0,0,1.0)">不使用</button>
+	  <button class="preset-btn" onclick="setForkliftPreset(15,5.0,900,1.4,1.5)">1.5t 电动堆高车</button>
+	  <button class="preset-btn selected" onclick="setForkliftPreset(30,4.0,1100,1.6,2.5)">2.5t 平衡重 (常见)</button>
+	  <button class="preset-btn" onclick="setForkliftPreset(45,2.5,1200,1.6,3.5)">3.5t 内燃叉车</button>
+	  <button class="preset-btn" onclick="setForkliftPreset(65,2.0,1400,1.6,5.0)">5.0t 重载叉车</button>
+	  <button class="preset-btn" onclick="setForkliftPreset(100,1.5,1600,1.6,8.0)">8.0t 集装箱叉车</button>
+	  <button class="preset-btn" onclick="setForkliftPreset(0,0,0,1.0,0)">不使用</button>
 	</div>
 
 	
@@ -1044,14 +1044,21 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
   if (!r0.isRC && !r0.isPlain) {
     const Mcr = fctm * r0.h * r0.h / 6 / 1000;
     const Mser_rack = p.Pu_rack / (2 * Math.PI);  // 立柱使用弯矩 (SLS)
-    const Mser_wheel = p.mheTons > 0 ? (p.mheTons * 10 * 0.9 / 2) / (2 * Math.PI) : 0;  // 叉车使用弯矩
+    const Mser_wheel_weight = p.mheTons > 0 ? (p.mheTons * 10 * 0.9 / 2) / (2 * Math.PI) : 0;  // 总重推算法
+    const Mser_wheel_contact = p.fl_Q > 0 ? p.fl_Q / (2 * Math.PI) : 0;  // 接触压力法 — 联动 §1.3b
+    const Mser_wheel = Math.max(Mser_wheel_weight, Mser_wheel_contact);  // 取两种方法包络值
     const Mser_max = Math.max(Mser_rack, Mser_wheel);
     const crack_status = Mser_max < Mcr ? '✅ 不裂' : '⚠️ 开裂（由纤维桥接）';
     html += '<details open style="margin-top:10px;"><summary style="cursor:pointer;color:var(--accent);font-weight:600;font-size:0.9rem;">📐 钢纤维裂缝控制机制（TR34 §8.8 / EN 14889-1）</summary>';
     html += '<div class="alert alert-info" style="font-size:0.82rem;margin-top:8px;line-height:1.8;">';
     html += '<strong>使用荷载弯矩（SLS）：</strong><br>';
     html += '• 立柱静载 M<sub>ser,rack</sub> = P<sub>ser</sub>/(2π) = '+p.Pu_rack+'/(2π) = <strong>'+fmt(Mser_rack,2)+' kNm/m</strong><br>';
-    if (p.mheTons > 0) html += '• 叉车轮静载 M<sub>ser,wheel</sub> = '+fmt(p.mheTons*10*0.9/2,1)+'/(2π) = <strong>'+fmt(Mser_wheel,2)+' kNm/m</strong><br>';
+    if (p.mheTons > 0 || p.fl_Q > 0) {
+      html += '• 叉车轮静载 M<sub>ser,wheel</sub><br>';
+      if (p.mheTons > 0) html += '&nbsp;&nbsp;总重法: '+fmt(p.mheTons*10*0.9/2,1)+'/(2π) = <strong>'+fmt(Mser_wheel_weight,2)+' kNm/m</strong><br>';
+      if (p.fl_Q > 0) html += '&nbsp;&nbsp;接触压力法 (联动§1.3b): Q='+p.fl_Q+'/(2π) = <strong>'+fmt(Mser_wheel_contact,2)+' kNm/m</strong><br>';
+      html += '&nbsp;&nbsp;→ 包络值 M<sub>ser,wheel</sub> = <strong>'+fmt(Mser_wheel,2)+' kNm/m</strong><br>';
+    }
     html += '• 最不利使用弯矩 M<sub>ser,max</sub> = <strong>'+fmt(Mser_max,2)+' kNm/m</strong> | 开裂弯矩 M<sub>cr</sub> = <strong>'+fmt(Mcr,2)+' kNm/m</strong> → '+crack_status+'<br><br>';
     html += '<strong>CMOD — 残余强度 — 裂缝宽度对应：</strong><br>';
     html += '• CMOD 0.5mm → f<sub>R1</sub>='+fmt(p.fR1,1)+' N/mm² → 使用阶段裂缝控制（货架静载、收缩）<br>';
@@ -1551,9 +1558,10 @@ function onManualKInput() {
   calculateAll();
 }
 
-function setForkliftPreset(Q, pVal, D, gf) {
+function setForkliftPreset(Q, pVal, D, gf, tons) {
   document.getElementById('fl_Q').value=Q; document.getElementById('fl_p').value=pVal;
   document.getElementById('fl_D').value=D; document.getElementById('fl_gf').value=gf;
+  if (tons !== undefined) document.getElementById('mheWeight').value=tons;
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
   event.target.classList.add('selected');
   calculateAll();
@@ -1571,7 +1579,7 @@ function resetToDefaults() {
   document.getElementById('poisson').value='0.20'; updatePoisson(); document.getElementById('ltValue').value='0';
   document.getElementById('rackingLoad').value='80'; document.getElementById('basePlateSize').value='150';
   document.getElementById('backToBackSpacing').value='300'; document.getElementById('udl').value='50';
-  document.getElementById('mheWeight').value='7'; document.getElementById('dynamicFactor').value='1.4';
+  document.getElementById('mheWeight').value='2.5'; document.getElementById('dynamicFactor').value='1.4';
   document.getElementById('fatigueCycles').value='500000';  document.getElementById('jointSpacing').value='35'; document.getElementById('jointMu').value='0.5';
    
   document.getElementById('fl_Q').value='30'; document.getElementById('fl_p').value='4.0';
