@@ -1041,27 +1041,60 @@ function renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4) {
   html += '</tbody></table></div>';
 
   // ── 裂缝控制说明（SFRC / Combined 专用，可折叠）──
+  // 两级裂缝控制：SLS使用阶段 (fR1/CMOD0.5mm) + ULS极限阶段 (fR4/CMOD3.5mm)
+  // 联动 §1.3b：动载系数、安全系数 γf 参与叉车弯矩计算
   if (!r0.isRC && !r0.isPlain) {
     const Mcr = fctm * r0.h * r0.h / 6 / 1000;
-    const Mser_rack = p.Pu_rack / (2 * Math.PI);  // 立柱使用弯矩 (SLS)
-    const Mser_wheel_weight = p.mheTons > 0 ? (p.mheTons * 10 * 0.9 / 2) / (2 * Math.PI) : 0;  // 总重推算法
-    const Mser_wheel_contact = p.fl_Q > 0 ? p.fl_Q / (2 * Math.PI) : 0;  // 接触压力法 — 联动 §1.3b
-    const Mser_wheel = Math.max(Mser_wheel_weight, Mser_wheel_contact);  // 取两种方法包络值
+    const wheelStatic = p.mheTons * 10 * 0.9 / 2;  // 静轮压 kN
+    const wheelSLS = wheelStatic * p.dynFactor;      // 使用阶段轮压（含动力放大）
+    const wheelULS = wheelSLS * p.fl_gf;             // 极限阶段轮压（含分项系数）
+
+    // ── SLS 使用阶段弯矩（正常使用 · 裂缝控制 fR1）──
+    const Mser_rack = p.Pu_rack / (2 * Math.PI);
+    const Mser_wheel_weight = p.mheTons > 0 ? wheelSLS / (2 * Math.PI) : 0;
+    const Mser_wheel_contact = p.fl_Q > 0 ? p.fl_Q / (2 * Math.PI) : 0;
+    const Mser_wheel = Math.max(Mser_wheel_weight, Mser_wheel_contact);
     const Mser_max = Math.max(Mser_rack, Mser_wheel);
-    const crack_status = Mser_max < Mcr ? '✅ 不裂' : '⚠️ 开裂（由纤维桥接）';
-    html += '<details open style="margin-top:10px;"><summary style="cursor:pointer;color:var(--accent);font-weight:600;font-size:0.9rem;">📐 钢纤维裂缝控制机制（TR34 §8.8 / EN 14889-1）</summary>';
+    const sls_status = Mser_max < Mcr ? '✅ 不裂' : '⚠️ 开裂（f<sub>R1</sub> 纤维桥接，裂缝&lt;0.3mm）';
+
+    // ── ULS 极限阶段弯矩（叉车冲击/超载 · 裂缝控制 fR4）──
+    const Mult_wheel_weight = p.mheTons > 0 ? wheelULS / (2 * Math.PI) : 0;
+    const Mult_wheel_contact = p.fl_Q > 0 ? p.fl_Q * p.fl_gf / (2 * Math.PI) : 0;
+    const Mult_wheel = Math.max(Mult_wheel_weight, Mult_wheel_contact);
+    const Mult_max = Math.max(Mser_rack, Mult_wheel);  // 货架不变（静载，无ULS放大）
+    const uls_status = Mult_max < Mcr ? '✅ 不裂' : '⚠️ 开裂（f<sub>R4</sub> 纤维桥接，裂缝&lt;2.5mm）';
+
+    html += '<details open style="margin-top:10px;"><summary style="cursor:pointer;color:var(--accent);font-weight:600;font-size:0.9rem;">📐 钢纤维裂缝控制机制 — SLS/ULS 两级（TR34 §8.8 / EN 14889-1）</summary>';
     html += '<div class="alert alert-info" style="font-size:0.82rem;margin-top:8px;line-height:1.8;">';
-    html += '<strong>使用荷载弯矩（SLS）：</strong><br>';
-    html += '• 立柱静载 M<sub>ser,rack</sub> = P<sub>ser</sub>/(2π) = '+p.Pu_rack+'/(2π) = <strong>'+fmt(Mser_rack,2)+' kNm/m</strong><br>';
+
+    // ── SLS 面板 ──
+    html += '<div style="background:#f6faf7;border:1px solid var(--pass);border-radius:6px;padding:10px 14px;margin-bottom:10px;">';
+    html += '<strong style="color:var(--pass);">🟢 使用阶段 SLS — CMOD≤0.5mm · f<sub>R1</sub>='+fmt(p.fR1,1)+' N/mm²</strong><br>';
+    html += '• 立柱静载 M<sub>ser,rack</sub> = '+p.Pu_rack+'/(2π) = <strong>'+fmt(Mser_rack,2)+' kNm/m</strong><br>';
     if (p.mheTons > 0 || p.fl_Q > 0) {
-      html += '• 叉车轮静载 M<sub>ser,wheel</sub><br>';
-      if (p.mheTons > 0) html += '&nbsp;&nbsp;总重法: '+fmt(p.mheTons*10*0.9/2,1)+'/(2π) = <strong>'+fmt(Mser_wheel_weight,2)+' kNm/m</strong><br>';
-      if (p.fl_Q > 0) html += '&nbsp;&nbsp;接触压力法 (联动§1.3b): Q='+p.fl_Q+'/(2π) = <strong>'+fmt(Mser_wheel_contact,2)+' kNm/m</strong><br>';
-      html += '&nbsp;&nbsp;→ 包络值 M<sub>ser,wheel</sub> = <strong>'+fmt(Mser_wheel,2)+' kNm/m</strong><br>';
+      html += '• 叉车弯矩 M<sub>ser,wheel</sub>（联动 §1.3b）:<br>';
+      if (p.mheTons > 0) html += '&nbsp;&nbsp;总重法: '+fmt(wheelStatic,1)+'×'+p.dynFactor+'/(2π) = <strong>'+fmt(Mser_wheel_weight,2)+' kNm/m</strong><br>';
+      if (p.fl_Q > 0) html += '&nbsp;&nbsp;接触压力法: Q='+p.fl_Q+'/(2π) = <strong>'+fmt(Mser_wheel_contact,2)+' kNm/m</strong><br>';
+      html += '&nbsp;&nbsp;→ 包络值 = <strong>'+fmt(Mser_wheel,2)+' kNm/m</strong><br>';
     }
-    html += '• 最不利使用弯矩 M<sub>ser,max</sub> = <strong>'+fmt(Mser_max,2)+' kNm/m</strong> | 开裂弯矩 M<sub>cr</sub> = <strong>'+fmt(Mcr,2)+' kNm/m</strong> → '+crack_status+'<br><br>';
+    html += '• M<sub>ser,max</sub> = <strong>'+fmt(Mser_max,2)+'</strong> vs M<sub>cr</sub> = '+fmt(Mcr,2)+' → <strong>'+sls_status+'</strong>';
+    html += '</div>';
+
+    // ── ULS 面板 ──
+    html += '<div style="background:#fdf5f4;border:1px solid var(--fail);border-radius:6px;padding:10px 14px;margin-bottom:10px;">';
+    html += '<strong style="color:var(--fail);">🔴 极限阶段 ULS — CMOD≤3.5mm · f<sub>R4</sub>='+fmt(p.fR4,1)+' N/mm²</strong><br>';
+    html += '• 立柱静载 M<sub>ult,rack</sub> = '+p.Pu_rack+'/(2π) = <strong>'+fmt(Mser_rack,2)+' kNm/m</strong>（静载，无ULS放大）<br>';
+    if (p.mheTons > 0 || p.fl_Q > 0) {
+      html += '• 叉车弯矩 M<sub>ult,wheel</sub>（联动 §1.3b）:<br>';
+      if (p.mheTons > 0) html += '&nbsp;&nbsp;总重法: '+fmt(wheelStatic,1)+'×'+p.dynFactor+'×'+p.fl_gf+'/(2π) = <strong>'+fmt(Mult_wheel_weight,2)+' kNm/m</strong><br>';
+      if (p.fl_Q > 0) html += '&nbsp;&nbsp;接触压力法: Q='+p.fl_Q+'×'+p.fl_gf+'/(2π) = <strong>'+fmt(Mult_wheel_contact,2)+' kNm/m</strong><br>';
+      html += '&nbsp;&nbsp;→ 包络值 = <strong>'+fmt(Mult_wheel,2)+' kNm/m</strong><br>';
+    }
+    html += '• M<sub>ult,max</sub> = <strong>'+fmt(Mult_max,2)+'</strong> vs M<sub>cr</sub> = '+fmt(Mcr,2)+' → <strong>'+uls_status+'</strong>';
+    html += '</div>';
+
     html += '<strong>CMOD — 残余强度 — 裂缝宽度对应：</strong><br>';
-    html += '• CMOD 0.5mm → f<sub>R1</sub>='+fmt(p.fR1,1)+' N/mm² → 使用阶段裂缝控制（货架静载、收缩）<br>';
+    html += '• CMOD 0.5mm → f<sub>R1</sub>='+fmt(p.fR1,1)+' N/mm² → 使用阶段裂缝控制（货架静载、正常叉车、收缩）<br>';
     html += '• CMOD 1.5mm → f<sub>R2</sub>='+fmt(p.fR2,1)+' N/mm² → 冲切验算用<br>';
     html += '• CMOD 2.5mm → f<sub>R3</sub>='+fmt(p.fR3,1)+' N/mm² → 冲切验算用<br>';
     html += '• CMOD 3.5mm → f<sub>R4</sub>='+fmt(p.fR4,1)+' N/mm² → 极限阶段裂缝控制（叉车冲击、超载）<br><br>';
