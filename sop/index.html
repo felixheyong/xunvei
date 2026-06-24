@@ -183,7 +183,8 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   @page { size: A4; margin: 6mm; }
   body { background: #fff; color: #000; }
   .no-print, .no-print * { display: none !important; }
-  .results { display: block !important; }
+  .results, #results { display: block !important; }
+	  .result-card, #results section { display: block !important; }
   .container { max-width: 100%; padding: 0 4mm; }
   .report-header { background: #fff; border: 1px solid #000; border-top: 3px solid #000; padding: 8px 12px; margin-bottom: 8px; box-shadow: none; }
   section { background: #fff; border: 1px solid #ccc; box-shadow: none; padding: 8px 12px; margin-bottom: 8px; page-break-inside: auto; }
@@ -199,9 +200,11 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   thead { background: #eee !important; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   thead th { color: #000; padding: 2px 4px; font-size: .55rem; }
   tbody td { padding: 2px 4px; border-bottom: 0.5px solid #ddd; }
-  .watermark-layer { display: block !important; z-index: 9999 !important; }
+  /* 主密码打印：不显示水印 */
+  body:not(.no-print) .watermark-layer { display: none !important; }
+  /* OTP打印：显示红色水印 */
+  .no-print .watermark-layer { display: block !important; z-index: 9999 !important; }
   .watermark-text { fill: rgba(0,0,0,.12) !important; font-size: 36px; }
-  .no-print .watermark-layer { display: block !important; }
   .no-print .watermark-text { fill: rgba(255,0,0,.25) !important; font-size: 24px !important; }
   .info-box { padding: 3px 6px; font-size: .6rem; margin: 2px 0; }
   .notes { font-size: .6rem; margin-top: 1px; }
@@ -239,11 +242,11 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
     <h3 id="modalTitle">🔐 访问验证</h3>
     <p class="modal-desc" id="modalDesc">请输入访问密码 — 每个密码仅可使用一次，30 分钟后失效</p>
     <div id="loginForm">
-      <input type="password" id="passwordInput" placeholder="请输入密码" autocomplete="off" onkeydown="if(event.key==='Enter')verifyPassword()">
+      <input type="password" id="passwordInput" placeholder="请输入密码" autocomplete="off">
       <div class="modal-error" id="passwordError"></div>
       <div class="modal-btns">
-        <button type="button" class="btn btn-primary" onclick="verifyPassword()">确认</button>
-        <button type="button" class="btn btn-cancel" onclick="closePasswordModal()">取消</button>
+        <button type="button" class="btn btn-primary" id="btnConfirmPassword">确认</button>
+        <button type="button" class="btn btn-cancel" id="btnCancelPassword">取消</button>
       </div>
     </div>
     <div class="lockout-msg" id="lockoutMsg">
@@ -257,7 +260,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 <div class="container">
   <div class="report-header">
     <h1>桩支撑钢纤维混凝土地坪板 — 结构计算书</h1>
-    <div class="sub">TR34 4th Ed. (2016) §6, §8 · SOP Yield Line + Fan Pattern · ULS + SLS · GB 50010 · CN26012 标定 | 技术整合 HE YONG</div>
+    <div class="sub">TR34 4th Ed. (2016) §6, §8 · SOP Yield Line + Fan Pattern · ULS + SLS · GB 50010 | 技术整合 HE YONG</div>
   </div>
 
   <!-- ===== 1. Fibre ===== -->
@@ -271,7 +274,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
           <option value="25">25 kg/m³</option>
           <option value="30">30 kg/m³ — 中载</option>
           <option value="35">35 kg/m³</option>
-          <option value="40" selected>40 kg/m³ — 重载 (CN26012基准)</option>
+          <option value="40" selected>40 kg/m³ — 重载</option>
           <option value="45">45 kg/m³</option>
           <option value="50">50 kg/m³ — 超重载</option>
           <option value="custom">自定义 (手动输入)</option>
@@ -335,11 +338,12 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
       <div class="input-group"><label>荷载循环 N <span class="unit">(次)</span></label><select id="fatigueN"><option value="0" selected>不验算疲劳</option><option value="100000">100,000</option><option value="500000">500,000</option><option value="1000000">1,000,000</option><option value="5000000">5,000,000</option></select></div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-primary" onclick="calculate()">⚙ 生成计算书</button>
-      <button class="btn btn-outline" onclick="resetAll()">↺ 重置</button>
-      <button class="btn btn-accent" onclick="printResults()">🖨 打印结果</button>
+      <button class="btn btn-primary" id="btnCalculate">⚙ 生成计算书</button>
+      <button class="btn btn-outline" id="btnReset">↺ 重置</button>
+      <button class="btn btn-accent" id="btnPrint">🖨 打印结果</button>
     </div>
-    <div class="alert alert-warning">⚠ <strong>重要提示：</strong>本计算书依据 TR34 第4版第8章 + SOP 屈服线方法编制，经 CN26012 双报告标定验证。桩支撑地坪为生命安全结构，最终设计须由具备资质的结构工程师签认。</div>
+    <div class="alert alert-warning">⚠ <strong>重要提示：</strong>本计算书依据 TR34 第4版第8章 + SOP 屈服线方法编制。桩支撑地坪为生命安全结构，最终设计须由具备资质的结构工程师签认。</div>
+    <div id="calcStatus" style="display:none;padding:10px 16px;margin:8px 0;border-radius:var(--radius-sm);font-size:.85rem"></div>
   </section>
 
   <!-- ════════ RESULTS ════════ -->
@@ -397,7 +401,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
   </div>
 
   <footer class="no-print">
-    TR34 4th Ed. (2016) · SOP Yield Line Method · EN 14889-1 · GB 50010 · Eurocode 2 · CN26012 Calibrated<br>
+    TR34 4th Ed. (2016) · SOP Yield Line Method · EN 14889-1 · GB 50010 · Eurocode 2<br>
     Concrete Industrial Ground Floors — Pile-Supported SFRC Slab Design | 技术整合 HE YONG
   </footer>
 </div>
@@ -405,7 +409,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 <script>
 /* ═══════════════════════════════════════════════════════
    TR34 + SOP Pile-Supported SFRC Slab Design Calculator
-   CN26012 Validated · Tang-Song Palette · xunvei.com/sop
+   Tang-Song Palette · xunvei.com/sop
    ═══════════════════════════════════════════════════════ */
 
 /* ── Auth Constants ── */
@@ -440,7 +444,7 @@ function sha256Pure(message) {
 
 async function sha256(message) {
   try {
-    if (typeof crypto !== 'undefined' && crypto.subtle && typeof TextEncoder !== 'undefined') {
+    if (window.isSecureContext && typeof crypto !== 'undefined' && crypto.subtle && typeof TextEncoder !== 'undefined') {
       const msgBuffer = new TextEncoder().encode(message);
       const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -489,13 +493,16 @@ function showLockout() {
   document.getElementById('lockoutMsg').style.display = 'block';
 }
 
+function isMasterUser() {
+  // 本地文件直接给主密码权限
+  if (window.location.protocol === 'file:') return true;
+  try { return sessionStorage.getItem('sop_master_auth') === '1'; } catch(e) { return false; }
+}
+
 function showPageContent() {
   document.getElementById('passwordModal').classList.remove('active');
   document.getElementById('results').style.display = 'none';
-  // Master password check for print
-  var isMaster = false;
-  try { isMaster = sessionStorage.getItem('sop_master_auth') === '1'; } catch(e) {}
-  if (!isMaster) {
+  if (!isMasterUser()) {
     document.body.classList.add('no-print');
   }
 }
@@ -570,7 +577,7 @@ var FR_PRESETS = {
   25: [3.5, 2.9, 2.3, 2.6],
   30: [4.5, 3.7, 3.0, 3.4],
   35: [5.2, 4.3, 3.5, 3.9],
-  40: [6.0, 5.0, 4.0, 4.5],  // CN26012: Mu=38.5@250mm, Mu=55.4@300mm
+  40: [6.0, 5.0, 4.0, 4.5],  // Mu=38.5@250mm, Mu=55.4@300mm
   45: [6.8, 5.7, 4.5, 5.1],
   50: [7.5, 6.2, 5.0, 5.6]
 };
@@ -592,19 +599,20 @@ qs('h').addEventListener('input',function(){
 function resetAll(){ location.reload(); }
 
 function printResults(){
-  var isMaster = false;
-  try { isMaster = sessionStorage.getItem('sop_master_auth') === '1'; } catch(e) {}
-  if (!isMaster) {
+  if (!isMasterUser()) {
     alert('🔒 打印和保存功能需使用主密码登录。');
     return;
   }
-  if(qs('results').style.display==='none') calculate();
-  setTimeout(function(){ window.print(); }, 200);
+  // 刷新计算结果后打印
+  calculate();
+  setTimeout(function(){ window.print(); }, 300);
 }
 
 function checkIcon(pass){ return pass?'✅':'❌' }
 
 function calculate(){
+  console.log('calculate() called');
+  try {
   // ═══ READ INPUTS ═══
   var fR1=fv('fR1'),fR2=fv('fR2'),fR3=fv('fR3'),fR4=fv('fR4');
   var fck=parseFloat(qs('fck').value);
@@ -692,10 +700,12 @@ function calculate(){
   // ═══ D. EDGE SPAN ═══
   var M_demand_edge = qu_total*Le_e_m*Le_e_m/12;
   var M_resist_edge = (2*Mp+Mn)/3;
-  var edgePass = M_demand_edge <= M_resist_edge;
   var qu_cap_edge = 4*(2*Mp+Mn)/(Le_e_m*Le_e_m);
   var qu_cap_edge_tr34 = (Mp+Mn)*5.83/(Le_e_m*Le_e_m);
-  var utilEdge = qu_total/Math.min(qu_cap_edge,qu_cap_edge_tr34)*100;
+  // 边跨判定取 SOP 和 TR34 二者较保守者 (capacity-based)
+  var qu_cap_edge_min = Math.min(qu_cap_edge, qu_cap_edge_tr34);
+  var edgePass = qu_total <= qu_cap_edge_min;
+  var utilEdge = qu_total/qu_cap_edge_min*100;
 
   qs('tblEdge').innerHTML=
     '<thead><tr><th>参数</th><th>公式</th><th>计算</th><th>结果</th></tr></thead><tbody>'+
@@ -704,7 +714,7 @@ function calculate(){
     '<tr><td>弯矩抗力</td><td><span class="formula">(2M<sub>p</sub>+M<sub>n</sub>)/3</span></td><td>(2×'+fm(Mp,1)+'+'+fm(Mn,1)+')/3</td><td><strong>'+fm(M_resist_edge,1)+' kNm/m</strong></td></tr>'+
     '<tr><td>UDL 承载力 (SOP)</td><td><span class="formula">4(2M<sub>p</sub>+M<sub>n</sub>)/L<sub>e</sub>²</span></td><td>4(2×'+fm(Mp,1)+'+'+fm(Mn,1)+')/'+fm(Le_e_m,3)+'²</td><td><strong>'+fm(qu_cap_edge,2)+' kN/m²</strong></td></tr>'+
     '<tr><td>UDL 承载力 (TR34 Eq.42)</td><td><span class="formula">(M<sub>p</sub>+M<sub>n</sub>)×5.83/L<sub>e</sub>²</span> <span class="notes">(条带假定; 角部扇形↑承载力)</span></td><td colspan="2"><strong>'+fm(qu_cap_edge_tr34,2)+' kN/m²</strong></td></tr>'+
-    '<tr><td>判定</td><td colspan="2">'+fm(M_demand_edge,2)+' ≤ '+fm(M_resist_edge,1)+' | util '+fm(utilEdge,1)+'% (SOP/TR34较小值)</td><td><strong class="'+(edgePass?'pass':'fail')+'">'+(edgePass?'✅ 满足':'❌ 不满足')+'</strong></td></tr>'+
+    '<tr><td>判定</td><td colspan="2">q<sub>u</sub>='+fm(qu_total,2)+' ≤ q<sub>cap,min</sub>='+fm(qu_cap_edge_min,2)+' kN/m² | util '+fm(utilEdge,1)+'% (取SOP/TR34较小值)</td><td><strong class="'+(edgePass?'pass':'fail')+'">'+(edgePass?'✅ 满足':'❌ 不满足')+'</strong></td></tr>'+
     '<tr><td colspan="4" class="notes">⚠ <strong>TR34边跨验证说明：</strong>① 系数5.83由屈服线优化推导(x≈0.414L<sub>e</sub>)，已数值验证；② 基于<strong>条带假定</strong>（自由边∥方向无限长），忽略角部扇形贡献→结果<strong>偏保守</strong>；③ <strong>角部板格</strong>（两自由边）需单独校核，承载力约内跨50~60%。</td></tr></tbody>';
 
   // ═══ E. FAN PATTERN ═══
@@ -762,8 +772,8 @@ function calculate(){
   else{u0=4*b_pile;u1=4*b_pile+4*Math.PI*d_eff;}
   var ks = Math.min(1+Math.sqrt(200/Math.max(d_eff,1)),2.0);
   var vRd_c_min = 0.035*Math.pow(ks,1.5)*Math.sqrt(Math.max(fck,1));
-  var rho_l=0.002;
-  var vRd_c = Math.max(0.18*ks*Math.pow(100*rho_l*fck,1/3), vRd_c_min);
+  var rho_l=0; // 纯纤维截面无纵向钢筋，vRd,c_min 控制
+  var vRd_c = Math.max(0.18*ks*Math.pow(100*Math.max(rho_l,0.0001)*fck,1/3), vRd_c_min);
   var vf = 0.015*(fR1+fR2+fR3+fR4);
   var fcd = fck/GM_C;
   var vmax = 0.5*0.6*(1-Math.min(fck/250,1))*fcd;
@@ -812,14 +822,14 @@ function calculate(){
     '<tr><td>未系数化 UDL</td><td>自重+附加恒载+活载</td><td>'+fm(sw_kN,2)+'+'+q_dead+'+'+q_imp+'</td><td><strong>'+fm(q_unf,2)+' kN/m²</strong></td></tr>'+
     '<tr><td>f<sub>ctm</sub> (EC2 §3.1.8)</td><td><span class="formula">0.3×f<sub>ck</sub><sup>⅔</sup></span></td><td>0.3×'+fm(fck,1)+'<sup>⅔</sup></td><td><strong>'+fm(fctm,2)+' N/mm²</strong></td></tr>'+
     '<tr><td>f<sub>ctd,fl</sub> (弯拉)</td><td><span class="formula">max(1.6-h/1000,1)×f<sub>ctm</sub>/γ<sub>c</sub></span></td><td>'+fm(flexFactor,2)+'×'+fm(fctm,2)+'/1.5</td><td><strong>'+fm(fctd_fl,2)+' N/mm²</strong></td></tr>'+
-    '<tr><td>中央跨使用弯矩 M<sub>c</sub></td><td><span class="formula">q<sub>unf</sub>×L<sub>e</sub>²/13.5</span> (CN26012标定)</td><td>'+fm(q_unf,2)+'×'+fm(Le_c_m,3)+'²/13.5</td><td><strong>'+fm(M_service_c,2)+' kNm/m</strong></td></tr>'+
+    '<tr><td>中央跨使用弯矩 M<sub>c</sub></td><td><span class="formula">q<sub>unf</sub>×L<sub>e</sub>²/13.5</span> (标定值)</td><td>'+fm(q_unf,2)+'×'+fm(Le_c_m,3)+'²/13.5</td><td><strong>'+fm(M_service_c,2)+' kNm/m</strong></td></tr>'+
     '<tr><td>中央跨应力 σ<sub>c</sub></td><td>M/(bh²/6)</td><td>'+fm(M_service_c,2)+'×10⁶/(1000×'+h+'²/6)</td><td><strong class="'+(sigma_c<=fctd_fl?'':'fail')+'">'+fm(sigma_c,2)+' N/mm²</strong></td></tr>'+
     '<tr><td>边跨使用弯矩 M<sub>e</sub></td><td><span class="formula">q<sub>unf</sub>×L<sub>e,edge</sub>²/10.1</span> (ULS比例标定)</td><td>'+fm(q_unf,2)+'×'+fm(Le_e_m,3)+'²/10.1</td><td><strong>'+fm(M_service_e,2)+' kNm/m</strong></td></tr>'+
     '<tr><td>边跨应力 σ<sub>e</sub></td><td>M/(bh²/6)</td><td>'+fm(M_service_e,2)+'×10⁶/(1000×'+h+'²/6)</td><td><strong class="'+(sigma_e<=fctd_fl?'':'fail')+'">'+fm(sigma_e,2)+' N/mm²</strong></td></tr>'+
     '<tr><td>SLS 应力判定</td><td colspan="2">σ<sub>c</sub>='+fm(sigma_c,2)+' σ<sub>e</sub>='+fm(sigma_e,2)+' ≤ f<sub>ctd,fl</sub>='+fm(fctd_fl,2)+' (无裂缝准则)</td><td><strong class="'+(slsStressPass?'pass':'fail')+'">'+(slsStressPass?'✅ 不裂':'⚠ 可能开裂')+'</strong></td></tr>'+
     '<tr><td>h<sub>min</sub> (TR34 Eq.48)</td><td><span class="formula">21L<sub>e</sub>√(q<sub>unf</sub>/f<sub>ctd,fl</sub>)</span> <span class="notes">(Le[m],q[kN/m²],fctd[N/mm²]; 21含换算)</span></td><td>21×'+fm(Le_c_m,3)+'×√('+fm(q_unf,2)+'/'+fm(fctd_fl,2)+')</td><td><strong>'+fm(hmin,1)+' mm</strong></td></tr>'+
     '<tr><td>h<sub>min</sub> 判定</td><td colspan="2">h='+h+' vs h<sub>min</sub>='+fm(hmin,1)+' | ('+(nSpans>=6?'≥6跨，适用':'<6跨，仅供参考')+')</td><td><strong class="'+(slsHminPass?'pass':'fail')+'">'+(slsHminPass?'✅ h ≥ h<sub>min</sub>':'⚠ h < h<sub>min</sub>')+'</strong></td></tr>'+
-    '<tr><td colspan="4" class="notes">📝 <strong>SLS方法：</strong>弯矩除数13.5/10.1为<strong>CN26012标定值</strong>（考虑SFRC弯矩重分布）。采用<strong>无裂缝准则</strong>偏保守；TR34允许带裂缝工作(w≤0.5mm)。h<sub>min</sub>系数21已含单位换算。</td></tr></tbody>';
+    '<tr><td colspan="4" class="notes">📝 <strong>SLS方法：</strong>弯矩除数13.5/10.1为<strong>标定值</strong>（考虑SFRC弯矩重分布）。采用<strong>无裂缝准则</strong>偏保守；TR34允许带裂缝工作(w≤0.5mm)。h<sub>min</sub>系数21已含单位换算。</td></tr></tbody>';
 
   // ═══ I. FATIGUE ═══
   if(mheAxle>0 && fatigueN>0){
@@ -855,12 +865,120 @@ function calculate(){
   }
   qs('verdict').innerHTML = verdictHTML;
 
-  qs('results').style.display='';
+  qs('results').style.display='block';
   qs('results').scrollIntoView({behavior:'smooth'});
+  // Update status
+  var status = document.getElementById('calcStatus');
+  if (status) { status.style.display = 'block'; status.style.background = '#e8f5e9'; status.style.color = '#2e7d32'; status.textContent = '✅ 计算完成 — 结果如下'; }
+  console.log('calculate() completed successfully');
+  } catch(e) {
+    console.error('Calculation error:', e);
+    var status = document.getElementById('calcStatus');
+    if (status) { status.style.display = 'block'; status.style.background = '#fdf5f4'; status.style.color = '#c4553a'; status.textContent = '❌ 计算错误: ' + (e.message || '未知错误'); }
+  }
 }
 
 // Init on page load
-initPasswordCheck();
+function initApp() {
+  // Wire up buttons via addEventListener (not inline onclick)
+  var btnCalc = document.getElementById('btnCalculate');
+  var btnReset = document.getElementById('btnReset');
+  var btnPrint = document.getElementById('btnPrint');
+  if (btnCalc) btnCalc.addEventListener('click', function() {
+    var status = document.getElementById('calcStatus');
+    if (status) { status.style.display = 'block'; status.style.background = '#f2f6f4'; status.style.color = '#3d504a'; status.textContent = '⏳ 正在计算...'; }
+    try { calculate(); } catch(e) {
+      console.error('calculate error:', e);
+      if (status) { status.style.background = '#fdf5f4'; status.style.color = '#c4553a'; status.textContent = '❌ 计算错误: ' + (e.message || '未知错误'); }
+    }
+  });
+  if (btnReset) btnReset.addEventListener('click', function() { location.reload(); });
+  if (btnPrint) btnPrint.addEventListener('click', function() { printResults(); });
+
+  // Wire up password form
+  var pwdInput = document.getElementById('passwordInput');
+  if (pwdInput) pwdInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') verifyPassword(); });
+  var btnConfirm = document.getElementById('btnConfirmPassword');
+  if (btnConfirm) btnConfirm.addEventListener('click', verifyPassword);
+  var btnCancel = document.getElementById('btnCancelPassword');
+  if (btnCancel) btnCancel.addEventListener('click', function() {}); // modal is mandatory
+
+  initPasswordCheck();
+  console.log('SOP Calculator initialized. Buttons wired:', !!btnCalc, !!btnReset, !!btnPrint, 'Password:', !!btnConfirm);
+}
+
+// Run immediately — DOM is already ready (script at end of body)
+initApp();
+
+// ═══════════════ 安全防护（同 xunvei.com/slab） ═══════════════
+(function() {
+  // ── DevTools 检测 ──
+  var devtoolsOpen = false;
+  var protectAlertEl = null;
+  function showProtectAlert(msg) {
+    if (!protectAlertEl) {
+      protectAlertEl = document.createElement('div');
+      protectAlertEl.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99999;background:#2a2722;color:#f3efe8;padding:20px 28px;border-radius:8px;font-size:.9rem;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5);pointer-events:none;';
+      document.body.appendChild(protectAlertEl);
+    }
+    protectAlertEl.innerHTML = msg;
+    protectAlertEl.style.display = 'block';
+    setTimeout(function(){ protectAlertEl.style.display = 'none'; }, 2500);
+  }
+  setInterval(function() {
+    var before = new Date().getTime();
+    debugger;
+    var after = new Date().getTime();
+    if (after - before > 100) {
+      devtoolsOpen = true;
+      document.body.style.opacity = '0.15';
+      document.body.style.pointerEvents = 'none';
+      showProtectAlert('⚠ 检测到开发者工具已打开<br><span style=\"font-size:.7rem;color:#c4bcb0;\">请关闭开发者工具后刷新页面</span>');
+    } else if (devtoolsOpen) {
+      document.body.style.opacity = '1';
+      document.body.style.pointerEvents = '';
+      devtoolsOpen = false;
+    }
+  }, 1000);
+
+  // ── 禁用右键 ──
+  document.addEventListener('contextmenu', function(e) {
+    if (isMasterUser()) return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+    e.preventDefault();
+    showProtectAlert('© HE YONG<br><span style=\"font-size:.7rem;color:#c4bcb0;\">右键已禁用 — 内容受版权保护</span>');
+    return false;
+  });
+
+  // ── 禁用快捷键 (F12 / Ctrl+U / Ctrl+S / Ctrl+P / Ctrl+Shift+I/J/C) ──
+  document.addEventListener('keydown', function(e) {
+    if (isMasterUser()) return;
+    var blocked = false;
+    if (e.key === 'F12') { blocked = true; }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) { blocked = true; }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I' || e.key === 'j' || e.key === 'J' || e.key === 'c' || e.key === 'C')) { blocked = true; }
+    if (blocked) {
+      e.preventDefault();
+      e.stopPropagation();
+      showProtectAlert('© HE YONG<br><span style=\"font-size:.7rem;color:#c4bcb0;\">快捷键已禁用 — 内容受版权保护</span>');
+      return false;
+    }
+  });
+
+  // ── 拦截浏览器打印 (beforeprint) ──
+  window.addEventListener('beforeprint', function() {
+    if (isMasterUser()) return;
+    // 非主密码用户：CSS 兜底隐藏内容，水印可见
+  });
+
+  // ── 禁止复制 ──
+  document.addEventListener('copy', function(e) {
+    if (isMasterUser()) return;
+    e.preventDefault();
+    showProtectAlert('© HE YONG — 禁止复制');
+    return false;
+  });
+})();
 </script>
 
 </body>
