@@ -1357,7 +1357,7 @@ function importProject(file) {
         else if (s.type === 'rc') setVal('hB', s.h);
         else if (s.type === 'plain') setVal('hD', s.h);
       });
-      updatePoisson(); updateRebarRatio(); estimateKfromCompaction();
+      updatePoisson(); updateRebarRatio();
       calculateAll();
       alert('✅ 项目已导入并重新计算');
     } catch (err) { alert('❌ 导入失败：' + err.message); }
