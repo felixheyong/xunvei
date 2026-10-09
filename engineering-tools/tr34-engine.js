@@ -161,23 +161,23 @@ function Pu_int_a02(Mn, Mp, a_over_l) {
 
 /**
  * Flexural capacity — Free edge, a/l = 0
- * Pu = [π × (Mn + Mp) + 4 × Mp] / 2
+ * Pu = π × (Mp + Mn) / 2 + 2 × Mn
  *
- * TR34 Eq 8.5a.
+ * TR34 §7.8.3 Eq 23.
  *
  * @param {number} Mn — negative moment capacity [kN·m/m]
  * @param {number} Mp — positive moment capacity [kN·m/m]
  * @returns {number} Pu [kN]
  */
 function Pu_edge_a0(Mn, Mp) {
-  return (Math.PI * (Mn + Mp) + 4 * Mp) / 2;
+  return (Math.PI * (Mp + Mn) + 4 * Mn) / 2;
 }
 
 /**
  * Flexural capacity — Free edge, a/l ≥ 0.2
- * Pu = [π × (Mn + Mp) + 4 × Mp] / (1 − 2a/(3l))
+ * Pu = [π × (Mp + Mn) + 4 × Mn] / (1 − 2a/(3l))
  *
- * TR34 Eq 8.5b.
+ * TR34 §7.8.3 Eq 24.
  *
  * @param {number} Mn — negative moment capacity [kN·m/m]
  * @param {number} Mp — positive moment capacity [kN·m/m]
@@ -185,7 +185,7 @@ function Pu_edge_a0(Mn, Mp) {
  * @returns {number} Pu [kN]
  */
 function Pu_edge_a02(Mn, Mp, a_over_l) {
-  return (Math.PI * (Mn + Mp) + 4 * Mp) / (1 - 2 * a_over_l / 3);
+  return (Math.PI * (Mp + Mn) + 4 * Mn) / (1 - 2 * a_over_l / 3);
 }
 
 /**
@@ -346,11 +346,11 @@ function calculateDowel(params) {
   var T   = params.dw_T;
   var S   = params.dw_S;
   var ds  = params.dw_ds;
-  var e   = params.dw_e;
+  var e   = (params.dw_X != null ? params.dw_X / 2 : params.dw_e); // 偏心距 = 接缝张开量/2（TR34 §6.5.2）
   var fck = params.fck;
   var h   = params.h;
 
-  var fcd_val = fcd(fck);           // design concrete strength
+  var fcd_val = fcd(fck, params.gammaC);           // design concrete strength (γc 随主表)
   var k3      = 3;                   // bearing factor
   var vRd_ct  = 0.52;               // design shear stress for unreinforced concrete [MPa]
   var d2      = h / 2;              // lever arm to slab centre
@@ -415,29 +415,29 @@ function anchorPullout(hef, fck, k1, gammaC) {
 // ============================================================================
 
 /**
- * Approximate central deflection under a point load.
- * δ_central ≈ (P / (K × l²)) × 0.002
+ * Central deflection under a point load — Westergaard elastic solution.
+ * δ_central = P / (8 × K × l²)
  *
- * This is a rule-of-thumb — accurate FEM or Westergaard closed-form
- * solutions should be used for final design.
- *
- * @param {number} P — applied service load [kN]
- * @param {number} K — modulus of subgrade reaction [MN/m³]
+ * @param {number} P_kN — applied service load [kN]
+ * @param {number} K_MNm3 — modulus of subgrade reaction [MN/m³]
  * @param {number} l_m — radius of relative stiffness [m]
  * @returns {number} deflection [mm]
  */
-function deflectionCentral(P, K_MNm3, l_m) {
-  return (P / (K_MNm3 * l_m * l_m)) * 0.002;
+function deflectionCentral(P_kN, K_MNm3, l_m) {
+  return P_kN / (8 * K_MNm3 * l_m * l_m);
 }
 
 /**
- * Edge deflection ≈ 4 × central deflection.
+ * Edge deflection under a point load — Westergaard elastic solution.
+ * δ_edge = P × √2 / (4 × K × l²)
  *
- * @param {number} defl_central — central deflection [mm]
- * @returns {number} edge deflection [mm]
+ * @param {number} P_kN — applied service load [kN]
+ * @param {number} K_MNm3 — modulus of subgrade reaction [MN/m³]
+ * @param {number} l_m — radius of relative stiffness [m]
+ * @returns {number} deflection [mm]
  */
-function deflectionEdge(defl_central) {
-  return defl_central * 4;
+function deflectionEdge(P_kN, K_MNm3, l_m) {
+  return P_kN * Math.SQRT2 / (4 * K_MNm3 * l_m * l_m);
 }
 
 // ============================================================================
