@@ -1,9 +1,10 @@
 # /slab 服务端访问控制（Cloudflare Pages Functions）
 
-`functions/slab/_middleware.js` 对 `/slab/*` 做服务端鉴权：
+`functions/_middleware.js`（**顶层**中间件）对 `/slab/*` 做服务端鉴权，其余路径（主页、/concrete、/sop 等）直接放行。
 
 - **主密码** `19921080011`：始终可用，签发 30 分钟签名会话 Cookie（`slab_session`）。
 - **一次性密码（OTP）**：100 个 8 位码（哈希存于中间件内），提交时校验；核销依赖 KV 命名空间。
+- **注意**：中间件必须放在顶层 `functions/`（子目录 `functions/slab/_middleware.js` 只会拦截同目录 Functions，不会拦截静态 HTML）。
 
 ## 必须的部署配置（Cloudflare 后台一次性操作）
 

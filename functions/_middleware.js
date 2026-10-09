@@ -1,6 +1,7 @@
-// functions/slab/_middleware.js
+// functions/_middleware.js（顶层中间件）
 // 服务端访问控制（Cloudflare Pages Functions 中间件）— 主密码 + 一次性密码(OTP)。
 // 会话为签名 Cookie（30 分钟有效），OTP 核销依赖 KV 命名空间 SLAB_OTP（见 README/部署说明）。
+// 注意：必须放在顶层 functions/ 目录（子目录 _middleware.js 不会拦截静态文件）。
 
 const COOKIE = 'slab_session';
 const WINDOW_MS = 30 * 60 * 1000;
@@ -125,13 +126,19 @@ button:hover { background:#3d6a94; }
 export async function onRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
+  const path = url.pathname;
+
+  // 仅保护 /slab（及子路径）；主页、/concrete、/sop 等其它路径直接放行
+  if (path !== '/slab' && !path.startsWith('/slab/')) {
+    return next();
+  }
 
   const cookies = parseCookies(request.headers.get('Cookie') || '');
   if (await validSession(cookies[COOKIE], env)) {
     return next();
   }
 
-  if (request.method === 'POST' && url.pathname.endsWith('/login')) {
+  if (request.method === 'POST' && path.endsWith('/login')) {
     return handleLogin(request, env);
   }
 
