@@ -250,26 +250,6 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 </div>
 
 
-<!-- ════════ 密码弹窗 ════════ -->
-<div class="modal-overlay active" id="passwordModal">
-  <div class="modal-dialog">
-    <h3 id="modalTitle">🔐 访问验证</h3>
-    <p class="modal-desc" id="modalDesc">请输入访问密码 — 每个密码仅可使用一次，30 分钟后失效</p>
-    <div id="loginForm">
-      <input type="password" id="passwordInput" placeholder="请输入密码" autocomplete="off" onkeydown="if(event.key==='Enter')verifyPassword()">
-      <div class="modal-error" id="passwordError"></div>
-      <div class="modal-btns">
-        <button type="button" class="btn btn-primary" onclick="verifyPassword()">确认</button>
-        <button type="button" class="btn btn-cancel" onclick="closePasswordModal()">取消</button>
-      </div>
-    </div>
-    <div class="lockout-msg" id="lockoutMsg">
-      <strong>🚫 密码错误次数过多</strong>
-      您已连续 3 次输入错误密码，访问已被暂时锁定。<br>请联系网站管理员获取新的访问密码。
-    </div>
-  </div>
-</div>
-
 <button id="toc-toggle" onclick="toggleSidebar()" title="菜单">☰</button>
 
 <nav id="toc">
@@ -410,7 +390,13 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 <section id="s4"><h2><span class="sec-num">4</span>冲切剪力验算 — 最大抗力 · 临界截面</h2><div id="section4Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
 <section id="s5"><h2><span class="sec-num">5</span>接缝传力设计 — 传力杆/钢板</h2><div id="section5Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
 <section id="s6"><h2><span class="sec-num">6</span>MHE 与叉车荷载验算</h2><div id="section6Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
-<section id="s8"><h2><span class="sec-num">7</span>计算汇总</h2><div id="section8Content"><p style="color:var(--muted);">请先执行计算。</p></div>
+<section id="s8"><h2><span class="sec-num">7</span>计算汇总</h2>
+<div class="btn-row" style="margin:-8px 0 12px;">
+  <button class="btn btn-accent" onclick="exportProject()">⬇️ 导出项目 (.json)</button>
+  <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">⬆️ 导入项目</button>
+  <input type="file" id="importFile" accept=".json,application/json" style="display:none;" onchange="importProject(this.files[0]);this.value='';">
+</div>
+<div id="section8Content"><p style="color:var(--muted);">请先执行计算。</p></div>
 </section>
 <section id="s9"><h2><span class="sec-num">8</span>最大设缝间距验算 <span style="font-size:0.7rem;color:var(--accent2);font-weight:400;">不切缝设计 — 方案A SFRC</span></h2>
 <div class="alert alert-info" style="font-size:0.82rem; margin-bottom:12px;">
@@ -424,174 +410,16 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 </section>
 
 
-<footer>地基承载混凝土地坪通用设计计算工具 · 基于 TR34 第4版 (2016) · Eurocode 2 · fib MC2010 §7.7 · SFRC+RC · 仅作参考</footer>
+<footer>地基承载混凝土地坪通用设计计算工具 v3.0.0 · 基于 TR34 第4版 (2016) · Eurocode 2 · fib MC2010 §7.7 · SFRC+RC · 仅作参考</footer>
 </main>
 
 <script src="../engineering-tools/tr34-engine.js"></script>
 <script>
 
 
-// ═══════════════ 密码保护 ═══════════════
-const MAX_ATTEMPTS = 3;
-const AUTH_WINDOW = 30 * 60 * 1000;
-const MASTER_HASH = '2d88ffbc912883f569bdd47bd68c351cedb751e3aebab40fba24dce3989cb9e8';
-const VALID_HASHES = ["873455d7a6ca5c2d90fc8367cb89bd3b4cff00bc53f63bf866a5b72988cd374d","5c35066cff0d0eb0eaf9c6a62afaba087b653ca8efea37391a65064e2aab4208","8eee884db5f41d749bb7c28522989fb3b5ab58a660222a79a15091bcc31d4464","b8cc557874d5e57b4e6b8ca2e2f36083b5540d875e358c3e369ed72310147669","d6cf76b03498ede7b4ee18b966a1685468b657728163937cea8a194e7d723d53","36a6c8e07d9e877f226b4e136edc012b3be73f0a392757268590ac69b9431cad","a7f9e5ebe7d1df67bc49d816e075021a6d26053387575b24ff0caf3e77ac27f9","89504ddacf1dee4ff5257468991a54b0124274a180ec9a537554b74cf6bdf036","949c1b0a15a77d8a72d2ec3da6d905decb4adb06e02e724c47eaa7c80e5914ad","aa8cfd9ded721fbe536ce6de7bce28eee77e6af14493d395527df4f381070640","1aef948399ada68ed0f98afe1bb82e274c77104e3330f5c4f3dbd884dbcda246","60fad41d5aee8665e0ec75e58a04019a74bf5159266094ffd61f3e02251d8ccf","853c97f6db065e9eb491df19c7e85be45acc4b5abf1c41373060723b3be9d08e","376682f5e6df079508b1e2fe39691bff373365bdabb095ca6f4df94bf32c3404","e8c3a03ddf02b8b77772d40078909e7fe0bbec6ce2d23757cc1721ab1319cd20","0db7bc8ec86329eb7f56fac9d5574a1087de8eab2f70f3e362205c6b0cbe5859","0f910910978b86feca07e545e2fbbfd506a7e0e38b796fa66936e2af559b1fbe","7a52bb95308782610c0b7c91bd569f85c6a3f902b8ca7db296a91fb49ca34112","a26c3a2a2cea1d18373b9cabc8bc5f051262812ef7f9f48c38d4a6a45184df84","b419d7be152ae8eb683ef8927e0d706b996e22998ec299fd046a29d45c2c0ce1","ed0ee72e4e6b67dfcb98d5333f596eb1b1fd7b7eac6b69f7f627da79f2073a0f","5b07355f9298bc05e9d13a135f0cb3c791a79aa7af664412d0dc1316743747ad","d33d696324ab0d7c974ba1e4e77c2f95955278a429de9ea963e35e0644ef647c","c5ee030bcf91cc6ac3a26e82753cedd66960eb2c1cfd4d4571517272d79d2d50","baf09b3163903c0f526c46ee1bf25f8df8d6d81130420668f856772245bad4ed","4ba9d7466ed22fcc4073d1f55d64acbf31a6349361fb18c41a0ea2e72e4f989a","41836fb67bb07ea904f6da8be31360194ca6233aa1d012cd78b85cfe626b3180","f101e5c59f19b9572a8e39d13a2bcde5806898669e067841d6f4697891214b36","71ad9bec5af685a6420eb98287510d01b1c939d5b4f293ca2f471259c8e59a3e","0d8659f0fee3ca46bf6589cb60871ad864dda7d0bc316e2924afeb30899bd1cd","3d3dd3c28fb79e0007bcf67ec2fd01065a49c3d2153b6e0a97fbe4e6bf14fafa","aa22de6ff6490c34f4e36375409e201f2412ccdf258e50fe39991ddc097f2567","ab96621615212c5107c91877b57f84508c6a662465d3b55436f4950f1270d173","6f44e9815a57a09b6fa757401bc3e61f340d8b8e18788a60fa5582df8e3ae948","56cc13846b640be61817f4e431892fac1c15f927eeeb99ba95255b22431b522f","d25d979bc4cef98d191d23308b977d3202b4de9e90bea8981889f66650e2d519","c0aa46fec28fde8ed6377e3589bfa1c4ba7561d5693133ca46fd2ab201255ab7","da57e8ebf828d011e996a54f657d86a6b272333bfd8a7ebd7c0e1611fb6eb7f4","c40ca42cfbeaadb4acd284e6fcfbbb01f26d0f13a29f493eff14f44d7e0eefbb","070f1eddebde4494b0a6027b0f40b67aba9a0b5eafa318ed682ae760e31e281f","e3b727ef44905a40bed1127624296a2b2d1bf0a287c05c42717eff16bfc7439f","8e7f75dac5225fe68a0114ec20cb49738b987cb9a0b5ec349f082f4f788b2cf7","230af6b5c99c650319f73f55239ccedf74214bcdfe7b7a923deeb6add1db43ba","9a2ea9f71505452feb4cf9f7de83b47fcb1124198f17b7d958e6a3e3ddd79d88","a966b5638e6fe92458386f4f7b9fb722c658886fdb02a0309112c8b13dc273c0","353aab91f054ef818c5343cbbbc44cbde2e68c1ad9aaad71ab3e041adbbe26c9","f4e678be6ca5960a110c5370531bc766f3500ce3966819427b8621882cf787b5","3b7a32478c9d653b8f6898bd82712d430a0e0f37f114322fe1127523b29c1051","d15d3a79963c80d5dafb27d65546e09515d78b8425b60247f59cf09e64e98ac2","008554807fdbae02205fd8efc1f2aed88c4ba9d8f3c1cd80fe194445c757de14","9fa22705e3d48c4233de05c3b09a468e60e86f15a9ba5ea19640f1e25312a6d3","dc1d79f796d46aa626d2e555fec2ddef224f3205fc4bfbcf242360b54c42e235","0145c7e9289f8e1d2e108d1ff25ddfb822d9ccd7cc0aa1822d9ac0fbc5019cfc","803876669172bd0735cc478fe4eb612e78756872da7d786d9aa6ddd1f023b009","53c8bc83d46cf8c3420dee9cdf02dd2b85f8a53d5747bd5639367666fcdea2a8","6168f111bbcb0ce1b3122bc70a5077a75b3fea1b21af39b8df6f5ad03322f745","d103b33afdfa3f769d52ebf1776e25aaa3c2a7e07b474526ae4923ea40262e6c","121b2b80697893aeef8b3f5c98868a354027e49a5a1e4ee7b6b0f95d5521efcd","f8a3c36f1e0aff13b6d662c8115595142f0d138dbbe0e5fe04edd4274b856097","1a42ea332a96a8fc15b2089b906c0f014ddd62665603f37ad424cb6b20b483d5","56156635915ca8047cebe283a3e28f257c77e67b24fe7ad64519ef997861dd52","7e0eb7485870f7e1fc84eb9f1f504074c10508f867882cc035d2a3f1e526af06","7d2573cb073e9715178d04b23a320641fb5b581b159d0064963bbbfa9e99f156","8668610ce25fc03f86e3a38da37d98d6e5a7f29b83e452b5efa0925e0524da3c","23067e4ad9c5045fc33fa314e7bb2f460e1276b18d1f978f5e05257916fa854b","5df21884ed2adeb477767143d159e35663de881b9c3afd4a7ae296ed42e932fb","78b9f53b70aa827fe9127b15f3bc3028354ff767113efa0448bd2b91d18e6c2d","8d7ca1a24d39ae4358b29941e5a681381002984166765d2a83ad40f8d308e6ba","d565990cec9d5ec663438fa05ddbb3bde2d3f3e51ec21fe799e32a52e5ec9997","d7c5894e82dde0e980c191a9512d32563ccaa30f85aff9aa4860685a7fad8ef9","d6e50653c2521b3b16704bd1c2f10d97e117da022d18c4574922a52f55019579","781fbcace4c1575c8f0e7a864e831cd3c31f8bed6cd742bc053d031a15600f62","3d0a1b3352a78c7c32e64003ab901945c33804c51ba9b262392f6d1d2d37b7f4","5b6483cd69de3398039832e415cb0c4054a20a5b07540776d466b6525b9f2c19","3acd31d81baabf69733bd17e847c954c5646361adfaeee6a1fa79ac902d42f80","8bddb3c81c6e23efd5f0bae59b74dbcf0de911c97d762935d981cf58701ee673","0e5ac8701002e61badfc48ad6fbcf69ca2a718470ac445163497eb57e56a809b","5b7b297c0691b6350a2d5cefd549bcc482e410751a808f30ce5a208c7030b3f7","6b1198882af08bca660ade45ca0ac6b8ac8fbbbb8384827f97bbf82ce1dd3c3b","caca996536866ed488c4719b5a2cd2a2b81f7758338cad8615779e7a7e0e7926","4ff74e2536ff17be55727d09222caffd959efca4946e07a943d892bcbf2e20a5","1c99df2ea799b4169948d84170debe47b54846d4e13bb66c40cf00b0d12492b9","bef7c4fe08c15e1db62c843f086cb4d4b389e17e3e423de6273215399aa70b04","988491e93508331ff10831d51d29648849a6c9925092c8fb15ca49b2a77df627","3a82954136c5450025624c0cd02dcc6acf48bf855d75bf5bd13419704145268b","62fbc50ccc852ee080ebe91cb074132dd277a25143ee445911cf0491e40bae68","b64020da87df2f83545ea4bff63e5f0fee1833a62db513d94ce612c44dbc79ce","ce6d75f5ee2183fbea1d6f17cb8cdeabe29f2d44b79dc6b0ea717c0f980cdc01","fc1cf7b1ae5aca9e9693708eea1855fb54fa4e74041891267cf375785e6451a5","42b9e2f5344ce3d0283aa45b96db073ad75d16b1240d91ff78fd1ddbcc75dd3f","3fc9426db3faa0febbf3ee344fd656ff60939c2e15af8f7e506d60312c49f7ca","26ac2954986037b81d7ae1dd19c73bce83c53715142b1511364adf2404d590ed","ceeae720e2e20c71001913e97d34a55450e20b706ec443a1e765ce2c50312b78","b14a2586878b088393133f22d9a3cbb6fa859bcdfe5302a15ff82964b8b41c9a","bab01ab27ff5d5a7a48867bedd8d65eb9ec2cfef519dc99008753dcd00488c89","61538942b2f3b206b3889c62adb1e296da2c048d74ec455fa2d261031a00f5e1","123a4676b5c67e276a4aa8a5eab1d71e7d57d0b997e8d89ed3258f1c6e9cf09d","b88580febab30f0d4f961cceb963f4a9d21b3c4cfa7f8259ef73a566aaf8e57f","4a46b3627c460b9f48e4c8c1525973b9aed39bd0adc6ba7b4c37abf808c9bac7","bf9c3c71b83644b6f67ff6909a3c7405c350e25548fe488e9054757c82980b76"];
-
-// SHA-256 纯 JS 回退 (移动端兼容)
-function sha256Pure(message) {
-  function rotr(x, n) { return (x >>> n) | (x << (32 - n)); }
-  var K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
-  var msg = unescape(encodeURIComponent(message));
-  var len = msg.length;
-  var bin = []; for (var i = 0; i < len; i++) bin.push(msg.charCodeAt(i));
-  bin.push(0x80);
-  while ((bin.length + 8) % 64 !== 0) bin.push(0);
-  var bitLen = len * 8;
-  for (var i = 0; i < 4; i++) { bin.push((bitLen >>> (24 - i * 8)) & 0xff); }
-  var H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
-  for (var i = 0; i < bin.length; i += 64) {
-    var W = new Array(64);
-    for (var t = 0; t < 16; t++) W[t] = (bin[i+t*4]<<24)|(bin[i+t*4+1]<<16)|(bin[i+t*4+2]<<8)|bin[i+t*4+3];
-    for (var t = 16; t < 64; t++) { var s0 = rotr(W[t-15],7)^rotr(W[t-15],18)^(W[t-15]>>>3); var s1 = rotr(W[t-2],17)^rotr(W[t-2],19)^(W[t-2]>>>10); W[t] = (W[t-16]+s0+W[t-7]+s1)|0; }
-    var a=H[0],b=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
-    for (var t = 0; t < 64; t++) { var T1 = (h + (rotr(e,6)^rotr(e,11)^rotr(e,25)) + ((e&f)^(~e&g)) + K[t] + W[t])|0; var T2 = ((rotr(a,2)^rotr(a,13)^rotr(a,22)) + ((a&b)^(a&c)^(b&c)))|0; h=g;g=f;f=e;e=(d+T1)|0;d=c;c=b;b=a;a=(T1+T2)|0; }
-    H[0]=(H[0]+a)|0;H[1]=(H[1]+b)|0;H[2]=(H[2]+c)|0;H[3]=(H[3]+d)|0;H[4]=(H[4]+e)|0;H[5]=(H[5]+f)|0;H[6]=(H[6]+g)|0;H[7]=(H[7]+h)|0;
-  }
-  var hex = ''; for (var i = 0; i < 8; i++) hex += ((H[i]>>>0).toString(16)).padStart(8, '0');
-  return hex;
-}
-
-async function sha256(message) {
-  try {
-    if (typeof crypto !== 'undefined' && crypto.subtle && typeof TextEncoder !== 'undefined') {
-      const msgBuffer = new TextEncoder().encode(message);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-  } catch(e) { /* fall through to pure JS */ }
-  // crypto.subtle not available (non-HTTPS, old mobile browser) → pure JS fallback
-  return sha256Pure(message);
-}
-
-function getUsedPasswords() {
-  try { return JSON.parse(localStorage.getItem('slab_used_passwords') || '[]'); }
-  catch(e) { return []; }
-}
-function markPasswordUsed(hash) {
-  const used = getUsedPasswords();
-  used.push(hash);
-  localStorage.setItem('slab_used_passwords', JSON.stringify(used));
-}
-function isAuthorized() {
-  // 本地文件直接放行
-  if (window.location.protocol === 'file:') return true;
-  try {
-    var t = sessionStorage.getItem('slab_auth_time');
-    if (!t) return false;
-    return (Date.now() - parseInt(t, 10)) < AUTH_WINDOW;
-  } catch(e) { return false; }
-}
-function setAuthorized() {
-  try { sessionStorage.setItem('slab_auth_time', Date.now().toString()); } catch(e) {}
-}
-function getFailedAttempts() {
-  try { return parseInt(sessionStorage.getItem('slab_failed') || '0'); }
-  catch(e) { return 0; }
-}
-function incrementFailed() {
-  var n = getFailedAttempts() + 1;
-  try { sessionStorage.setItem('slab_failed', String(n)); } catch(e) {}
-  return n;
-}
-function isLockedOut() { return getFailedAttempts() >= MAX_ATTEMPTS; }
-
-function showLockout() {
-  document.getElementById('modalTitle').textContent = '🔒 访问已锁定';
-  document.getElementById('modalDesc').style.display = 'none';
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('lockoutMsg').style.display = 'block';
-}
-
-function showPageContent() {
-  document.getElementById('passwordModal').classList.remove('active');
-  document.querySelector('main').classList.add('authorized');
-  // 检查是否主密码授权 → 允许打印/保存；否则禁用
-  var isMaster = false;
-  try { isMaster = sessionStorage.getItem('slab_master_auth') === '1'; } catch(e) {}
-  if (!isMaster) {
-    document.body.classList.add('no-print');
-  }
-  try { calculateAll(); } catch(e) {}
-}
-
-function initPasswordCheck() {
-  if (isAuthorized()) {
-    showPageContent();
-    return;
-  }
-  document.getElementById('passwordModal').classList.add('active');
-  if (isLockedOut()) {
-    showLockout();
-    return;
-  }
-  document.getElementById('modalTitle').textContent = '🔐 访问验证';
-  document.getElementById('modalDesc').style.display = '';
-  document.getElementById('loginForm').style.display = '';
-  document.getElementById('lockoutMsg').style.display = 'none';
-  document.getElementById('passwordInput').value = '';
-  document.getElementById('passwordError').textContent = '';
-  setTimeout(function() { document.getElementById('passwordInput').focus(); }, 200);
-}
-
-function closePasswordModal() {
-  // Don't close if not authorized — modal is mandatory
-}
-
-async function verifyPassword() {
-  if (isLockedOut()) { showLockout(); return; }
-  var input = document.getElementById('passwordInput').value.trim();
-  var errorEl = document.getElementById('passwordError');
-  if (!input) { errorEl.textContent = '请输入密码'; return; }
-  var hash;
-  try { hash = await sha256(input); } catch(e) { errorEl.textContent = '⚠️ 加密错误，请刷新页面重试'; return; }
-  var used = getUsedPasswords();
-  if (hash === MASTER_HASH) {
-    setAuthorized();
-    try { sessionStorage.setItem('slab_master_auth', '1'); sessionStorage.removeItem('slab_failed'); } catch(e) {}
-    document.body.classList.remove('no-print');
-    showPageContent();
-    return;
-  }
-  var validIdx = VALID_HASHES.indexOf(hash);
-  if (validIdx >= 0) {
-    if (used.indexOf(hash) >= 0) {
-      errorEl.textContent = '❌ 此密码已被使用，请使用新的密码';
-      incrementFailed();
-      if (isLockedOut()) showLockout();
-      return;
-    }
-    markPasswordUsed(hash);
-    setAuthorized();
-    try { sessionStorage.removeItem('slab_master_auth'); sessionStorage.removeItem('slab_failed'); } catch(e) {}
-    showPageContent();
-    return;
-  }
-  var attempts = incrementFailed();
-  var remaining = MAX_ATTEMPTS - attempts;
-  if (remaining > 0) {
-    errorEl.textContent = '❌ 密码错误，还剩 ' + remaining + ' 次尝试机会';
-  } else {
-    showLockout();
-  }
-}
-
-// Password DISABLED
-window.addEventListener('DOMContentLoaded', function() {
-  document.querySelector('main').classList.add('authorized');
-  document.getElementById('passwordModal').style.display='none';
-  calculateAll();
-});
+// ═══════════════ 访问控制 ═══════════════
+// 鉴权已移至服务端（Cloudflare Pages Functions: functions/slab/_middleware.js）。
+// 本页不再包含客户端密码校验；通过鉴权后服务端才会下发本页面。
 
 // ═══════════════ SIDEBAR TOGGLE ═══════════════
 function toggleSidebar() {
@@ -906,18 +734,18 @@ function calculateAll() {
   });
 
   var renderFns = [
-    function(){ renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4); },
-    function(){ renderSection3(p, results); },
-    function(){ renderSection4(p, results); },
-    function(){ renderSection5(p, results); },
-    function(){ renderSection6(p, results); },
-    function(){ renderSection8(p, results); },
-    function(){ renderJointSpacing(p, results); }
+    { id:'section2Content', fn:function(){ renderSection2(p, results, fcm, fctm, Ecm_gpa, Ecm, r1, r4); } },
+    { id:'section3Content', fn:function(){ renderSection3(p, results); } },
+    { id:'section4Content', fn:function(){ renderSection4(p, results); } },
+    { id:'section5Content', fn:function(){ renderSection5(p, results); } },
+    { id:'section6Content', fn:function(){ renderSection6(p, results); } },
+    { id:'section8Content', fn:function(){ renderSection8(p, results); } },
+    { id:'section9Content', fn:function(){ renderJointSpacing(p, results); } }
   ];
-  renderFns.forEach(function(fn, i){
-    try { fn(); } catch(e) {
-      console.error('Section '+(i+2)+' error:', e);
-      var div = document.getElementById('section'+(i+2)+'Content');
+  renderFns.forEach(function(entry){
+    try { entry.fn(); } catch(e) {
+      console.error('渲染错误 ('+entry.id+'):', e);
+      var div = document.getElementById(entry.id);
       if (div) div.innerHTML = '<div class="alert alert-danger"><strong>渲染错误：</strong>' + e.message + '</div>';
     }
   });
@@ -1475,121 +1303,68 @@ function resetToDefaults() {
   estimateKfromCompaction();
 }
 
-// 注：原 copySummary / exportJSON 为无入口的遗留重复计算函数（含 undefined 项目名与旧公式），已移除。
-// 如需导出，应在结果快照基础上重新实现（见技术审查报告第10条）。
+// ═══════════════ 项目文件导入/导出 + 版本 ═══════════════
+const APP_VERSION = '3.0.0';
 
-// ═══════════════ 安全防护（同 xunvei.com/concrete） ═══════════════
-(function() {
-  // ── DevTools 检测 ──
-  var devtoolsOpen = false;
-  setInterval(function() {
-    var before = new Date().getTime();
-    debugger;
-    var after = new Date().getTime();
-    if (after - before > 100) {
-      devtoolsOpen = true;
-      document.body.style.opacity = '0.15';
-      document.body.style.pointerEvents = 'none';
-      showProtectAlert('⚠ 检测到开发者工具已打开<br><span style="font-size:.7rem;color:#c4bcb0;">请关闭开发者工具后刷新页面</span>');
-    } else if (devtoolsOpen) {
-      document.body.style.opacity = '1';
-      document.body.style.pointerEvents = '';
-      devtoolsOpen = false;
-    }
-  }, 1000);
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el && val !== undefined && val !== null) el.value = String(val);
+}
 
-  // ── 禁用右键 ──
-  document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-    showProtectAlert('© HE YONG<br><span style="font-size:.7rem;color:#c4bcb0;">右键已禁用 — 内容受版权保护</span>');
-    return false;
-  });
+function exportProject() {
+  const p = getParams();
+  const payload = {
+    app: 'xunvei-slab',
+    version: APP_VERSION,
+    tr34: 'Concrete Society TR34 4th Ed (2016)',
+    exportedAt: new Date().toISOString(),
+    params: p
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'slab-project-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
 
-  // ── 禁用快捷键 (F12 / Ctrl+U / Ctrl+S / Ctrl+P / Ctrl+Shift+I/J/C) ──
-  document.addEventListener('keydown', function(e) {
-    var blocked = false;
-    if (e.key === 'F12') { blocked = true; }
-    if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) { blocked = true; }
-    if (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I' || e.key === 'j' || e.key === 'J' || e.key === 'c' || e.key === 'C')) { blocked = true; }
-    if (blocked) {
-      e.preventDefault();
-      showProtectAlert('© HE YONG<br><span style="font-size:.7rem;color:#c4bcb0;">快捷键已禁用 — 内容受版权保护</span>');
-      return false;
-    }
-  });
+function importProject(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      const p = data.params || data;
+      const numMap = {
+        fck:'fck', fckcube:'fckcube', gammaC:'gammaC', alphaCC:'alphaCC',
+        fR1:'fR1', fR4:'fR4', fR2:'fR2', fR3:'fR3',
+        k:'kValue', cbr:'cbrValue', lt:'ltValue', Pu_rack:'rackingLoad',
+        basePlate:'basePlateSize', bbSpacing:'backToBackSpacing', udl:'udl',
+        mheTons:'mheWeight', dynFactor:'dynamicFactor', N:'fatigueCycles',
+        jointSpacing:'jointSpacing', jointMu:'jointMu',
+        fl_Q:'fl_Q', fl_p:'fl_p', fl_D:'fl_D', fl_gf:'fl_gf',
+        dw_W:'dw_W', dw_L:'dw_L', dw_Emb:'dw_Emb', dw_T:'dw_T',
+        dw_S:'dw_S', dw_ds:'dw_ds', dw_X:'dw_X', dw_e:'dw_e',
+        rebarDia:'rebarDia', rebarSpacing:'rebarSpacing'
+      };
+      for (const k in numMap) { if (p[k] !== undefined) setVal(numMap[k], p[k]); }
+      setVal('fiberLabel', p.fiberLabel);
+      setVal('fiberDosage', p.fiberDosage);
+      setVal('rebarGrade', p.rebarGrade);
+      setVal('rebarPosition', p.rebarPosition);
+      (p.schemes || []).forEach(function(s) {
+        if (s.type === 'sfrc') setVal('hA', s.h);
+        else if (s.type === 'rc') setVal('hB', s.h);
+        else if (s.type === 'plain') setVal('hD', s.h);
+      });
+      updatePoisson(); updateRebarRatio(); estimateKfromCompaction();
+      calculateAll();
+      alert('✅ 项目已导入并重新计算');
+    } catch (err) { alert('❌ 导入失败：' + err.message); }
+  };
+  reader.readAsText(file);
+}
 
-  // ── 禁用复制 / 剪切 / 拖拽 ──
-  document.addEventListener('copy', function(e) { e.preventDefault(); showProtectAlert('© HE YONG — 禁止复制'); return false; });
-  document.addEventListener('cut', function(e) { e.preventDefault(); return false; });
-  document.addEventListener('dragstart', function(e) { e.preventDefault(); return false; });
-
-  // ── 保护提示弹窗 ──
-  var alertActive = false;
-  function showProtectAlert(msg) {
-    if (alertActive) return;
-    alertActive = true;
-    var div = document.createElement('div');
-    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100000;'
-      + 'background:rgba(37,34,32,.94);color:#f3efe8;padding:20px 36px;border-radius:10px;'
-      + 'font-family:Inter,"Noto Sans SC",sans-serif;font-size:.92rem;text-align:center;'
-      + 'box-shadow:0 12px 48px rgba(0,0,0,.3);border:1px solid rgba(196,154,74,.3);'
-      + 'animation:protectFade .25s ease;pointer-events:none;';
-    div.innerHTML = msg;
-    document.body.appendChild(div);
-    setTimeout(function() { div.remove(); alertActive = false; }, 2500);
-  }
-
-  // ── 动画 CSS ──
-  var style = document.createElement('style');
-  style.textContent = '@keyframes protectFade{from{opacity:0;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}';
-  document.head.appendChild(style);
-
-  // ── 全局禁止文本选中 ──
-  document.addEventListener('DOMContentLoaded', function() {
-    var blocks = document.querySelectorAll('section, .report-header, table, .calc-box, .card, .final-banner, h2, h3, h4, .alert');
-    blocks.forEach(function(el) {
-      el.style.userSelect = 'none';
-      el.style.webkitUserSelect = 'none';
-      el.style.msUserSelect = 'none';
-    });
-    // Allow selection in input fields
-    var inputs = document.querySelectorAll('input, select, textarea');
-    inputs.forEach(function(el) {
-      el.style.userSelect = 'text';
-      el.style.webkitUserSelect = 'text';
-    });
-  });
-
-  // ═══════════════ 打印/保存安全控制 ═══════════════
-  (function() {
-    function isMaster() {
-      try { return sessionStorage.getItem('slab_master_auth') === '1'; } catch(e) { return false; }
-    }
-    // 拦截 Ctrl+P / Ctrl+S / Ctrl+Shift+S
-    document.addEventListener('keydown', function(e) {
-      if (isMaster()) return;
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S')) {
-        e.preventDefault();
-        e.stopPropagation();
-        alert('🔒 打印和保存功能需使用主密码登录。');
-        return false;
-      }
-    });
-    // 拦截浏览器打印菜单 (beforeprint 事件)
-    window.addEventListener('beforeprint', function() {
-      if (isMaster()) return;
-      // 非主密码 → 立即取消打印（部分浏览器不支持阻止，CSS 兜底）
-    });
-    // 拦截右键菜单中的打印/另存为
-    document.addEventListener('contextmenu', function(e) {
-      if (isMaster()) return;
-      // 允许在输入框中右键
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      e.preventDefault();
-      return false;
-    });
-  })();
-})();
 </script>
 </body>
 </html>
