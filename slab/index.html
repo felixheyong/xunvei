@@ -390,13 +390,7 @@ footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8r
 <section id="s4"><h2><span class="sec-num">4</span>冲切剪力验算 — 最大抗力 · 临界截面</h2><div id="section4Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
 <section id="s5"><h2><span class="sec-num">5</span>接缝传力设计 — 传力杆/钢板</h2><div id="section5Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
 <section id="s6"><h2><span class="sec-num">6</span>MHE 与叉车荷载验算</h2><div id="section6Content"><p style="color:var(--muted);">请先执行计算。</p></div></section>
-<section id="s8"><h2><span class="sec-num">7</span>计算汇总</h2>
-<div class="btn-row" style="margin:-8px 0 12px;">
-  <button class="btn btn-accent" onclick="exportProject()">⬇️ 导出项目 (.json)</button>
-  <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">⬆️ 导入项目</button>
-  <input type="file" id="importFile" accept=".json,application/json" style="display:none;" onchange="importProject(this.files[0]);this.value='';">
-</div>
-<div id="section8Content"><p style="color:var(--muted);">请先执行计算。</p></div>
+<section id="s8"><h2><span class="sec-num">7</span>计算汇总</h2><div id="section8Content"><p style="color:var(--muted);">请先执行计算。</p></div>
 </section>
 <section id="s9"><h2><span class="sec-num">8</span>最大设缝间距验算 <span style="font-size:0.7rem;color:var(--accent2);font-weight:400;">不切缝设计 — 方案A SFRC</span></h2>
 <div class="alert alert-info" style="font-size:0.82rem; margin-bottom:12px;">
@@ -1301,68 +1295,6 @@ function resetToDefaults() {
   document.querySelectorAll('#fiberPresets .preset-btn').forEach(b=>b.classList.remove('selected'));
   // No fiber preset selected
   estimateKfromCompaction();
-}
-
-// ═══════════════ 项目文件导入/导出 + 版本 ═══════════════
-const APP_VERSION = '3.0.0';
-
-function setVal(id, val) {
-  const el = document.getElementById(id);
-  if (el && val !== undefined && val !== null) el.value = String(val);
-}
-
-function exportProject() {
-  const p = getParams();
-  const payload = {
-    app: 'xunvei-slab',
-    version: APP_VERSION,
-    tr34: 'Concrete Society TR34 4th Ed (2016)',
-    exportedAt: new Date().toISOString(),
-    params: p
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'slab-project-' + new Date().toISOString().slice(0, 10) + '.json';
-  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-}
-
-function importProject(file) {
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = JSON.parse(e.target.result);
-      const p = data.params || data;
-      const numMap = {
-        fck:'fck', fckcube:'fckcube', gammaC:'gammaC', alphaCC:'alphaCC',
-        fR1:'fR1', fR4:'fR4', fR2:'fR2', fR3:'fR3',
-        k:'kValue', cbr:'cbrValue', lt:'ltValue', Pu_rack:'rackingLoad',
-        basePlate:'basePlateSize', bbSpacing:'backToBackSpacing', udl:'udl',
-        mheTons:'mheWeight', dynFactor:'dynamicFactor', N:'fatigueCycles',
-        jointSpacing:'jointSpacing', jointMu:'jointMu',
-        fl_Q:'fl_Q', fl_p:'fl_p', fl_D:'fl_D', fl_gf:'fl_gf',
-        dw_W:'dw_W', dw_L:'dw_L', dw_Emb:'dw_Emb', dw_T:'dw_T',
-        dw_S:'dw_S', dw_ds:'dw_ds', dw_X:'dw_X', dw_e:'dw_e',
-        rebarDia:'rebarDia', rebarSpacing:'rebarSpacing'
-      };
-      for (const k in numMap) { if (p[k] !== undefined) setVal(numMap[k], p[k]); }
-      setVal('fiberLabel', p.fiberLabel);
-      setVal('fiberDosage', p.fiberDosage);
-      setVal('rebarGrade', p.rebarGrade);
-      setVal('rebarPosition', p.rebarPosition);
-      (p.schemes || []).forEach(function(s) {
-        if (s.type === 'sfrc') setVal('hA', s.h);
-        else if (s.type === 'rc') setVal('hB', s.h);
-        else if (s.type === 'plain') setVal('hD', s.h);
-      });
-      updatePoisson(); updateRebarRatio();
-      calculateAll();
-      alert('✅ 项目已导入并重新计算');
-    } catch (err) { alert('❌ 导入失败：' + err.message); }
-  };
-  reader.readAsText(file);
 }
 
 </script>
