@@ -2,7 +2,7 @@
 
 `functions/_middleware.js`（**顶层**中间件）对 `/slab/*` 做服务端鉴权，其余路径（主页、/concrete、/sop 等）直接放行。
 
-- **主密码** `19921080011`：始终可用，签发 30 分钟签名会话 Cookie（`slab_session`）。
+- **主密码**：不在仓库与文档中记录。始终可用，签发 30 分钟签名会话 Cookie（`slab_session`）；轮换时用 `printf '新密码' | sha256sum` 生成哈希，同步替换所有页面的 `MASTER_HASH` 与本中间件中的值。
 - **一次性密码（OTP）**：100 个 8 位码（哈希存于中间件内），提交时校验；核销依赖 KV 命名空间。
 - **注意**：中间件必须放在顶层 `functions/`（子目录 `functions/slab/_middleware.js` 只会拦截同目录 Functions，不会拦截静态 HTML）。
 
@@ -16,7 +16,7 @@
    - （变量名必须与中间件内 `env.SLAB_OTP` 一致，否则 OTP 无法核销。）
 3. **（建议）设置会话签名密钥环境变量**
    - Settings → Functions → Environment variables，添加 `SLAB_SECRET`（随机长字符串）。
-   - 不设置时中间件用内置默认值，安全性较弱，仅建议测试期使用。
+   - **必须设置**（≥32 字符随机值）。未设置或过短时，中间件拒绝签发/校验会话；仓库中不再提供默认密钥。
 
 ## 行为说明
 
